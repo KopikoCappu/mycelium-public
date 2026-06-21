@@ -1,0 +1,50 @@
+{
+  "teams": {
+    "core": {
+      "name": "core",
+      "includeTags": [],
+      "includeAll": true
+    },
+    "security": {
+      "name": "security",
+      "includeTags": ["auth", "encryption", "tokens", "permissions", "firewall", "jwt", "session", "rbac", "oauth"]
+    },
+    "finance": {
+      "name": "finance",
+      "includeTags": ["billing", "stripe", "payments", "invoices", "pricing", "subscriptions", "checkout"]
+    },
+    "data": {
+      "name": "data",
+      "includeTags": ["database", "firebase", "sql", "migrations", "models", "schema", "queries", "cache"]
+    },
+    "ui": {
+      "name": "ui",
+      "includeTags": ["components", "hooks", "ui", "styles", "layout", "forms", "navigation", "animations"]
+    },
+    "api": {
+      "name": "api",
+      "includeTags": ["api", "routes", "middleware", "endpoints", "rest", "graphql", "websocket", "handlers"]
+    }
+  },
+  "summarizer": {
+    "model": "claude-haiku-4-5",
+    "batchSize": 10
+  },
+  "parser": {
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"],
+    "exclude": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".graphmem/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/*.stories.*",
+      "**/*.d.ts"
+    ]
+  },
+  "mcp": {
+    "port": 47821,
+    "enabled": true
+  }
+}

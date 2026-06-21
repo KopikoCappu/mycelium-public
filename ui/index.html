@@ -1,0 +1,2458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mycelium Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root {
+    --bg:#060606; --surface:#0d0d0d; --surface2:#161616; --surface3:#1f1f1f;
+    --border:#2a2a2a; --border-soft:#1c1c1c; --thread:#4a4a48; --thread-bright:#c9c7ba;
+    --text:#ededE6; --text-dim:#84827a; --text-faint:#4f4d47;
+    --import-edge:#4a8fff; --imported-edge:#ff8c42;
+    --fn-node:#c9c7ba; --class-node:#9d9b8f;
+    --sidebar-w:340px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'SF Mono','Fira Code',monospace; overflow:hidden; height:100vh; display:flex; position:relative; }
+  body::before { content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: radial-gradient(circle at 12% 18%,rgba(237,237,230,.025) 0,transparent 2%),
+      radial-gradient(circle at 78% 32%,rgba(237,237,230,.02) 0,transparent 1.6%),
+      radial-gradient(circle at 35% 68%,rgba(237,237,230,.022) 0,transparent 1.8%),
+      radial-gradient(circle at 64% 84%,rgba(237,237,230,.018) 0,transparent 1.4%),
+      radial-gradient(circle at 90% 70%,rgba(237,237,230,.02) 0,transparent 1.5%),
+      radial-gradient(circle at 8% 90%,rgba(237,237,230,.02) 0,transparent 1.6%); }
+
+  /* ── Sidebar ── */
+  #sidebar { width:var(--sidebar-w); min-width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border-soft); display:flex; flex-direction:column; z-index:10; overflow:hidden; position:relative; transition:width .32s cubic-bezier(.65,0,.35,1),min-width .32s cubic-bezier(.65,0,.35,1); }
+  #sidebar.collapsed { width:0; min-width:0; border-right-color:transparent; }
+  #sidebar::after { content:''; position:absolute; top:0; right:-1px; bottom:0; width:6px; pointer-events:none; opacity:.6;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='400' viewBox='0 0 6 400'%3E%3Cpath d='M3 0 C2 40 5 70 3 110 C1 150 5 180 3 220 C1 260 5 290 3 330 C2 360 4 380 3 400' stroke='%23ededE6' stroke-opacity='0.06' stroke-width='1' fill='none'/%3E%3C/svg%3E"); background-repeat:repeat-y; }
+
+  /* ── Collapse pill — FIXED & outside sidebar so overflow:hidden can't clip it ── */
+  #sidebar-collapse-btn {
+    position:fixed; left:340px; top:50%; transform:translateY(-50%);
+    width:20px; height:64px; border-radius:0 10px 10px 0;
+    background:var(--surface2); border:1px solid var(--border); border-left:none;
+    color:var(--text-dim); cursor:pointer; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; line-height:1; user-select:none;
+    transition:left .32s cubic-bezier(.65,0,.35,1),background .15s,color .15s,border-color .15s;
+  }
+  #sidebar-collapse-btn:hover { background:var(--surface3); color:var(--text); border-color:rgba(255,255,255,.28); }
+
+  .sidebar-tab { flex:1; padding:8px 4px; background:none; border:none; border-bottom:2px solid transparent; color:var(--text-dim); cursor:pointer; font-family:inherit; font-size:12px; letter-spacing:.04em; transition:color .15s,border-color .15s; white-space:nowrap; }
+  .sidebar-tab:hover { color:var(--text); }
+  .sidebar-tab.active { color:var(--text); border-bottom-color:var(--thread-bright); }
+  .tab-content { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+
+  .history-item { padding:10px 12px; border-bottom:1px solid var(--border-soft); font-size:11px; cursor:pointer; }
+  .history-item:hover { background:rgba(255,255,255,.03); }
+  .history-file { color:var(--text); margin-bottom:3px; font-family:'SF Mono',monospace; }
+  .history-meta { color:var(--text-dim); display:flex; gap:8px; flex-wrap:wrap; }
+  .history-task-group { border-bottom:1px solid var(--border-soft); }
+  .history-task-header { padding:8px 12px; background:var(--surface2); display:flex; align-items:center; justify-content:space-between; }
+  .history-task-label { font-size:11px; font-weight:600; color:var(--thread-bright); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .history-task-count { font-size:10px; color:var(--text-dim); flex-shrink:0; }
+  .history-summary { padding:10px 12px; font-size:11px; color:var(--text-dim); background:rgba(255,255,255,.02); border-bottom:1px solid var(--border-soft); line-height:1.7; }
+
+  .logo { font-size:18px; font-weight:700; color:var(--text); letter-spacing:-.5px; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .logo span { color:var(--text-dim); font-weight:400; }
+  .logo-glyph { width:16px; height:16px; flex-shrink:0; opacity:.85; }
+
+  #search-wrap { padding:12px 16px; border-bottom:1px solid var(--border-soft); position:relative; }
+  #search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:3px; color:var(--text); font-family:inherit; font-size:12px; padding:7px 10px 7px 30px; outline:none; transition:border-color .15s; }
+  #search:focus { border-color:var(--thread-bright); }
+  .search-icon { position:absolute; left:26px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:12px; pointer-events:none; }
+
+  #controls { padding:10px 16px; border-bottom:1px solid var(--border-soft); display:flex; flex-direction:column; gap:8px; }
+  .control-row { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-dim); }
+  .toggle-btn { background:var(--surface2); border:1px solid var(--border); border-radius:3px; color:var(--text-dim); font-family:inherit; font-size:11px; padding:3px 8px; cursor:pointer; transition:all .15s; }
+  .toggle-btn.active { background:var(--thread-bright); border-color:var(--thread-bright); color:#0a0a0a; }
+  .zoom-level-btns { display:flex; gap:4px; }
+
+  #node-info { flex:1; overflow-y:auto; padding:16px; }
+  .node-info-empty { color:var(--text-dim); font-size:12px; text-align:center; margin-top:40px; }
+  .node-detail { animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+  .node-kind-badge { display:inline-block; font-size:10px; padding:2px 6px; border-radius:2px; margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px; border:1px solid var(--border); }
+  .kind-file { background:rgba(237,237,230,.08); color:var(--text); }
+  .kind-function { background:rgba(201,199,186,.1); color:var(--fn-node); }
+  .kind-class { background:rgba(157,155,143,.1); color:var(--class-node); }
+  .node-name { font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px; word-break:break-all; }
+  .node-description { font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:12px; }
+  .tags-wrap { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:14px; }
+  .tag { background:var(--surface2); border:1px solid var(--border); border-radius:2px; font-size:10px; padding:2px 6px; color:var(--text-dim); cursor:pointer; transition:border-color .12s,color .12s; }
+  .tag:hover { border-color:var(--thread-bright); color:var(--text); }
+  .section-title { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:var(--text-dim); margin-bottom:6px; margin-top:14px; }
+  .dep-list { display:flex; flex-direction:column; gap:3px; }
+  .dep-item { font-size:11px; color:var(--text); padding:4px 8px; background:var(--surface2); border-radius:3px; border-left:2px solid; cursor:pointer; transition:background .1s; word-break:break-all; }
+  .dep-item:hover { background:var(--surface3); }
+  .dep-import { border-left-color:var(--import-edge); }
+  .dep-call { border-left-color:#ff8c42; }
+  .dep-calledby { border-left-color:#4a8fff; }
+  .dep-more { border-left:2px solid var(--border)!important; color:var(--text-dim)!important; text-align:center; font-style:italic; font-size:10px; }
+  .dep-more:hover { color:var(--text)!important; }
+  .dep-label { font-size:9px; color:var(--text-dim); display:block; margin-bottom:1px; }
+  .cycle-item { font-size:10px; color:#e0524a; padding:4px 8px; background:rgba(224,82,74,.08); border:1px solid rgba(224,82,74,.25); border-radius:3px; cursor:pointer; }
+  .cycle-item:hover { background:rgba(224,82,74,.16); }
+  .cycle-path { word-break:break-word; }
+  .stat-row { display:flex; justify-content:space-between; font-size:11px; padding:3px 0; border-bottom:1px solid var(--border-soft); }
+  .stat-val { color:var(--text); font-weight:600; }
+
+  #legend { padding:12px 16px; border-top:1px solid var(--border-soft); display:flex; flex-wrap:wrap; gap:10px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-dim); }
+  .legend-item-clickable { cursor:pointer; padding:2px 5px; border-radius:3px; border:1px solid transparent; transition:background .12s,border-color .12s; }
+  .legend-item-clickable:hover { background:rgba(255,255,255,.05); }
+  .legend-item-clickable.active { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); color:var(--text); }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+  .legend-line { width:16px; height:2px; border-radius:1px; }
+
+  /* ── Canvas ── */
+  #canvas-wrap { flex:1; position:relative; overflow:hidden; background:var(--bg); }
+  #graph-svg { width:100%; height:100%; }
+  #topbar { position:absolute; top:0; left:0; right:0; height:44px; background:rgba(6,6,6,.88); backdrop-filter:blur(8px); border-bottom:1px solid var(--border-soft); display:flex; align-items:center; padding:0 16px; gap:12px; z-index:5; }
+  .stats-chip { font-size:11px; color:var(--text-dim); background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:3px 8px; }
+  .stats-chip strong { color:var(--text); }
+  #task-input-wrap { flex:1; max-width:400px; position:relative; }
+  #task-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:3px; color:var(--text); font-family:inherit; font-size:12px; padding:6px 36px 6px 10px; outline:none; transition:border-color .15s; }
+  #task-input:focus { border-color:var(--thread-bright); }
+  #task-input::placeholder { color:var(--text-faint); }
+  #task-submit { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--thread-bright); border:none; border-radius:2px; color:#0a0a0a; font-family:inherit; font-size:10px; padding:3px 7px; cursor:pointer; }
+
+  #minimap { position:absolute; bottom:16px; right:16px; width:160px; height:100px; background:var(--surface); border:1px solid var(--border); border-radius:4px; overflow:hidden; z-index:5; }
+  #minimap-svg { width:100%; height:100%; }
+  #minimap-viewport { fill:rgba(237,237,230,.08); stroke:var(--thread-bright); stroke-width:1; }
+  #zoom-btns { position:absolute; bottom:130px; right:16px; display:flex; flex-direction:column; gap:4px; z-index:5; }
+  .zoom-btn { background:var(--surface); border:1px solid var(--border); border-radius:3px; color:var(--text); width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:background .1s; }
+  .zoom-btn:hover { background:var(--surface2); }
+
+  #loading { position:absolute; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:100; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--thread-bright); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  #loading-text { font-size:13px; color:var(--text-dim); }
+
+  #tooltip { position:absolute; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 14px; font-size:12px; pointer-events:none; z-index:20; max-width:320px; display:none; box-shadow:0 4px 24px rgba(0,0,0,.6); }
+  #tooltip .tip-name { font-weight:700; font-size:13px; margin-bottom:2px; color:var(--text); }
+  #tooltip .tip-path { font-size:10px; color:var(--text-dim); margin-bottom:4px; word-break:break-all; }
+  #tooltip .tip-desc { color:var(--text-dim); font-size:11px; line-height:1.6; margin-top:4px; }
+  #tooltip .tip-tags { margin-top:6px; display:flex; flex-wrap:wrap; gap:3px; }
+  #tooltip .tip-tag { background:rgba(237,237,230,.08); color:var(--text); font-size:10px; padding:2px 6px; border-radius:2px; }
+
+  [data-tip] { position:relative; }
+  [data-tip]::after { content:attr(data-tip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#111; border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.85); font-size:11px; white-space:pre; padding:6px 10px; line-height:1.5; pointer-events:none; opacity:0; transition:opacity .15s; z-index:50; text-align:left; min-width:160px; }
+  [data-tip]:hover::after { opacity:1; }
+
+  #ctx-menu { display:none; position:fixed; background:#0c0c0c; border:1px solid rgba(255,255,255,.15); z-index:400; padding:4px 0; min-width:190px; box-shadow:0 8px 32px rgba(0,0,0,.7); font-family:'SF Mono','Fira Code',monospace; }
+  .ctx-item { padding:9px 16px; font-size:12px; cursor:pointer; color:rgba(255,255,255,.8); transition:background .1s; }
+  .ctx-item:hover { background:rgba(255,255,255,.07); }
+  .ctx-divider { height:1px; background:rgba(255,255,255,.08); margin:4px 0; }
+
+  /* ── Settings modal ── */
+  .modal-tab { flex:1; padding:10px 8px; background:none; border:none; border-bottom:2px solid transparent; color:rgba(255,255,255,.4); cursor:pointer; font-family:inherit; font-size:12px; transition:color .15s,border-color .15s; }
+  .modal-tab:hover { color:rgba(255,255,255,.7); }
+  .modal-tab.active { color:#fff; border-bottom-color:#ededE6; }
+  .color-preset { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; padding:8px 10px; border-radius:6px; border:1px solid transparent; transition:border-color .15s,background .15s; }
+  .color-preset:hover { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.15); }
+  .color-preset.active { border-color:rgba(237,237,230,.6); background:rgba(255,255,255,.06); }
+  .color-swatch { width:18px; height:18px; border-radius:50%; }
+  .color-preset-name { font-size:10px; color:rgba(255,255,255,.5); text-align:center; }
+
+  /* ── SVG ── */
+  .node circle { cursor:pointer; }
+  .node text { font-family:'SF Mono','Fira Code',monospace; font-size:10px; fill:var(--text-dim); pointer-events:none; user-select:none; }
+  .node.selected circle { filter:drop-shadow(0 0 7px var(--thread-bright)); }
+  .node.highlighted circle { opacity:1!important; }
+  .node.dimmed circle { opacity:.12!important; }
+  .node.dimmed text { opacity:.12; }
+  .link { fill:none; stroke:var(--thread); stroke-opacity:.5; }
+  .link.imports-edge { stroke:var(--thread); stroke-width:1.4; stroke-opacity:.45; }
+  .link.calls-edge { stroke:var(--thread); stroke-width:1.4; stroke-dasharray:5,4; stroke-opacity:.4; }
+  .link.contains-edge { stroke:#222220; stroke-width:.5; stroke-dasharray:3,3; }
+  .link.cycle-edge { stroke:#e0524a!important; stroke-opacity:.65!important; stroke-dasharray:none!important; }
+  .link.highlighted { stroke-opacity:.85!important; stroke-width:2!important; }
+  .link.dimmed { stroke-opacity:.03!important; }
+  .flow-dot { pointer-events:none; }
+  .hull { fill:none; stroke-width:1.3; stroke-dasharray:1,5; opacity:.45; stroke-linecap:round; }
+  .cluster-label { font-family:'SF Mono',monospace; font-size:11px; fill:rgba(237,237,230,.4); font-weight:600; pointer-events:none; letter-spacing:.06em; }
+
+  /* ── History tab improvements ── */
+  .history-item { padding:10px 12px; border-bottom:1px solid var(--border-soft); font-size:11px; transition:background .1s; }
+  .history-item:hover { background:rgba(255,255,255,.03); }
+  .history-item-clickable { cursor:pointer; }
+  .history-item-unknown { opacity:.55; cursor:default; }
+  .history-file { color:var(--text); margin-bottom:1px; font-family:'SF Mono',monospace; font-size:11px; }
+  .history-dirpath { font-size:9px; color:var(--text-faint); font-family:'SF Mono',monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .history-change-desc { font-size:10px; color:var(--text-dim); margin-top:3px; line-height:1.5; }
+  .history-agent-badge { display:inline-block; font-size:10px; color:var(--thread-bright); margin-top:3px; }
+  .delta-add { color:#7ECBA1; font-size:10px; }
+  .delta-rm  { color:#F28B82; font-size:10px; margin-left:3px; }
+  .delta-eq  { color:var(--text-faint); font-size:10px; }
+  /* ── Custom scrollbar — sidebar only ── */
+  #sidebar *::-webkit-scrollbar { width:3px; }
+  #sidebar *::-webkit-scrollbar-track { background:transparent; }
+  #sidebar *::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  #sidebar *::-webkit-scrollbar-thumb:hover { background:var(--text-faint); }
+  #sidebar * { scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+
+  /* ── Pinned nodes ── */
+  .node.pinned circle:first-of-type {
+    stroke-dasharray:4,3 !important;
+    stroke-width:2.5 !important;
+    stroke-opacity:.95 !important;
+  }
+  .pin-badge { font-size:8px; pointer-events:none; user-select:none; }
+
+  /* ── Multi-select ── */
+  .node.multi-selected circle { filter:drop-shadow(0 0 5px #ffd700); stroke:#ffd700 !important; stroke-width:2.5 !important; stroke-opacity:1 !important; }
+
+  /* ── Subtree banner ── */
+  #subtree-banner {
+    position:absolute; top:52px; left:50%; transform:translateX(-50%);
+    background:var(--surface2); border:1px solid var(--border);
+    padding:6px 14px; border-radius:4px; font-size:11px;
+    color:var(--text-dim); z-index:10; display:none;
+    align-items:center; gap:10px; white-space:nowrap;
+    box-shadow:0 2px 12px rgba(0,0,0,.4);
+  }
+
+  /* ── Description editing ── */
+  .node-description {
+    cursor:text; position:relative;
+    transition:background .1s;
+    border-radius:3px; padding:2px 4px; margin:-2px -4px;
+  }
+  .node-description:hover { background:rgba(255,255,255,.04); }
+  .node-description:hover::after {
+    content:'click to edit';
+    position:absolute; right:0; top:0;
+    font-size:9px; color:var(--text-faint);
+    letter-spacing:.04em; padding:2px;
+  }
+  .desc-textarea {
+    width:100%; min-height:72px;
+    background:var(--surface2); border:1px solid var(--thread-bright);
+    color:var(--text); font-family:inherit; font-size:12px;
+    padding:6px 8px; resize:vertical; outline:none;
+    border-radius:2px; line-height:1.5;
+  }
+  .desc-save-row { display:flex; gap:6px; margin-top:5px; }
+  .desc-save-btn { background:var(--thread-bright); border:none; color:#0a0a0a; cursor:pointer; font-family:inherit; font-size:11px; padding:4px 10px; }
+  .desc-cancel-btn { background:none; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-family:inherit; font-size:11px; padding:4px 10px; }
+  .desc-status { font-size:10px; align-self:center; }
+
+  /* ── Markdown copy btn ── */
+  .md-copy-btn { flex:1; background:none; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-family:inherit; font-size:11px; padding:4px 10px; }
+  .md-copy-btn:hover { color:var(--text); border-color:rgba(255,255,255,.3); }
+
+  /* ── Ripple animation on neighbor expand ── */
+  @keyframes nodeRipple {
+    0%   { r: var(--base-r); }
+    40%  { r: calc(var(--base-r) * 1.4); }
+    100% { r: var(--base-r); }
+  }
+
+
+  /* ── Help tab ── */
+  .help-code { display:inline-block; background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:1px 5px; font-family:'SF Mono',monospace; font-size:11px; color:var(--thread-bright); }
+  .help-section { margin-bottom:18px; }
+  .help-section-title { font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; border-bottom:1px solid var(--border-soft); padding-bottom:4px; }
+  .help-row { margin-bottom:6px; line-height:1.7; color:var(--text-dim); }
+  .help-row strong { color:var(--text); }
+
+  /* ── Ignore list ── */
+  .ignore-item { display:flex; align-items:center; justify-content:space-between; padding:5px 8px; border-radius:3px; gap:8px; }
+  .ignore-item:hover { background:rgba(255,255,255,.04); }
+  .ignore-pattern { font-family:'SF Mono',monospace; font-size:11px; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ignore-btn { background:none; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-family:inherit; font-size:10px; padding:2px 7px; flex-shrink:0; transition:all .12s; }
+  .ignore-btn:hover { color:var(--text); border-color:rgba(255,255,255,.3); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR (no collapse btn inside — it lives outside as position:fixed) ═══ -->
+<div id="sidebar">
+  <div style="padding:0 14px;height:50px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div class="logo">
+      <svg class="logo-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 C12 6 10 7 8 9 C6 11 5 14 5 17 M12 2 C12 6 14 7 16 9 C18 11 19 14 19 17 M12 2 V21 M8 9 C7 9 6 10 5 10 M16 9 C17 9 18 10 19 10 M12 13 C10.5 13 9.5 14 8 14 M12 13 C13.5 13 14.5 14 16 14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+      mycelium<span>.dev</span>
+    </div>
+    <button id="settings-btn" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;padding:5px 12px;font-family:inherit;letter-spacing:.04em;display:flex;align-items:center;gap:5px;white-space:nowrap;">⚙ Settings</button>
+  </div>
+
+  <div style="display:flex;border-bottom:1px solid var(--border-soft);flex-shrink:0;">
+    <button class="sidebar-tab active" id="tab-graph"   onclick="switchTab('graph')">Graph</button>
+    <button class="sidebar-tab"        id="tab-history" onclick="switchTab('history')">History</button>
+    <button class="sidebar-tab"        id="tab-help"    onclick="switchTab('help')">? Help</button>
+  </div>
+
+  <!-- GRAPH TAB -->
+  <div id="tab-content-graph" class="tab-content">
+    <div id="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="search" type="text" placeholder="Search files, functions, tags… ( / )" autocomplete="off">
+    </div>
+    <div id="controls">
+      <div class="control-row">
+        <span>Edges:</span>
+        <button class="toggle-btn active" id="toggle-imports"   data-tip="Show/hide import edges&#10;File A imports from File B">Imports</button>
+        <button class="toggle-btn active" id="toggle-calls"     data-tip="Show/hide call edges (dashed)&#10;Function A calls Function B">Calls</button>
+        <button class="toggle-btn"        id="toggle-functions" data-tip="Show function/class symbols&#10;Only visible in Symbols zoom">Functions</button>
+      </div>
+      <div class="control-row">
+        <span>Zoom:</span>
+        <div class="zoom-level-btns">
+          <button class="toggle-btn active" id="zoom-files"   data-tip="Files only — one dot = one file">Files</button>
+          <button class="toggle-btn"        id="zoom-symbols" data-tip="Show function + class symbols">Symbols</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <button class="toggle-btn" id="toggle-clusters" data-tip="Dashed folder outlines">Directory clusters</button>
+      </div>
+      <div id="hidden-row" style="display:none;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="hidden-count" style="color:var(--imported-edge);cursor:pointer;text-decoration:underline dotted;" onclick="toggleHiddenList()" title="Click to see hidden files">0 hidden</span>
+          <button class="toggle-btn" onclick="unhideAll()">Show all</button>
+        </div>
+        <div id="hidden-list" style="display:none;max-height:130px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px;"></div>
+      </div>
+      <div id="cycles-row" style="display:none;flex-direction:column;gap:4px;font-size:11px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#e0524a;">⟲</span>
+          <span id="cycles-count" style="color:#e0524a;font-weight:600;">0 cycles</span>
+          <span style="color:var(--text-faint);">import cycles found</span>
+        </div>
+        <div id="cycles-list" style="display:flex;flex-direction:column;gap:3px;max-height:140px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div id="node-info">
+      <div class="node-info-empty" style="line-height:1.8">Click any dot to see<br>what it imports, exports,<br>and connects to<br><br><span style="font-size:10px;opacity:.6">Right-click to hide a file or folder</span></div>
+    </div>
+    <div id="legend">
+      <div id="dir-legend"></div>
+      <div class="legend-item"><div class="legend-line" style="background:#4a8fff;height:2px;"></div><span>Imports edge</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#ff8c42;height:2px;"></div><span>Imported-by edge</span></div>
+      <div style="width:100%;font-size:9px;color:var(--text-faint);letter-spacing:.05em;text-transform:uppercase;margin-top:2px;">Flow dots (on select)</div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legend-flow-out-dot" style="background:#d4ff3e;box-shadow:0 0 4px #d4ff3e;"></div>
+        <span>Imports (source→you)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legend-flow-in-dot" style="background:#ff3eb8;box-shadow:0 0 4px #ff3eb8;"></div>
+        <span>Imported by (you→dependent)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-content-history" class="tab-content" style="display:none;overflow-y:auto;flex:1;">
+
+    <!-- Active task — editable -->
+    <div style="padding:12px 14px;border-bottom:1px solid var(--border-soft);flex-shrink:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);">Active task</div>
+        <button id="task-edit-btn" onclick="toggleTaskEdit()" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-family:inherit;padding:0;letter-spacing:.03em;">✎ change</button>
+      </div>
+      <div id="history-task" style="font-size:13px;color:var(--text);font-weight:500;">Loading…</div>
+      <div id="task-edit-form" style="display:none;margin-top:8px;">
+        <input id="task-edit-input" placeholder="What are you working on?"
+          style="width:100%;background:var(--surface2);border:1px solid var(--thread-bright);color:var(--text);font-family:inherit;font-size:12px;padding:7px 8px;outline:none;border-radius:2px;margin-bottom:6px;">
+        <div style="display:flex;gap:6px;">
+          <button onclick="setActiveTask()" style="background:var(--thread-bright);border:none;color:#0a0a0a;cursor:pointer;font-family:inherit;font-size:11px;padding:5px 10px;flex:1;font-weight:600;">→ Set task</button>
+          <button onclick="toggleTaskEdit()" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:11px;padding:5px 10px;">Cancel</button>
+        </div>
+        <div id="task-edit-status" style="font-size:10px;color:var(--text-faint);margin-top:5px;display:none;"></div>
+      </div>
+    </div>
+
+    <div id="history-summary" class="history-summary" style="display:none;"></div>
+    <div id="history-list"></div>
+    <div style="padding:12px;border-top:1px solid var(--border-soft);flex-shrink:0;">
+      <button onclick="loadHistory()" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:11px;padding:5px 10px;width:100%;">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- HELP TAB -->
+  <div id="tab-content-help" class="tab-content" style="display:none;overflow-y:auto;flex:1;padding:14px;font-size:12px;line-height:1.7;">
+    <div class="help-section">
+      <div class="help-section-title">What Mycelium does</div>
+      <div style="color:var(--text-dim);">One command gives AI agents queryable memory of your entire codebase. Agents call <span class="help-code">/preflight</span> before touching any file — instead of reading 40 files, they read 4.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">CLI commands</div>
+      <div class="help-row"><span class="help-code">mycelium init</span> — scan + AI-describe all files, build graph</div>
+      <div class="help-row"><span class="help-code">mycelium scan</span> — re-scan structure (fast, skips AI descriptions)</div>
+      <div class="help-row"><span class="help-code">mycelium scan --force</span> — full rescan + regenerate all descriptions</div>
+      <div class="help-row"><span class="help-code">mycelium start</span> — start MCP HTTP server and open this viewer</div>
+      <div class="help-row"><span class="help-code">mycelium start --port 4000</span> — start on a custom port</div>
+      <div class="help-row"><span class="help-code">mycelium status</span> — print graph stats and version</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">Setting a task</div>
+      <div class="help-row">Type your goal in the <strong>topbar input</strong> (e.g. <em>"add Stripe checkout"</em>) and press <span class="help-code">→</span> or Enter. Mycelium scores every file and highlights the most relevant ones. Your AI agent can call <span class="help-code">/preflight?task=</span> to get the same list programmatically — so the graph and the agent always agree on what to touch.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">Sidebar controls</div>
+      <div class="help-row"><strong>Imports / Calls</strong> — toggle edge types on/off (instant, no rebuild)</div>
+      <div class="help-row"><strong>Functions</strong> — show function/class symbols (Symbols zoom only)</div>
+      <div class="help-row"><strong>Files / Symbols</strong> — zoom level: one dot per file vs. per symbol</div>
+      <div class="help-row"><strong>Directory clusters</strong> — overlay dashed folder grouping hulls</div>
+      <div class="help-row"><strong>⚙ Settings</strong> — scan filters and flow dot color customization</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">Graph navigation</div>
+      <div class="help-row"><strong>Click node</strong> — center it, highlight connections, animate flow dots</div>
+      <div class="help-row"><strong>Right-click</strong> — hide file or folder (persists across page reloads)</div>
+      <div class="help-row"><strong>Click a tag pill</strong> on a selected node — filter graph to files sharing that tag</div>
+      <div class="help-row"><strong>Click directory</strong> in legend — isolate that folder</div>
+      <div class="help-row"><strong>Scroll</strong> — zoom in/out. <strong>Drag</strong> — pan. <strong>⊡</strong> — fit all to screen</div>
+      <div class="help-row"><strong>‹ pill</strong> on sidebar right edge — collapse / expand the panel</div>
+      <div class="help-row"><strong>History items</strong> — clickable; jumps to that file in the graph</div>
+      <div class="help-row"><strong>⧉ Copy path</strong> — in node detail panel, copies full file path</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">Flow dots (when a node is selected)</div>
+      <div class="help-row" id="help-flow-out-line"><span style="color:#d4ff3e;font-weight:700;">●</span> <strong>Lime</strong> — if A imports B, dot travels B→A (dependency source flows into you)</div>
+      <div class="help-row" id="help-flow-in-line"><span style="color:#ff3eb8;font-weight:700;">●</span> <strong>Pink</strong> — if C imports A, dot travels A→C (you flow out to your dependents)</div>
+      <div class="help-row"><span style="color:#e0524a;font-weight:700;">●</span> <strong>Red edges</strong> — circular import (A imports B imports A)</div>
+      <div class="help-row"><strong>Node size</strong> — bigger = more lines of code and more connections (hot files)</div>
+      <div class="help-row"><strong>Node color</strong> — which top-level directory the file lives in</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">History tab</div>
+      <div class="help-row">Shows every file save during active Mycelium sessions, grouped by task. Summary stats at the top. Click any entry to jump to that file in the graph. Use <span class="help-code">↻ Refresh</span> to pull the latest.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">MCP / agent endpoints</div>
+      <div class="help-row"><span class="help-code">/preflight?task=</span> — relevant files for a natural-language task</div>
+      <div class="help-row"><span class="help-code">/search?q=</span> — semantic keyword search across all descriptions</div>
+      <div class="help-row"><span class="help-code">/dependencies?file=</span> — what a file imports and who imports it</div>
+      <div class="help-row"><span class="help-code">/xref?file=&fn=</span> — callers and callees of a specific function</div>
+      <div class="help-row"><span class="help-code">/graph</span> — full graph JSON (nodes + edges)</div>
+      <div class="help-row"><span class="help-code">/history</span> — file save log by task and agent</div>
+      <div class="help-row"><span class="help-code">/status</span> — server version and graph stats</div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">Keyboard shortcuts</div>
+      <div class="help-row"><span class="help-code">/</span> — focus search bar</div>
+      <div class="help-row"><span class="help-code">Esc</span> — close modal → clear selection → clear search (in priority order)</div>
+    </div>
+    <div style="border-top:1px solid var(--border-soft);padding-top:12px;display:flex;gap:16px;">
+      <a href="https://github.com/KopikoCappu/Mycelium" target="_blank" style="color:var(--thread-bright);text-decoration:none;font-size:11px;">GitHub ↗</a>
+      <a href="https://www.npmjs.com/package/@kopikocappu/mycelium" target="_blank" style="color:var(--thread-bright);text-decoration:none;font-size:11px;">npm ↗</a>
+      <a href="https://www.getmycelium.net/" target="_blank" style="color:var(--thread-bright);text-decoration:none;font-size:11px;">getmycelium.net ↗</a>
+    </div>
+  </div>
+</div><!-- /sidebar -->
+
+<!-- ═══ Collapse pill — OUTSIDE sidebar so overflow:hidden can't clip it ═══ -->
+<button id="sidebar-collapse-btn" title="Collapse sidebar">‹</button>
+
+<!-- ═══ Settings modal (Scan Filters + Appearance tabs) ═══ -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#0c0c0c;border:1px solid rgba(255,255,255,.15);width:720px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7);">
+    <div style="padding:16px 24px 0;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0;">
+      <div style="display:flex;gap:0;">
+        <button class="modal-tab active" id="modal-tab-filters"    onclick="switchModalTab('filters')">Scan Filters</button>
+        <button class="modal-tab"        id="modal-tab-appearance" onclick="switchModalTab('appearance')">🎨 Appearance</button>
+      </div>
+      <button id="settings-close" style="background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:pointer;font-size:18px;padding:4px 12px;font-family:inherit;line-height:1;margin-bottom:1px;">✕</button>
+    </div>
+
+    <!-- FILTERS PANEL -->
+    <div id="modal-panel-filters" style="display:flex;flex:1;overflow:hidden;">
+      <div style="width:300px;border-right:1px solid rgba(255,255,255,.08);padding:20px;display:flex;flex-direction:column;flex-shrink:0;">
+        <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px;">Add custom pattern</div>
+        <input id="ignore-input" placeholder="e.g. android/** or src/Foo.tsx" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:inherit;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;width:100%;"/>
+        <button id="ignore-add-btn" style="background:#ededE6;border:none;color:#0a0a0a;cursor:pointer;font-family:inherit;font-size:13px;padding:10px;font-weight:600;width:100%;">+ Add to ignore list</button>
+        <div style="margin-top:20px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px;">Your patterns</div>
+        <div id="ignore-custom-list" style="flex:1;overflow-y:auto;"><div style="font-size:13px;color:rgba(255,255,255,.3);padding:4px 0;">None added yet</div></div>
+        <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;">After changes, run:<br><code style="color:rgba(237,237,230,.9);">mycelium scan --force</code></div>
+      </div>
+      <div style="flex:1;padding:20px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);">Default patterns</div>
+          <button onclick="postIgnoreAction('reset','')" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.35);cursor:pointer;font-family:inherit;font-size:11px;padding:4px 10px;">Reset all</button>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Click Allow to stop ignoring a default. Click Ignore again to re-enable it.</div>
+        <div id="ignore-default-list" style="flex:1;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE PANEL -->
+    <div id="modal-panel-appearance" style="display:none;flex:1;overflow-y:auto;padding:24px;flex-direction:column;gap:20px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">Flow Dot Colors</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;">Colors of the animated dots when a node is selected. Chosen to be distinct from node colors. Important for colorblindness accessibility.</div>
+
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px;">Presets</div>
+        <div id="color-presets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;"></div>
+
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px;">Custom</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:12px;color:rgba(255,255,255,.6);">Import flow <span style="color:rgba(255,255,255,.3);font-size:10px;">(source → you)</span></label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="color" id="color-flow-out" value="#d4ff3e" style="width:40px;height:32px;border:1px solid rgba(255,255,255,.2);background:none;cursor:pointer;border-radius:4px;padding:2px;">
+              <span id="color-out-hex" style="font-size:12px;color:rgba(255,255,255,.5);font-family:'SF Mono',monospace;">#d4ff3e</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:12px;color:rgba(255,255,255,.6);">Imported-by flow <span style="color:rgba(255,255,255,.3);font-size:10px;">(you → dependents)</span></label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="color" id="color-flow-in" value="#ff3eb8" style="width:40px;height:32px;border:1px solid rgba(255,255,255,.2);background:none;cursor:pointer;border-radius:4px;padding:2px;">
+              <span id="color-in-hex" style="font-size:12px;color:rgba(255,255,255,.5);font-family:'SF Mono',monospace;">#ff3eb8</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="resetColors()" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);cursor:pointer;font-family:inherit;font-size:11px;padding:6px 14px;">Reset to defaults</button>
+        <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);">Colors are saved to your browser automatically.</div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:20px;">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;">Coming soon</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.8;">LOC / connectivity heatmap · Node color by file type · Export PNG · Pin nodes · Edge opacity slider · Shortest path between files</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" id="ctx-hide-file">👁 Hide this file</div>
+  <div class="ctx-item" id="ctx-hide-dir">📁 Hide entire folder</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" id="ctx-focus-node" style="color:var(--thread-bright);">🔍 Focus</div>
+  <div class="ctx-item" id="ctx-pin-node">📌 Pin node</div>
+  <div class="ctx-item" id="ctx-isolate-subtree" style="color:var(--thread-bright);">⬡ Show only subtree</div>
+</div>
+
+<!-- Canvas -->
+<div id="canvas-wrap">
+  <div id="topbar">
+    <span class="stats-chip"><strong id="stat-nodes">–</strong> files</span>
+    <span class="stats-chip"><strong id="stat-edges">–</strong> connections</span>
+    <span class="stats-chip"><strong id="stat-fns">–</strong> functions</span>
+    <span class="stats-chip"><strong id="stat-lines">–</strong> total lines</span>
+    <div id="task-input-wrap">
+      <input id="task-input" type="text" placeholder="Describe your task to find relevant files…">
+      <button id="task-submit">→</button>
+    </div>
+  </div>
+  <svg id="graph-svg"></svg>
+  <div id="subtree-banner">
+    Subtree of <strong id="subtree-root-name" style="color:var(--text);margin:0 2px;"></strong>
+    <button onclick="clearSubtreeIsolation()" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:10px;padding:2px 8px;">✕ Clear</button>
+  </div>
+  <div id="zoom-btns">
+    <div class="zoom-btn" id="btn-zoom-in">+</div>
+    <div class="zoom-btn" id="btn-zoom-fit">⊡</div>
+    <div class="zoom-btn" id="btn-zoom-out">−</div>
+  </div>
+  <div id="minimap">
+    <svg id="minimap-svg"><rect id="minimap-viewport" x="0" y="0" width="0" height="0"/></svg>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="loading-text">Loading graph…</div>
+</div>
+
+<div id="help-overlay" style="position:absolute;inset:0;background:rgba(6,6,6,.9);display:flex;align-items:center;justify-content:center;z-index:50;cursor:pointer;backdrop-filter:blur(2px);" onclick="this.style.display='none'">
+  <div style="text-align:center;max-width:460px;padding:40px">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="margin:0 auto 16px;display:block;opacity:.9">
+      <path d="M12 2 C12 6 10 7 8 9 C6 11 5 14 5 17 M12 2 C12 6 14 7 16 9 C18 11 19 14 19 17 M12 2 V21 M8 9 C7 9 6 10 5 10 M16 9 C17 9 18 10 19 10 M12 13 C10.5 13 9.5 14 8 14 M12 13 C13.5 13 14.5 14 16 14" stroke="#ededE6" stroke-width="1.1" stroke-linecap="round"/>
+    </svg>
+    <div style="font-size:20px;font-weight:700;color:#ededE6;margin-bottom:12px">Your codebase, mapped</div>
+    <div style="font-size:13px;color:#84827a;line-height:1.9;margin-bottom:24px">
+      Each <span style="color:#ededE6">●</span> dot is a file.<br>
+      Color shows which folder it lives in.<br>
+      Size grows with lines of code and connections.<br>
+      Select a node — dots flow to show dependency direction.<br>
+      <span style="color:#d4ff3e">Lime</span> flows toward you (imports). <span style="color:#ff3eb8">Pink</span> flows away (imported by).<br><br>
+      <strong>Click</strong> to explore. <strong>Right-click</strong> to hide.<br>
+      <strong>‹ pill</strong> on sidebar edge to collapse it.
+    </div>
+    <div style="font-size:11px;color:#84827a;background:#0d0d0d;padding:8px 16px;border-radius:4px;border:1px solid #2a2a2a">Click anywhere to dismiss</div>
+  </div>
+</div>
+
+<div id="tooltip">
+  <div class="tip-name"></div>
+  <div class="tip-path"></div>
+  <div class="tip-desc"></div>
+  <div class="tip-tags"></div>
+</div>
+
+<script>
+// ─── Config ────────────────────────────────────────────────────────────────────
+const API_BASE = '';
+
+const DIR_PALETTE = [
+  '#6B8AFF','#4ECDC4','#F7B267','#C5A3FF',
+  '#7ECBA1','#F28B82','#93C5FD','#FCD34D',
+  '#E8A87C','#8FD9C4','#D88FD9','#A8C97F',
+];
+const dirColorMap = new Map();
+let dirColorIdx = 0;
+
+function getDirColor(nodeId) {
+  const parts = (nodeId || '').split('/');
+  const dir = parts.length > 1 ? parts[0] : 'root';
+  if (!dirColorMap.has(dir)) {
+    dirColorMap.set(dir, DIR_PALETTE[dirColorIdx % DIR_PALETTE.length]);
+    dirColorIdx++;
+  }
+  return dirColorMap.get(dir);
+}
+
+const COLORS = {
+  file: '#ededE6', function: 'rgba(255,255,255,.55)',
+  class: 'rgba(255,255,255,.45)', call: 'rgba(255,255,255,.22)',
+  contains: 'rgba(255,255,255,.08)',
+};
+
+// Flow dot colors — mutable, distinct from DIR_PALETTE node colors
+// Lime + Hot Pink are absent from the palette by design
+let FLOW_OUT_COLOR = '#d4ff3e'; // lime  — imports flow (B→A: source flows into you)
+let FLOW_IN_COLOR  = '#ff3eb8'; // pink  — imported-by (A→C: you flow to dependents)
+
+const COLOR_PRESETS = [
+  { name:'Default',   out:'#d4ff3e', in:'#ff3eb8', label:'Lime + Hot Pink' },
+  { name:'Ocean',     out:'#00e5ff', in:'#ff6e6e', label:'Cyan + Coral' },
+  { name:'Sunset',    out:'#ffd700', in:'#c084fc', label:'Gold + Purple' },
+  { name:'Deutan',    out:'#4da6ff', in:'#ffa040', label:'Blue + Orange\n(deuteranopia-safe)' },
+  { name:'Hi-Con',    out:'#ffffff', in:'#ffff00', label:'White + Yellow\n(max contrast)' },
+];
+
+// Load saved colors from localStorage
+try {
+  const saved = JSON.parse(localStorage.getItem('mycelium-flow-colors') || '{}');
+  if (saved.out) FLOW_OUT_COLOR = saved.out;
+  if (saved.in)  FLOW_IN_COLOR  = saved.in;
+} catch {}
+
+// ─── State ─────────────────────────────────────────────────────────────────────
+let allNodes = [], allLinks = [];
+let visNodes = [], visLinks = [];
+let selectedNode = null;
+let simulation, zoom, svg, gMain, gHulls, gLinks, gNodes, gFlow;
+let showImports = true, showCalls = true, showFunctions = false, showClusters = false;
+let zoomLevel = 'files';
+let preflight = new Set();
+let _initialFitDone = false;
+let currentLinkObjs = [];
+let flowRafId = null;
+let flowParticles = [];
+let sidebarCollapsed = false;
+
+let hiddenNodes = new Set();
+try { hiddenNodes = new Set(JSON.parse(localStorage.getItem('mycelium-hidden') || '[]')); } catch {}
+
+// ── New feature state ──────────────────────────────────────────────────────────
+let pinnedNodes = new Set();       // nodes with locked positions
+let pinnedPositions = new Map();   // saved x,y for each pinned node
+let multiSelected = new Set();     // shift-click multi-select
+let subtreeRoot = null;            // active subtree isolation root
+
+try { pinnedNodes = new Set(JSON.parse(localStorage.getItem('mycelium-pinned') || '[]')); } catch {}
+try {
+  const pp = JSON.parse(localStorage.getItem('mycelium-pinned-pos') || '{}');
+  pinnedPositions = new Map(Object.entries(pp));
+} catch {}
+
+// ─── Color system ──────────────────────────────────────────────────────────────
+function applyFlowColors(out, inC, save = true) {
+  FLOW_OUT_COLOR = out;
+  FLOW_IN_COLOR  = inC;
+  const op = document.getElementById('color-flow-out');
+  const ip = document.getElementById('color-flow-in');
+  if (op) op.value = out;
+  if (ip) ip.value = inC;
+  const oh = document.getElementById('color-out-hex');
+  const ih = document.getElementById('color-in-hex');
+  if (oh) oh.textContent = out;
+  if (ih) ih.textContent = inC;
+  // Sync legend dots
+  const od = document.getElementById('legend-flow-out-dot');
+  const id2 = document.getElementById('legend-flow-in-dot');
+  if (od) { od.style.background = out; od.style.boxShadow = `0 0 4px ${out}`; }
+  if (id2){ id2.style.background = inC; id2.style.boxShadow = `0 0 4px ${inC}`; }
+  // Highlight active preset swatch
+  document.querySelectorAll('.color-preset').forEach(el => {
+    el.classList.toggle('active', el.dataset.out === out && el.dataset.in === inC);
+  });
+  // Restart animation if a node is selected
+  if (selectedNode && gFlow) {
+    const connected = currentLinkObjs.filter(l => {
+      const f = l.source?.id ?? l.from, t = l.target?.id ?? l.to;
+      return f === selectedNode.id || t === selectedNode.id;
+    });
+    startFlowAnimation(selectedNode, connected);
+  }
+  if (save) { try { localStorage.setItem('mycelium-flow-colors', JSON.stringify({out, in: inC})); } catch {} }
+}
+
+function resetColors() { applyFlowColors('#d4ff3e', '#ff3eb8'); }
+
+function buildColorPresets() {
+  const wrap = document.getElementById('color-presets');
+  if (!wrap) return;
+  wrap.innerHTML = COLOR_PRESETS.map(p => `
+    <div class="color-preset${p.out === FLOW_OUT_COLOR && p.in === FLOW_IN_COLOR ? ' active' : ''}"
+         data-out="${p.out}" data-in="${p.in}"
+         onclick="applyFlowColors('${p.out}','${p.in}')" title="${p.label}">
+      <div style="display:flex;gap:4px;">
+        <div class="color-swatch" style="background:${p.out};box-shadow:0 0 5px ${p.out}60;"></div>
+        <div class="color-swatch" style="background:${p.in};box-shadow:0 0 5px ${p.in}60;"></div>
+      </div>
+      <div class="color-preset-name">${p.name}</div>
+    </div>`).join('');
+}
+
+function switchModalTab(name) {
+  document.getElementById('modal-panel-filters').style.display    = name === 'filters'    ? 'flex'  : 'none';
+  document.getElementById('modal-panel-appearance').style.display = name === 'appearance' ? 'flex'  : 'none';
+  document.getElementById('modal-tab-filters').classList.toggle('active',    name === 'filters');
+  document.getElementById('modal-tab-appearance').classList.toggle('active', name === 'appearance');
+  if (name === 'appearance') buildColorPresets();
+}
+
+document.getElementById('color-flow-out').addEventListener('input', function() {
+  document.getElementById('color-out-hex').textContent = this.value;
+  applyFlowColors(this.value, FLOW_IN_COLOR);
+});
+document.getElementById('color-flow-in').addEventListener('input', function() {
+  document.getElementById('color-in-hex').textContent = this.value;
+  applyFlowColors(FLOW_OUT_COLOR, this.value);
+});
+
+// ─── Load graph ────────────────────────────────────────────────────────────────
+async function loadGraph() {
+  try {
+    setLoading('Fetching graph…');
+    const r = await fetch(`${API_BASE}/graph`);
+    const data = await r.json();
+    allNodes = data.nodes || [];
+    allLinks = data.edges || [];
+    detectImportCycles();
+    setLoading('Building simulation…');
+    buildVis();
+  } catch (e) {
+    document.getElementById('loading-text').textContent = 'Failed to load graph. Is the server running?';
+  }
+}
+
+// ─── Build visualization ───────────────────────────────────────────────────────
+function buildVis(silent = false) {
+  if (!silent) setLoading('Building graph…');
+  stopFlowAnimation();
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
+
+  computeConnectionCounts();
+
+  visNodes = allNodes.filter(n => {
+    if (hiddenNodes.has(n.id)) return false;
+    if (n.kind === 'file') return true;
+    if (zoomLevel === 'symbols' && showFunctions) {
+      if (['function','class','type','interface'].includes(n.kind))
+        return n.name && n.name.length > 1 && !n.name.includes('anonymous') && !n.name.startsWith('_');
+    }
+    return false;
+  });
+
+  const nodeIds = new Set(visNodes.map(n => n.id));
+  visLinks = allLinks.filter(l => {
+    if (!nodeIds.has(l.from) || !nodeIds.has(l.to)) return false;
+    if (l.kind === 'imports' && !showImports) return false;
+    if (l.kind === 'calls'   && !showCalls)   return false;
+    if (l.kind === 'contains') return zoomLevel === 'symbols' && showFunctions;
+    return true;
+  });
+
+  const fileNodes = visNodes.filter(n => n.kind === 'file');
+  const fnCount = allNodes.filter(n => n.kind === 'function').length;
+  const totalLines = allNodes.filter(n => n.kind === 'file')
+    .reduce((s, n) => s + (n.lineCount ?? n.lines ?? n.loc ?? n.linesOfCode ?? 0), 0);
+
+  document.getElementById('stat-nodes').textContent = fileNodes.length;
+  document.getElementById('stat-edges').textContent = visLinks.length;
+  document.getElementById('stat-fns').textContent   = fnCount;
+  document.getElementById('stat-lines').textContent = totalLines > 0 ? totalLines.toLocaleString() : '–';
+
+  d3.select('#graph-svg').selectAll('*').remove();
+  svg = d3.select('#graph-svg');
+  _initialFitDone = false;
+
+  zoom = d3.zoom()
+    .scaleExtent([0.05, 8])
+    .filter(event => event.type !== 'dblclick')
+    .on('zoom', ({ transform }) => {
+      gMain.attr('transform', transform);
+      updateMinimap(transform, W, H);
+    });
+  svg.call(zoom);
+
+  gMain  = svg.append('g').attr('class','main-group');
+  gHulls = gMain.append('g').attr('class','hulls');
+  gLinks = gMain.append('g').attr('class','links');
+  gFlow  = gMain.append('g').attr('class','flow-layer');
+  gNodes = gMain.append('g').attr('class','nodes');
+
+  const dirGroups = groupByDirectory(fileNodes);
+  const nodeMap   = new Map(visNodes.map(n => [n.id, n]));
+  const linkObjs  = visLinks.map(l => ({
+    ...l,
+    source: nodeMap.get(l.from),
+    target: nodeMap.get(l.to),
+  })).filter(l => l.source && l.target);
+  currentLinkObjs = linkObjs;
+
+  // Restore pinned node positions before simulation starts
+  visNodes.forEach(n => {
+    if (pinnedNodes.has(n.id)) {
+      const pos = pinnedPositions.get(n.id);
+      if (pos) { n.fx = pos.x; n.fy = pos.y; }
+    }
+  });
+
+  simulation = d3.forceSimulation(visNodes)
+    .force('link', d3.forceLink(linkObjs)
+      .id(d => d.id)
+      .distance(d => d.kind === 'contains' ? 40 : d.kind === 'calls' ? 80 : 100)
+      .strength(d => d.kind === 'contains' ? 0.8 : 0.3))
+    .force('charge', d3.forceManyBody()
+      .strength(d => d.kind === 'file' ? -180 : -8)
+      .distanceMax(300))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 8))
+    .force('cluster', clusterForce(dirGroups, 0.08))
+    .alphaDecay(0.02)
+    .on('tick', ticked)
+    .on('end', () => {
+      if (!_initialFitDone) {
+        hideLoading();
+        if (showClusters) renderHulls(dirGroups);
+        fitToScreen();
+        updateDirLegend();
+        _initialFitDone = true;
+      }
+    });
+
+  const link = gLinks.selectAll('.link')
+    .data(linkObjs)
+    .join('line')
+    .attr('class', d => {
+      const inCycle = d.kind === 'imports' && cycleEdgeKeys.has(d.from + '→' + d.to);
+      return `link ${d.kind}-edge${inCycle ? ' cycle-edge' : ''}`;
+    })
+    .attr('stroke-width', d => Math.min(5, 1.4 + Math.log2((d.weight || 1)) * 0.9))
+    .attr('marker-end', d => d.kind === 'calls' ? 'url(#arrow-call)' : null);
+
+  svg.append('defs').html(`
+    <marker id="arrow-call" viewBox="0 -4 8 8" refX="8" refY="0" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,-4L8,0L0,4" fill="${COLORS.call}" opacity="0.6"/>
+    </marker>`);
+
+  const node = gNodes.selectAll('.node')
+    .data(visNodes)
+    .join('g')
+    .attr('class', 'node')
+    .attr('data-id', d => d.id)
+    .call(d3.drag()
+      .clickDistance(8)
+      .on('start', (event, d) => { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (event, d) => { d.fx = event.x; d.fy = event.y; })
+      .on('end',   (event, d) => {
+        if (!event.active) simulation.alphaTarget(0);
+        if (pinnedNodes.has(d.id)) {
+          // Dragging a pinned node moves the pin — update stored position
+          pinnedPositions.set(d.id, { x: d.fx, y: d.fy });
+          _persistPins();
+          // Keep fx/fy set so the node stays where you dropped it
+        } else {
+          d.fx = null; d.fy = null;
+        }
+      }))
+    .on('click', (event, d) => {
+      event.stopPropagation();
+      hideCtxMenu();
+      if (event.shiftKey) {
+        // Multi-select: toggle node in/out
+        if (multiSelected.has(d.id)) {
+          multiSelected.delete(d.id);
+        } else {
+          multiSelected.add(d.id);
+          // Include the previously single-selected node if any
+          if (selectedNode && !multiSelected.has(selectedNode.id)) multiSelected.add(selectedNode.id);
+        }
+        selectedNode = null;
+        if (multiSelected.size === 0) {
+          selectNode(null, linkObjs);
+        } else if (multiSelected.size === 1) {
+          const id = [...multiSelected][0];
+          const nd = allNodes.find(n => n.id === id);
+          if (nd) { centerOnNode(nd); selectNode(nd, linkObjs); multiSelected.clear(); }
+        } else {
+          applyMultiSelect(linkObjs);
+        }
+      } else {
+        multiSelected.clear();
+        centerOnNode(d);
+        selectNode(d, linkObjs);
+      }
+    })
+    .on('dblclick', (event, d) => {
+      event.stopPropagation();
+      expandNeighbors(d);
+    })
+    .on('contextmenu', (event, d) => { event.preventDefault(); event.stopPropagation(); showCtxMenu(event, d); })
+    .on('mouseenter', (event, d) => showTooltip(event, d))
+    .on('mousemove',  (event)    => moveTooltip(event))
+    .on('mouseleave', hideTooltip);
+
+  node.append('circle')
+    .attr('r', d => nodeRadius(d))
+    .attr('fill', d => d.kind === 'file' ? getDirColor(d.id) : (COLORS[d.kind] ?? COLORS.file))
+    .attr('fill-opacity', 0.92)
+    .attr('stroke', d => d.kind === 'file' ? getDirColor(d.id) : (COLORS[d.kind] ?? COLORS.file))
+    .attr('stroke-width', 2)
+    .attr('stroke-opacity', 0.4);
+
+  node.append('text')
+    .attr('dy', d => nodeRadius(d) + 11)
+    .attr('text-anchor', 'middle')
+    .text(d => shortName(d.name || d.id));
+
+  // Pin badge — small "📌" text above pinned nodes
+  node.append('text')
+    .attr('class', 'pin-badge')
+    .attr('dy', d => -nodeRadius(d) - 3)
+    .attr('text-anchor', 'middle')
+    .attr('fill', 'var(--thread-bright)')
+    .style('display', d => pinnedNodes.has(d.id) ? null : 'none')
+    .text('📌');
+
+  // Apply pinned class
+  node.classed('pinned', d => pinnedNodes.has(d.id));
+  node.classed('multi-selected', d => multiSelected.has(d.id));
+
+  // Load-in animation — only on fresh load, not silent rebuilds
+  if (!silent) {
+    gNodes.style('opacity', 0)
+      .transition().duration(550).delay(120)
+      .style('opacity', 1)
+      .on('end', () => gNodes.style('opacity', null));
+    gLinks.style('opacity', 0)
+      .transition().duration(380).delay(320)
+      .style('opacity', 1)
+      .on('end', () => gLinks.style('opacity', null));
+  }
+
+  svg.on('click', () => { hideCtxMenu(); clearMultiSelect(); selectNode(null, linkObjs); });
+
+  // Double-click canvas → fit to screen
+  svg.on('dblclick', (event) => {
+    if (event.target.closest && event.target.closest('.node')) return;
+    fitToScreen();
+  });
+
+  function ticked() {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+    updateMinimapNodes(visNodes);
+    if (selectedNode) positionFlowEndpoints();
+  }
+}
+
+// ─── Centering ─────────────────────────────────────────────────────────────────
+function centerOnNode(d) {
+  if (d.x === undefined) return;
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
+  const s = d3.zoomTransform(svg.node()).k;
+  svg.transition().duration(450).ease(d3.easeCubicOut).call(
+    zoom.transform,
+    d3.zoomIdentity.translate(W / 2 - d.x * s, H / 2 - d.y * s).scale(s)
+  );
+}
+
+// ─── Context menu ──────────────────────────────────────────────────────────────
+let _ctxNode = null;
+function showCtxMenu(event, d) {
+  _ctxNode = d;
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = (event.clientX + 2) + 'px';
+  menu.style.top  = (event.clientY + 2) + 'px';
+}
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
+document.addEventListener('click', hideCtxMenu);
+
+document.getElementById('ctx-hide-file').addEventListener('click', () => {
+  if (!_ctxNode) return;
+  hideNodeInstant(_ctxNode.id);
+  hideCtxMenu();
+});
+document.getElementById('ctx-hide-dir').addEventListener('click', () => {
+  if (!_ctxNode) return;
+  const parts = _ctxNode.id.split('/');
+  if (parts.length <= 1) {
+    hideNodeInstant(_ctxNode.id);
+  } else {
+    const dir = parts.slice(0, -1).join('/');
+    const toHide = allNodes.filter(n => n.id.startsWith(dir + '/') || n.id === dir).map(n => n.id);
+    toHide.forEach(id => hideNodeInstant(id, true));
+    persistHidden();
+    updateHiddenRow();
+  }
+  hideCtxMenu();
+});
+document.getElementById('ctx-focus-node').addEventListener('click', () => {
+  if (_ctxNode) focusNode(_ctxNode.id);
+  hideCtxMenu();
+});
+
+document.getElementById('ctx-pin-node').addEventListener('click', () => {
+  if (!_ctxNode) return;
+  const id = _ctxNode.id;
+  if (pinnedNodes.has(id)) {
+    unpinNode(id);
+  } else {
+    pinNode(id);
+  }
+  // Update context menu label for next time
+  document.getElementById('ctx-pin-node').textContent = pinnedNodes.has(id) ? '📌 Unpin node' : '📌 Pin node';
+  hideCtxMenu();
+});
+
+document.getElementById('ctx-isolate-subtree').addEventListener('click', () => {
+  if (!_ctxNode) return;
+  isolateSubtree(_ctxNode.id);
+  hideCtxMenu();
+});
+
+// Update pin label when context menu opens
+const _origShowCtxMenu = showCtxMenu;
+function showCtxMenu(event, d) {
+  _ctxNode = d;
+  document.getElementById('ctx-pin-node').textContent =
+    pinnedNodes.has(d.id) ? '📌 Unpin node' : '📌 Pin node';
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = (event.clientX + 2) + 'px';
+  menu.style.top  = (event.clientY + 2) + 'px';
+}
+
+function persistHidden() { try { localStorage.setItem('mycelium-hidden', JSON.stringify([...hiddenNodes])); } catch {} }
+
+function hideNodeInstant(nodeId, batch = false) {
+  hiddenNodes.add(nodeId);
+  visNodes = visNodes.filter(n => n.id !== nodeId);
+  visLinks = visLinks.filter(l => l.from !== nodeId && l.to !== nodeId);
+  currentLinkObjs = currentLinkObjs.filter(l =>
+    (l.source?.id ?? l.from) !== nodeId && (l.target?.id ?? l.to) !== nodeId
+  );
+  if (gNodes) gNodes.selectAll('.node').filter(d => d.id === nodeId).remove();
+  if (gLinks) gLinks.selectAll('.link').filter(d =>
+    (d.source?.id ?? d.from) === nodeId || (d.target?.id ?? d.to) === nodeId
+  ).remove();
+  if (simulation) {
+    simulation.nodes(visNodes);
+    const lf = simulation.force('link');
+    if (lf) lf.links(currentLinkObjs);
+    simulation.alpha(0.05).restart();
+  }
+  document.getElementById('stat-nodes').textContent = visNodes.filter(n => n.kind === 'file').length;
+  document.getElementById('stat-edges').textContent = visLinks.length;
+  if (selectedNode?.id === nodeId) { selectedNode = null; stopFlowAnimation(); renderNodeInfo(null, []); }
+  if (!batch) { persistHidden(); updateHiddenRow(); }
+}
+
+function unhideNode(nodeId) { hiddenNodes.delete(nodeId); persistHidden(); updateHiddenRow(); silentRebuild(); }
+function unhideAll() { hiddenNodes.clear(); persistHidden(); updateHiddenRow(); silentRebuild(); }
+function silentRebuild() { if (simulation) simulation.stop(); buildVis(true); }
+
+let _hiddenListOpen = false;
+function toggleHiddenList() {
+  _hiddenListOpen = !_hiddenListOpen;
+  document.getElementById('hidden-list').style.display = _hiddenListOpen ? 'block' : 'none';
+  if (_hiddenListOpen) renderHiddenList();
+}
+function renderHiddenList() {
+  const el = document.getElementById('hidden-list');
+  if (!hiddenNodes.size) { el.innerHTML = ''; return; }
+  el.innerHTML = [...hiddenNodes].map(id => {
+    const short = id.split('/').pop();
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;gap:6px;">
+      <span style="font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;" title="${id}">${short}</span>
+      <button onclick="unhideNode('${id}')" style="background:none;border:1px solid var(--border);color:var(--thread-bright);cursor:pointer;font-family:inherit;font-size:9px;padding:1px 6px;flex-shrink:0;">↩</button>
+    </div>`;
+  }).join('');
+}
+function updateHiddenRow() {
+  const count = hiddenNodes.size;
+  document.getElementById('hidden-row').style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('hidden-count').textContent = count + ' hidden';
+  if (_hiddenListOpen) renderHiddenList();
+}
+
+// ─── Cluster force ─────────────────────────────────────────────────────────────
+function clusterForce(groups, strength) {
+  return function(alpha) {
+    for (const [dir, nodes] of Object.entries(groups)) {
+      if (nodes.length < 2) continue;
+      let cx = 0, cy = 0;
+      for (const n of nodes) { cx += n.x || 0; cy += n.y || 0; }
+      cx /= nodes.length; cy /= nodes.length;
+      for (const n of nodes) {
+        n.vx = (n.vx || 0) + (cx - n.x) * strength * alpha;
+        n.vy = (n.vy || 0) + (cy - n.y) * strength * alpha;
+      }
+    }
+  };
+}
+
+// ─── Hull rendering ────────────────────────────────────────────────────────────
+function renderHulls(dirGroups) {
+  gHulls.selectAll('*').remove();
+  for (const [dir, nodes] of Object.entries(dirGroups)) {
+    if (nodes.length < 3) continue;
+    const pts = nodes.map(n => [n.x, n.y]);
+    const hull = d3.polygonHull(pts);
+    if (!hull) continue;
+    const cen = d3.polygonCentroid(hull);
+    const exp = hull.map(([px, py]) => {
+      const dx = px - cen[0], dy = py - cen[1];
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      return [px + dx / dist * 30, py + dy / dist * 30];
+    });
+    const hc = getDirColor(nodes[0]?.id ?? dir);
+    gHulls.append('path').attr('class','hull').attr('d', `M${exp.join('L')}Z`).attr('stroke', hc);
+    gHulls.append('text').attr('class','cluster-label')
+      .attr('x', cen[0])
+      .attr('y', cen[1] - (Math.max(...nodes.map(n => Math.abs(n.y - cen[1]))) + 40))
+      .attr('text-anchor', 'middle').attr('fill', hc).text(dir);
+  }
+}
+
+// ─── Node selection ────────────────────────────────────────────────────────────
+function selectNode(nodeData, linkObjs) {
+  selectedNode = nodeData;
+  stopFlowAnimation();
+  if (!nodeData) {
+    d3.selectAll('.node').classed('selected highlighted dimmed', false);
+    d3.selectAll('.link').classed('highlighted dimmed', false);
+    d3.selectAll('.node circle').attr('fill-opacity', 0.92);
+    renderNodeInfo(null, linkObjs);
+    applyDirIsolation();
+    return;
+  }
+  const connectedIds = new Set([nodeData.id]);
+  const connectedLinks = new Set();
+  for (const l of linkObjs) {
+    const fromId = l.source?.id ?? l.from;
+    const toId   = l.target?.id ?? l.to;
+    if (fromId === nodeData.id || toId === nodeData.id) {
+      connectedIds.add(fromId);
+      connectedIds.add(toId);
+      connectedLinks.add(l);
+    }
+  }
+  d3.selectAll('.node')
+    .classed('selected',    d => d.id === nodeData.id)
+    .classed('highlighted', d => connectedIds.has(d.id))
+    .classed('dimmed',      d => !connectedIds.has(d.id));
+  d3.selectAll('.link')
+    .classed('highlighted', l => connectedLinks.has(l))
+    .classed('dimmed',      l => !connectedLinks.has(l));
+  renderNodeInfo(nodeData, linkObjs);
+  startFlowAnimation(nodeData, [...connectedLinks]);
+}
+
+// ─── Flow animation ────────────────────────────────────────────────────────────
+// Import edges are REVERSED: if A imports B, the dot travels B→A
+// (dependency source flows INTO the importer, like water flowing to a root)
+// Called-by is untouched: call signal flows from caller to callee naturally
+function startFlowAnimation(nodeData, links) {
+  stopFlowAnimation();
+  if (!gFlow || !links.length) return;
+  flowParticles = [];
+  links.forEach(l => {
+    const fromId  = l.source?.id ?? l.from;
+    const outgoing = fromId === nodeData.id;
+    const color   = outgoing ? FLOW_OUT_COLOR : FLOW_IN_COLOR;
+    const speed   = l.kind === 'calls' ? 0.55 : 0.4;
+    const reverse = l.kind === 'imports'; // B→A direction for imports
+    const el = gFlow.append('circle')
+      .attr('class', 'flow-dot')
+      .attr('r', l.kind === 'calls' ? 2.6 : 3)
+      .attr('fill', color)
+      .style('filter', `drop-shadow(0 0 3px ${color})`);
+    flowParticles.push({ el, link: l, outgoing, t: Math.random(), speed, reverse });
+  });
+  let lastTs = null;
+  function tick(ts) {
+    if (lastTs == null) lastTs = ts;
+    const dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+    for (const p of flowParticles) { p.t += p.speed * dt; if (p.t > 1) p.t -= 1; }
+    positionFlowEndpoints();
+    flowRafId = requestAnimationFrame(tick);
+  }
+  flowRafId = requestAnimationFrame(tick);
+}
+
+function positionFlowEndpoints() {
+  for (const p of flowParticles) {
+    const startNode = p.reverse ? p.link.target : p.link.source;
+    const endNode   = p.reverse ? p.link.source : p.link.target;
+    const sx = startNode?.x, sy = startNode?.y;
+    const tx = endNode?.x,   ty = endNode?.y;
+    if (sx === undefined || tx === undefined) continue;
+    p.el.attr('cx', sx + (tx - sx) * p.t).attr('cy', sy + (ty - sy) * p.t);
+  }
+}
+
+function stopFlowAnimation() {
+  if (flowRafId) { cancelAnimationFrame(flowRafId); flowRafId = null; }
+  if (gFlow) gFlow.selectAll('.flow-dot').remove();
+  flowParticles = [];
+}
+
+// ─── dep-list with see-more ────────────────────────────────────────────────────
+let _depSectionCounter = 0;
+
+function depList(items, cssClass, labelText, key) {
+  if (!items.length) return '';
+  const INITIAL = 12;
+  const sid = 'dep-' + (++_depSectionCounter);
+  function renderItem(l) {
+    const id = key === 'to' ? (l.target?.id ?? l.to) : (l.source?.id ?? l.from);
+    const safe = id.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return `<div class="dep-item ${cssClass}" onclick="focusNode('${safe}')" title="${id}">${id.split('/').pop()}</div>`;
+  }
+  const visible = items.slice(0, INITIAL).map(renderItem).join('');
+  const hidden  = items.slice(INITIAL);
+  const moreBtn = hidden.length ? `
+    <div id="${sid}-more" style="display:none;">${hidden.map(renderItem).join('')}</div>
+    <div class="dep-item dep-more" id="${sid}-btn" onclick="toggleDepSection('${sid}')">+ ${hidden.length} more…</div>` : '';
+  return `<div class="section-title">${labelText} (${items.length})</div><div class="dep-list">${visible}${moreBtn}</div>`;
+}
+
+function toggleDepSection(sid) {
+  const more = document.getElementById(sid + '-more');
+  const btn  = document.getElementById(sid + '-btn');
+  if (!more || !btn) return;
+  const opening = more.style.display === 'none';
+  more.style.display = opening ? 'block' : 'none';
+  btn.textContent = opening ? '▲ Show less' : `+ ${more.querySelectorAll('.dep-item').length} more…`;
+}
+
+// ─── Node info panel ───────────────────────────────────────────────────────────
+function renderNodeInfo(nodeData, linkObjs) {
+  _depSectionCounter = 0;
+  const panel = document.getElementById('node-info');
+  if (!nodeData) {
+    panel.innerHTML = '<div class="node-info-empty" style="line-height:1.8">Click any dot to see<br>what it imports, exports,<br>and connects to<br><br><span style="font-size:10px;opacity:.6">Right-click to hide a file or folder</span></div>';
+    return;
+  }
+  const imports    = linkObjs.filter(l => (l.source?.id ?? l.from) === nodeData.id && l.kind === 'imports');
+  const importedBy = linkObjs.filter(l => (l.target?.id ?? l.to)   === nodeData.id && l.kind === 'imports');
+  const calls      = linkObjs.filter(l => (l.source?.id ?? l.from) === nodeData.id && l.kind === 'calls');
+  const calledBy   = linkObjs.filter(l => (l.target?.id ?? l.to)   === nodeData.id && l.kind === 'calls');
+  const tags = (nodeData.tags || []).map(t =>
+    `<span class="tag" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">` + t + `</span>`
+  ).join('');
+  // Try all known field names for line count
+  const lc = nodeData.lineCount ?? nodeData.lines ?? nodeData.loc ?? nodeData.linesOfCode ?? nodeData.linecount;
+  panel.innerHTML = `
+    <div class="node-detail">
+      <div class="node-kind-badge kind-${nodeData.kind}">${nodeData.kind}</div>
+      <div class="node-name">${nodeData.name || nodeData.id}</div>
+      <div class="node-description"
+        data-raw-desc="${nodeData.description ? nodeData.description.replace(/`/g,'\\`').replace(/'/g,"\\'") : ''}"
+        onclick="startDescriptionEdit(this, '${nodeData.id.replace(/'/g,"\\'")}')"
+        title="Click to edit">${
+          nodeData.description
+            ? nodeData.description
+            : '<span style=\'color:var(--text-faint);font-style:italic;\'>No description — click to add one</span>'
+        }</div>
+      ${tags ? `<div class="tags-wrap">${tags}</div>` : ''}
+      <div class="section-title">Stats</div>
+      <div class="stat-row"><span>Lines</span><span class="stat-val">${lc != null ? lc : '–'}</span></div>
+      <div class="stat-row"><span>Imports</span><span class="stat-val" style="color:${FLOW_OUT_COLOR}">${imports.length}</span></div>
+      <div class="stat-row"><span>Imported by</span><span class="stat-val" style="color:${FLOW_IN_COLOR}">${importedBy.length}</span></div>
+      ${calls.length || calledBy.length ? `
+      <div class="stat-row"><span>Calls</span><span class="stat-val" style="color:${FLOW_OUT_COLOR}">${calls.length}</span></div>
+      <div class="stat-row"><span>Called by</span><span class="stat-val" style="color:${FLOW_IN_COLOR}">${calledBy.length}</span></div>` : ''}
+      <div style="margin-top:12px;display:flex;gap:4px;flex-wrap:wrap;">
+        <button onclick="copyNodePath('${nodeData.id}', this)" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:11px;padding:4px 8px;flex:1;">⧉ Path</button>
+        <button onclick="hideNodeFromPanel('${nodeData.id}')" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:11px;padding:4px 8px;flex:1;">👁 Hide</button>
+        <button class="md-copy-btn" onclick="copyAsMarkdown(allNodes.find(n=>n.id==='${nodeData.id.replace(/'/g,"\\'")}'), currentLinkObjs.filter(l=>(l.source?.id??l.from)==='${nodeData.id.replace(/'/g,"\\'")}' && l.kind==='imports'), currentLinkObjs.filter(l=>(l.target?.id??l.to)==='${nodeData.id.replace(/'/g,"\\'")}' && l.kind==='imports'), this)">{ } MD</button>
+      </div>
+      ${depList(imports,    'dep-import',   'Imports',      'to')}
+      ${depList(importedBy, 'dep-import',   'Imported by',  'from')}
+      ${depList(calls,      'dep-call',     'Calls',        'to')}
+      ${depList(calledBy,   'dep-calledby', 'Called by',    'from')}
+    </div>`;
+}
+
+function hideNodeFromPanel(id) { hideNodeInstant(id); }
+
+async function copyNodePath(id, btn) {
+  try { await navigator.clipboard.writeText(id); } catch {}
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.textContent = original; }, 1200);
+  }
+}
+
+// ─── Tag filtering ─────────────────────────────────────────────────────────────
+function filterByTag(tag) {
+  const matched = new Set(
+    allNodes.filter(n => !hiddenNodes.has(n.id) && (n.tags || []).includes(tag)).map(n => n.id)
+  );
+  d3.selectAll('.node')
+    .classed('highlighted', d => matched.has(d.id))
+    .classed('dimmed',      d => !matched.has(d.id));
+  document.getElementById('search').value = tag;
+}
+
+// ─── Focus node ────────────────────────────────────────────────────────────────
+function focusNode(nodeId) {
+  const nodeData = allNodes.find(n => n.id === nodeId);
+  if (!nodeData || hiddenNodes.has(nodeId)) return;
+  const linkObjs = visLinks.map(l => ({
+    ...l,
+    source: allNodes.find(n => n.id === l.from),
+    target: allNodes.find(n => n.id === l.to),
+  })).filter(l => l.source && l.target);
+  if (nodeData.x !== undefined) centerOnNode(nodeData);
+  selectNode(nodeData, linkObjs);
+}
+
+// ─── Search ────────────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  if (!q) { d3.selectAll('.node').classed('highlighted dimmed', false); return; }
+  const matched = new Set(allNodes.filter(n => !hiddenNodes.has(n.id) && (
+    (n.id || '').toLowerCase().includes(q) ||
+    (n.name || '').toLowerCase().includes(q) ||
+    (n.description || '').toLowerCase().includes(q) ||
+    (n.tags || []).some(t => t.toLowerCase().includes(q))
+  )).map(n => n.id));
+  d3.selectAll('.node')
+    .classed('highlighted', d => matched.has(d.id))
+    .classed('dimmed',      d => !matched.has(d.id));
+});
+
+// ─── Preflight ─────────────────────────────────────────────────────────────────
+document.getElementById('task-submit').addEventListener('click', async () => {
+  const task = document.getElementById('task-input').value.trim();
+  if (!task) return;
+  const btn = document.getElementById('task-submit');
+  btn.textContent = '…';
+  try {
+    const r = await fetch(`${API_BASE}/preflight?task=${encodeURIComponent(task)}`);
+    const data = await r.json();
+    const fileIds = new Set((data.files || []).map(f => f.nodeId || f.id));
+    preflight = fileIds;
+    d3.selectAll('.node')
+      .classed('highlighted', d => fileIds.has(d.id))
+      .classed('dimmed',      d => !fileIds.has(d.id));
+    d3.selectAll('.link').classed('dimmed', l => {
+      const from = l.source?.id ?? l.from, to = l.target?.id ?? l.to;
+      return !fileIds.has(from) && !fileIds.has(to);
+    });
+    const panel = document.getElementById('node-info');
+    const saved = data.tokensSaved ?? 0;
+    panel.innerHTML = `
+      <div class="node-detail">
+        <div class="node-kind-badge kind-file">Preflight</div>
+        <div class="node-name">"${task}"</div>
+        <div class="node-description">${fileIds.size} files · ~${saved} tokens saved</div>
+        <div class="section-title">Relevant Files</div>
+        <div class="dep-list">
+          ${(data.files || []).map(f => `
+            <div class="dep-item dep-import" onclick="focusNode('${(f.nodeId || f.id).replace(/'/g,"\\'")}')">
+              <span class="dep-label">${f.reason || ''} · ${Math.round((f.score || 0) * 100)}% match</span>
+              ${(f.nodeId || f.id).split('/').pop()}
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  } catch (e) { console.error('Preflight failed:', e); }
+  btn.textContent = '→';
+});
+document.getElementById('task-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('task-submit').click();
+});
+
+// ─── Toggle controls ───────────────────────────────────────────────────────────
+document.getElementById('toggle-imports').addEventListener('click', function() {
+  showImports = !showImports;
+  this.classList.toggle('active', showImports);
+  gLinks.selectAll('.imports-edge').transition().duration(150)
+    .style('opacity', showImports ? null : 0)
+    .style('pointer-events', showImports ? null : 'none');
+});
+
+document.getElementById('toggle-calls').addEventListener('click', function() {
+  showCalls = !showCalls;
+  this.classList.toggle('active', showCalls);
+  gLinks.selectAll('.calls-edge').transition().duration(150)
+    .style('opacity', showCalls ? null : 0)
+    .style('pointer-events', showCalls ? null : 'none');
+});
+
+document.getElementById('toggle-functions').addEventListener('click', function() {
+  showFunctions = !showFunctions;
+  this.classList.toggle('active', showFunctions);
+  if (zoomLevel === 'symbols') _rebuildKeepPositions();
+  // In files mode this is a no-op; function nodes don't appear at file zoom
+});
+
+document.getElementById('toggle-clusters').addEventListener('click', function() {
+  showClusters = !showClusters;
+  this.classList.toggle('active', showClusters);
+  if (showClusters) {
+    renderHulls(groupByDirectory(visNodes.filter(n => n.kind === 'file')));
+  } else {
+    gHulls.selectAll('*').remove();
+  }
+});
+
+function _rebuildKeepPositions() {
+  const saved = new Map();
+  allNodes.forEach(n => { if (n.x !== undefined) saved.set(n.id, { x: n.x, y: n.y }); });
+  rebuildVis();
+  requestAnimationFrame(() => {
+    allNodes.forEach(n => { const s = saved.get(n.id); if (s) { n.x = s.x; n.y = s.y; } });
+  });
+}
+
+document.getElementById('zoom-files').addEventListener('click', function() {
+  if (zoomLevel === 'symbols') {
+    allNodes.forEach(n => { n.x = undefined; n.y = undefined; n.vx = 0; n.vy = 0; });
+    _initialFitDone = false;
+  }
+  zoomLevel = 'files';
+  this.classList.add('active');
+  document.getElementById('zoom-symbols').classList.remove('active');
+  rebuildVis();
+});
+
+document.getElementById('zoom-symbols').addEventListener('click', function() {
+  zoomLevel = 'symbols';
+  this.classList.add('active');
+  document.getElementById('zoom-files').classList.remove('active');
+  rebuildVis();
+});
+
+function rebuildVis() {
+  if (simulation) simulation.stop();
+  const reselectId = selectedNode?.id ?? null;
+  buildVis(true); // silent — no loading overlay on user-triggered rebuilds
+  if (reselectId) {
+    requestAnimationFrame(() => {
+      const stillThere = visNodes.find(n => n.id === reselectId);
+      if (stillThere) selectNode(stillThere, currentLinkObjs);
+    });
+  }
+}
+
+
+// ─── Pin / Unpin ──────────────────────────────────────────────────────────────
+function pinNode(id) {
+  pinnedNodes.add(id);
+  const nd = visNodes.find(n => n.id === id);
+  if (nd) {
+    nd.fx = nd.x; nd.fy = nd.y;
+    pinnedPositions.set(id, { x: nd.x, y: nd.y });
+  }
+  // Apply visual class + show badge
+  gNodes.selectAll('.node').filter(d => d.id === id)
+    .classed('pinned', true)
+    .select('.pin-badge').style('display', null);
+  _persistPins();
+}
+
+function unpinNode(id) {
+  pinnedNodes.delete(id);
+  pinnedPositions.delete(id);
+  const nd = visNodes.find(n => n.id === id);
+  if (nd) { nd.fx = null; nd.fy = null; }
+  gNodes.selectAll('.node').filter(d => d.id === id)
+    .classed('pinned', false)
+    .select('.pin-badge').style('display', 'none');
+  if (simulation) simulation.alpha(0.05).restart();
+  _persistPins();
+}
+
+function _persistPins() {
+  try {
+    localStorage.setItem('mycelium-pinned', JSON.stringify([...pinnedNodes]));
+    const pos = {};
+    pinnedPositions.forEach((v, k) => { pos[k] = v; });
+    localStorage.setItem('mycelium-pinned-pos', JSON.stringify(pos));
+  } catch {}
+}
+
+// ─── Multi-select ─────────────────────────────────────────────────────────────
+function applyMultiSelect(linkObjs) {
+  if (!linkObjs) linkObjs = currentLinkObjs;
+  // Collect all connections for selected set
+  const connectedIds = new Set(multiSelected);
+  const connectedLinks = new Set();
+  for (const l of linkObjs) {
+    const f = l.source?.id ?? l.from;
+    const t = l.target?.id ?? l.to;
+    if (multiSelected.has(f) || multiSelected.has(t)) {
+      connectedIds.add(f); connectedIds.add(t);
+      connectedLinks.add(l);
+    }
+  }
+  d3.selectAll('.node')
+    .classed('selected',       d => false)
+    .classed('multi-selected', d => multiSelected.has(d.id))
+    .classed('highlighted',    d => !multiSelected.has(d.id) && connectedIds.has(d.id))
+    .classed('dimmed',         d => !connectedIds.has(d.id));
+  d3.selectAll('.link')
+    .classed('highlighted', l => connectedLinks.has(l))
+    .classed('dimmed',      l => !connectedLinks.has(l));
+  stopFlowAnimation();
+  renderMultiSelectInfo(linkObjs);
+}
+
+function clearMultiSelect() {
+  multiSelected.clear();
+  d3.selectAll('.node').classed('multi-selected', false);
+}
+
+function renderMultiSelectInfo(linkObjs) {
+  const panel = document.getElementById('node-info');
+  const ids = [...multiSelected];
+  if (ids.length === 0) return;
+
+  // Per-node import/importedBy sets
+  const importSets = ids.map(id =>
+    new Set(linkObjs.filter(l => (l.source?.id ?? l.from) === id && l.kind === 'imports')
+      .map(l => l.target?.id ?? l.to))
+  );
+  const importedBySets = ids.map(id =>
+    new Set(linkObjs.filter(l => (l.target?.id ?? l.to) === id && l.kind === 'imports')
+      .map(l => l.source?.id ?? l.from))
+  );
+
+  // Common imports (appear in ALL selected)
+  const commonImports = importSets.length
+    ? [...importSets[0]].filter(id => importSets.every(s => s.has(id)))
+    : [];
+  // Union of all imports / imported-by
+  const allImports    = [...new Set(importSets.flatMap(s => [...s]))];
+  const allImportedBy = [...new Set(importedBySets.flatMap(s => [...s]))];
+
+  const renderSmallList = (items, color) => items.length === 0
+    ? '<div style="font-size:10px;color:var(--text-faint);padding:2px 0">None</div>'
+    : items.map(id => `<div class="dep-item dep-import" style="border-left-color:${color}" onclick="focusNode('${id.replace(/'/g,"\\'")}');" title="${id}">${id.split('/').pop()}</div>`).join('');
+
+  panel.innerHTML = `
+    <div class="node-detail">
+      <div class="node-kind-badge kind-file">${ids.length} files selected</div>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text-dim);">
+        ${ids.map(id => `<div style="font-size:10px;margin-bottom:2px;">· ${id.split('/').pop()}</div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">
+        Shift+click to add/remove files. Click any node normally to clear.
+      </div>
+      <div class="section-title">Common Imports (${commonImports.length})</div>
+      <div class="dep-list">${renderSmallList(commonImports.slice(0,8), 'var(--import-edge)')}</div>
+      <div class="section-title">All Imports (${allImports.length})</div>
+      <div class="dep-list">${renderSmallList(allImports.slice(0,8), 'var(--import-edge)')}</div>
+      <div class="section-title">All Imported By (${allImportedBy.length})</div>
+      <div class="dep-list">${renderSmallList(allImportedBy.slice(0,8), 'var(--imported-edge)')}</div>
+    </div>`;
+}
+
+// ─── Expand neighbors ripple ──────────────────────────────────────────────────
+function expandNeighbors(nodeData) {
+  // Pulse source node
+  gNodes.selectAll('.node').filter(d => d.id === nodeData.id)
+    .select('circle')
+    .transition().duration(130)
+    .attr('r', nodeRadius(nodeData) * 1.45)
+    .transition().duration(250)
+    .attr('r', nodeRadius(nodeData));
+
+  // Build BFS rings (up to 3 deep, both directions)
+  const rings = [];
+  const visited = new Set([nodeData.id]);
+  let frontier = new Set([nodeData.id]);
+  for (let depth = 0; depth < 3; depth++) {
+    const next = new Set();
+    for (const id of frontier) {
+      for (const l of currentLinkObjs) {
+        const f = l.source?.id ?? l.from;
+        const t = l.target?.id ?? l.to;
+        if (f === id && !visited.has(t)) { next.add(t); visited.add(t); }
+        if (t === id && !visited.has(f)) { next.add(f); visited.add(f); }
+      }
+    }
+    if (next.size === 0) break;
+    rings.push([...next]);
+    frontier = next;
+  }
+
+  // Cascade ripple: each ring animates 280ms after the previous
+  const ringColors = [FLOW_OUT_COLOR, '#ffd700', '#ff8c42'];
+  rings.forEach((ring, ri) => {
+    setTimeout(() => {
+      gNodes.selectAll('.node').filter(d => ring.includes(d.id))
+        .select('circle')
+        .each(function(d) {
+          const r = nodeRadius(d);
+          d3.select(this)
+            .transition().duration(180)
+            .attr('r', r * 1.28)
+            .attr('stroke', ringColors[ri] || ringColors[2])
+            .attr('stroke-width', 3).attr('stroke-opacity', 1)
+            .transition().duration(650)
+            .attr('r', r)
+            .attr('stroke', getDirColor(d.id))
+            .attr('stroke-width', 2).attr('stroke-opacity', 0.4);
+        });
+    }, ri * 280);
+  });
+}
+
+// ─── Isolate subtree ──────────────────────────────────────────────────────────
+function isolateSubtree(nodeId) {
+  subtreeRoot = nodeId;
+  // BFS both directions
+  const reachable = new Set([nodeId]);
+  const queue = [nodeId];
+  while (queue.length) {
+    const id = queue.shift();
+    for (const l of allLinks) {
+      const f = l.from, t = l.to;
+      if (f === id && !reachable.has(t)) { reachable.add(t); queue.push(t); }
+      if (t === id && !reachable.has(f)) { reachable.add(f); queue.push(f); }
+    }
+  }
+  d3.selectAll('.node')
+    .classed('highlighted', d => reachable.has(d.id))
+    .classed('dimmed',      d => !reachable.has(d.id));
+  d3.selectAll('.link')
+    .classed('dimmed', l => !reachable.has(l.source?.id ?? l.from) && !reachable.has(l.target?.id ?? l.to));
+  const banner = document.getElementById('subtree-banner');
+  document.getElementById('subtree-root-name').textContent = nodeId.split('/').pop();
+  banner.style.display = 'flex';
+}
+
+function clearSubtreeIsolation() {
+  subtreeRoot = null;
+  d3.selectAll('.node').classed('highlighted dimmed', false);
+  d3.selectAll('.link').classed('highlighted dimmed', false);
+  document.getElementById('subtree-banner').style.display = 'none';
+  if (selectedNode) selectNode(selectedNode, currentLinkObjs);
+}
+
+// ─── Copy as markdown ─────────────────────────────────────────────────────────
+async function copyAsMarkdown(nodeData, imports, importedBy, btnEl) {
+  const lc = nodeData.lineCount ?? nodeData.lines ?? nodeData.loc ?? nodeData.linesOfCode;
+  const tags = (nodeData.tags || []).map(t => `\`${t}\``).join(', ');
+  let md = `## \`${nodeData.id}\`\n`;
+  md += `**${nodeData.kind}**${lc != null ? ` · ${lc} lines` : ''}\n\n`;
+  if (nodeData.description) md += `> ${nodeData.description}\n\n`;
+  if (tags) md += `**Tags:** ${tags}\n\n`;
+  if (imports.length) {
+    md += `**Imports (${imports.length}):**\n`;
+    imports.forEach(l => { md += `- \`${l.target?.id ?? l.to}\`\n`; });
+    md += '\n';
+  }
+  if (importedBy.length) {
+    md += `**Imported by (${importedBy.length}):**\n`;
+    importedBy.forEach(l => { md += `- \`${l.source?.id ?? l.from}\`\n`; });
+  }
+  try { await navigator.clipboard.writeText(md); } catch {}
+  if (btnEl) {
+    const orig = btnEl.textContent;
+    btnEl.textContent = '✓ Markdown';
+    setTimeout(() => { btnEl.textContent = orig; }, 1400);
+  }
+}
+
+// ─── Inline description editing ───────────────────────────────────────────────
+function startDescriptionEdit(el, nodeId) {
+  if (el.querySelector('textarea')) return; // already editing
+  const currentText = el.dataset.rawDesc || '';
+  el.innerHTML = '';
+
+  const ta = document.createElement('textarea');
+  ta.className = 'desc-textarea';
+  ta.value = currentText;
+  ta.placeholder = 'Describe what this file does…';
+
+  const row = document.createElement('div');
+  row.className = 'desc-save-row';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'desc-save-btn'; saveBtn.textContent = 'Save';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'desc-cancel-btn'; cancelBtn.textContent = 'Cancel';
+
+  const status = document.createElement('span');
+  status.className = 'desc-status';
+
+  row.append(saveBtn, cancelBtn, status);
+  el.append(ta, row);
+  ta.focus();
+
+  const save = async () => {
+    const newDesc = ta.value.trim();
+    // Update in allNodes immediately
+    const node = allNodes.find(n => n.id === nodeId);
+    if (node) node.description = newDesc;
+    el.innerHTML = newDesc
+      ? `<span>${newDesc}</span>`
+      : `<span style="color:var(--text-faint);font-style:italic;">No description — click to add one</span>`;
+    el.dataset.rawDesc = newDesc;
+    // Try to POST to server
+    try {
+      const res = await fetch(`${API_BASE}/describe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodeId, description: newDesc }),
+      });
+      if (!res.ok) throw new Error('not ok');
+      el.insertAdjacentHTML('beforeend', '<span style="color:#7ECBA1;font-size:10px;margin-left:6px;">✓ saved</span>');
+      setTimeout(() => el.querySelector('[style*="7ECBA1"]')?.remove(), 2000);
+    } catch {
+      el.insertAdjacentHTML('beforeend', '<span style="color:var(--text-faint);font-size:10px;margin-left:6px;">local only</span>');
+      setTimeout(() => el.querySelector('[style*="local only"]')?.remove(), 2500);
+    }
+  };
+
+  saveBtn.onclick = save;
+  cancelBtn.onclick = () => {
+    el.innerHTML = currentText
+      ? `<span>${currentText}</span>`
+      : `<span style="color:var(--text-faint);font-style:italic;">No description — click to add one</span>`;
+    el.dataset.rawDesc = currentText;
+  };
+  ta.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); save(); }
+    if (e.key === 'Escape') cancelBtn.click();
+  });
+}
+
+// ─── Sidebar collapse — position:fixed, JS-managed left ───────────────────────
+function setSidebarCollapsed(collapsed) {
+  sidebarCollapsed = collapsed;
+  const sidebar     = document.getElementById('sidebar');
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  sidebar.classList.toggle('collapsed', collapsed);
+  collapseBtn.textContent = collapsed ? '›' : '‹';
+  collapseBtn.title       = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  collapseBtn.style.left  = collapsed ? '0px' : '340px';
+  setTimeout(() => { if (selectedNode) centerOnNode(selectedNode); }, 340);
+}
+document.getElementById('sidebar-collapse-btn').addEventListener('click', () => setSidebarCollapsed(!sidebarCollapsed));
+
+// ─── Zoom controls ─────────────────────────────────────────────────────────────
+document.getElementById('btn-zoom-in').onclick  = () => svg.transition().duration(300).call(zoom.scaleBy, 1.5);
+document.getElementById('btn-zoom-out').onclick = () => svg.transition().duration(300).call(zoom.scaleBy, 0.667);
+document.getElementById('btn-zoom-fit').onclick = fitToScreen;
+
+function fitToScreen() {
+  if (!visNodes.length) return;
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const n of visNodes) {
+    if (n.x < minX) minX = n.x; if (n.y < minY) minY = n.y;
+    if (n.x > maxX) maxX = n.x; if (n.y > maxY) maxY = n.y;
+  }
+  const pad = 60;
+  const scale = Math.min((W - pad * 2) / (maxX - minX || 1), (H - pad * 2) / (maxY - minY || 1), 2.5);
+  const tx = W / 2 - ((minX + maxX) / 2) * scale;
+  const ty = H / 2 - ((minY + maxY) / 2) * scale;
+  svg.transition().duration(700).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+
+// ─── Minimap ───────────────────────────────────────────────────────────────────
+let minimapSvg;
+let _mmMinX = 0, _mmMinY = 0, _mmScale = 1;
+
+function initMinimap() { minimapSvg = d3.select('#minimap-svg'); }
+
+function updateMinimapNodes(nodes) {
+  if (!minimapSvg || !nodes.length) return;
+  const mm = document.getElementById('minimap');
+  const W = mm.clientWidth, H = mm.clientHeight;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const n of nodes) {
+    if (n.x < minX) minX = n.x; if (n.y < minY) minY = n.y;
+    if (n.x > maxX) maxX = n.x; if (n.y > maxY) maxY = n.y;
+  }
+  const scale = Math.min((W - 8) / (maxX - minX || 1), (H - 8) / (maxY - minY || 1));
+  _mmMinX = minX; _mmMinY = minY; _mmScale = scale;
+  minimapSvg.selectAll('.mm-node').remove();
+  minimapSvg.selectAll('.mm-node')
+    .data(nodes.filter(n => n.kind === 'file'))
+    .join('circle')
+    .attr('class', 'mm-node')
+    .attr('cx', d => 4 + (d.x - minX) * scale)
+    .attr('cy', d => 4 + (d.y - minY) * scale)
+    .attr('r', 2)
+    .attr('fill', d => getDirColor(d.id))
+    .attr('opacity', 0.7);
+}
+
+function updateMinimap(transform, svgW, svgH) {
+  if (!minimapSvg) return;
+  const mm = document.getElementById('minimap');
+  const W = mm.clientWidth, H = mm.clientHeight;
+  const gx0 = (-transform.x) / transform.k;
+  const gy0 = (-transform.y) / transform.k;
+  const gx1 = gx0 + svgW / transform.k;
+  const gy1 = gy0 + svgH / transform.k;
+  d3.select('#minimap-viewport')
+    .attr('x',      Math.max(0, 4 + (gx0 - _mmMinX) * _mmScale))
+    .attr('y',      Math.max(0, 4 + (gy0 - _mmMinY) * _mmScale))
+    .attr('width',  Math.min(W, Math.max(4, (gx1 - gx0) * _mmScale)))
+    .attr('height', Math.min(H, Math.max(4, (gy1 - gy0) * _mmScale)));
+}
+
+// ─── Tooltip ───────────────────────────────────────────────────────────────────
+function showTooltip(event, d) {
+  const tip  = document.getElementById('tooltip');
+  const name = (d.id || '').split('/').pop() || d.name || d.id;
+  const dir  = (d.id || '').split('/').slice(0, -1).join('/');
+  tip.querySelector('.tip-name').textContent = name;
+  tip.querySelector('.tip-path').textContent = dir ? dir + '/' : '';
+  tip.querySelector('.tip-desc').textContent = d.description || 'No description yet — run mycelium init to summarize';
+  const tagsEl = tip.querySelector('.tip-tags');
+  tagsEl.innerHTML = (d.tags || []).map(t => `<span class="tip-tag">${t}</span>`).join('');
+  tip.style.display = 'block';
+  moveTooltip(event);
+}
+function moveTooltip(event) {
+  const tip  = document.getElementById('tooltip');
+  const rect = document.getElementById('canvas-wrap').getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  tip.style.left = (x + 12) + 'px';
+  tip.style.top  = (y - tip.offsetHeight - 8) + 'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function nodeRadius(d) {
+  if (d.kind === 'file') {
+    const base  = Math.max(5, Math.min(14, Math.sqrt((d.lineCount ?? d.lines ?? d.loc ?? 100) / 10)));
+    const heat  = (connCountById.get(d.id) || 0) / maxConnCount;
+    return base + heat * 9;
+  }
+  if (d.kind === 'function') return 4;
+  if (d.kind === 'class')    return 6;
+  return 5;
+}
+function shortName(name) {
+  if (!name) return '';
+  const last = name.split('/').pop();
+  return last.length > 20 ? last.slice(0, 18) + '…' : last;
+}
+function groupByDirectory(fileNodes) {
+  const groups = {};
+  for (const n of fileNodes) {
+    const parts = (n.id || '').split('/');
+    const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : '.';
+    if (!groups[dir]) groups[dir] = [];
+    groups[dir].push(n);
+  }
+  return groups;
+}
+
+let connCountById = new Map(), maxConnCount = 1;
+function computeConnectionCounts() {
+  connCountById = new Map();
+  for (const l of allLinks) {
+    if (l.kind === 'contains') continue;
+    connCountById.set(l.from, (connCountById.get(l.from) || 0) + 1);
+    connCountById.set(l.to,   (connCountById.get(l.to)   || 0) + 1);
+  }
+  maxConnCount = Math.max(1, ...connCountById.values());
+}
+
+// ─── Import-cycle detection ─────────────────────────────────────────────────────
+let detectedCycles = [], cycleEdgeKeys = new Set();
+
+function detectImportCycles() {
+  const adj = new Map();
+  for (const l of allLinks) {
+    if (l.kind !== 'imports') continue;
+    if (!adj.has(l.from)) adj.set(l.from, []);
+    adj.get(l.from).push(l.to);
+  }
+  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const state = new Map(), stack = [], cycles = [], seenSigs = new Set();
+  function dfs(u) {
+    state.set(u, GRAY); stack.push(u);
+    for (const v of (adj.get(u) || [])) {
+      const s = state.get(v) || WHITE;
+      if (s === WHITE) dfs(v);
+      else if (s === GRAY) {
+        const idx = stack.indexOf(v);
+        if (idx !== -1) {
+          const cyc = stack.slice(idx).concat(v);
+          const sig = [...new Set(cyc)].sort().join('|');
+          if (!seenSigs.has(sig)) { seenSigs.add(sig); cycles.push(cyc); }
+        }
+      }
+    }
+    stack.pop(); state.set(u, BLACK);
+  }
+  for (const n of allNodes) {
+    if (n.kind !== 'file') continue;
+    if ((state.get(n.id) || WHITE) === WHITE) dfs(n.id);
+  }
+  detectedCycles = cycles;
+  cycleEdgeKeys  = new Set();
+  for (const cyc of cycles) {
+    for (let i = 0; i < cyc.length - 1; i++) cycleEdgeKeys.add(cyc[i] + '→' + cyc[i + 1]);
+  }
+  renderCyclesPanel();
+}
+
+function renderCyclesPanel() {
+  const wrap = document.getElementById('cycles-row');
+  const list = document.getElementById('cycles-list');
+  if (!wrap || !list) return;
+  if (!detectedCycles.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'flex';
+  document.getElementById('cycles-count').textContent =
+    detectedCycles.length + (detectedCycles.length === 1 ? ' cycle' : ' cycles');
+  list.innerHTML = detectedCycles.map((cyc, i) => {
+    const names = cyc.map(id => id.split('/').pop());
+    return `<div class="cycle-item" onclick="focusCycle(${i})"><span class="cycle-path">${names.join(' → ')}</span></div>`;
+  }).join('');
+}
+
+function focusCycle(i) {
+  const cyc = detectedCycles[i];
+  if (!cyc || !cyc.length) return;
+  focusNode(cyc[0]);
+}
+
+function setLoading(text) {
+  document.getElementById('loading').style.display    = 'flex';
+  document.getElementById('loading-text').textContent = text;
+}
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+
+// ─── Directory legend + isolation ──────────────────────────────────────────────
+let isolatedDir = null;
+
+function updateDirLegend() {
+  const el = document.getElementById('dir-legend');
+  if (!el) return;
+  el.innerHTML = Array.from(dirColorMap.entries()).map(([dir, color]) => {
+    const active = isolatedDir === dir;
+    return `<div class="legend-item legend-item-clickable${active ? ' active' : ''}"
+      onclick="toggleIsolateDir('${dir}')" title="Click to isolate ${dir}/">
+      <div class="legend-dot" style="background:${color}"></div>${dir}/
+    </div>`;
+  }).join('');
+}
+
+function toggleIsolateDir(dir) {
+  isolatedDir = (isolatedDir === dir) ? null : dir;
+  updateDirLegend();
+  applyDirIsolation();
+}
+
+function applyDirIsolation() {
+  if (subtreeRoot) return; // subtree isolation takes priority
+  if (!isolatedDir) {
+    if (!selectedNode && !document.getElementById('search').value.trim() && multiSelected.size === 0)
+      d3.selectAll('.node').classed('highlighted dimmed', false);
+    return;
+  }
+  const inDir = new Set(allNodes.filter(n => {
+    const parts = (n.id || '').split('/');
+    return (parts.length > 1 ? parts[0] : 'root') === isolatedDir;
+  }).map(n => n.id));
+  d3.selectAll('.node')
+    .classed('highlighted', d => inDir.has(d.id))
+    .classed('dimmed',      d => !inDir.has(d.id));
+}
+
+// ─── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  ['graph', 'history', 'help'].forEach(t => {
+    document.getElementById('tab-content-' + t).style.display = t === name ? 'flex' : 'none';
+    const btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === name);
+  });
+  if (name === 'history') loadHistory();
+}
+
+// ─── History tab — grouped by task, clickable to jump to file ─────────────────
+// ─── Active task management ───────────────────────────────────────────────────
+function toggleTaskEdit() {
+  const form   = document.getElementById('task-edit-form');
+  const btn    = document.getElementById('task-edit-btn');
+  const status = document.getElementById('task-edit-status');
+  const isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  btn.textContent    = isOpen ? '✎ change' : '✕';
+  if (status) status.style.display = 'none';
+  if (!isOpen) {
+    const inp = document.getElementById('task-edit-input');
+    inp.value = document.getElementById('history-task').textContent.replace(' (local only)', '');
+    inp.focus(); inp.select();
+  }
+}
+
+async function setActiveTask() {
+  const inp    = document.getElementById('task-edit-input');
+  const task   = inp.value.trim();
+  const status = document.getElementById('task-edit-status');
+  if (!task) return;
+
+  // Sync topbar preflight input immediately
+  document.getElementById('task-input').value = task;
+
+  try {
+    const res = await fetch(`${API_BASE}/task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task }),
+    });
+    if (!res.ok) throw new Error('no endpoint');
+    document.getElementById('history-task').textContent = task;
+    if (status) { status.textContent = '✓ Saved to server'; status.style.color = '#7ECBA1'; status.style.display = 'block'; }
+  } catch {
+    // Server doesn't have /task yet — update display locally
+    document.getElementById('history-task').textContent = task;
+    if (status) {
+      status.textContent = 'Updated locally — add POST /task to server to persist';
+      status.style.color = 'var(--text-faint)';
+      status.style.display = 'block';
+    }
+  }
+
+  setTimeout(() => {
+    toggleTaskEdit();
+    // Refresh list so new task context shows in summary
+    loadHistory();
+  }, 900);
+}
+
+async function loadHistory() {
+  const listEl = document.getElementById('history-list');
+  const taskEl = document.getElementById('history-task');
+  const summEl = document.getElementById('history-summary');
+  listEl.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--text-dim)">Loading…</div>';
+  summEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${API_BASE}/history`);
+    const data = await res.json();
+
+    // ── Active task ──────────────────────────────────────────────────────────
+    const activeTask = data.activeTask || data.currentTask || 'None set';
+    taskEl.textContent = activeTask;
+
+    // Show live session info if one is running
+    if (data.activeSession) {
+      const as = data.activeSession;
+      const dur = _relativeElapsed(as.durationMs || 0);
+      summEl.style.display = 'block';
+      summEl.innerHTML =
+        `<span style="color:var(--thread-bright)">⬤</span> ` +
+        `Session running · ${dur}` +
+        (as.filesInScope ? ` · ${as.filesInScope} files in scope` : '') +
+        `<br><span style="color:var(--text-faint);font-size:10px;">` +
+        `Run <code style="background:var(--surface3);padding:1px 4px;">mycelium task done</code> ` +
+        `when finished to record the session.</span>`;
+    }
+
+    // ── Sessions (new format) ────────────────────────────────────────────────
+    const sessions = data.sessions || [];
+    if (sessions.length > 0) {
+      // Summary line
+      const totalFiles = sessions.reduce((n, s) =>
+        n + (s.filesChanged?.length||0) + (s.filesAdded?.length||0) + (s.filesDeleted?.length||0), 0);
+      const totalAdded   = sessions.reduce((n, s) => n + (s.totalLinesAdded   || 0), 0);
+      const totalRemoved = sessions.reduce((n, s) => n + (s.totalLinesRemoved || 0), 0);
+      if (!data.activeSession) {
+        summEl.style.display = 'block';
+        summEl.innerHTML =
+          `<strong style="color:var(--text)">${sessions.length}</strong> session${sessions.length!==1?'s':''} recorded · ` +
+          `<strong style="color:var(--text)">${totalFiles}</strong> files touched · ` +
+          `<span style="color:#7ECBA1">+${totalAdded}</span> ` +
+          `<span style="color:#F28B82">-${totalRemoved}</span> lines`;
+      }
+
+      listEl.innerHTML = sessions.map(s => _renderSession(s)).join('');
+      return;
+    }
+
+    // ── Legacy flat list (old server format) ─────────────────────────────────
+    const changes = data.recentChanges || data.changes || data.events || [];
+    if (!changes.length) {
+      listEl.innerHTML = `
+        <div style="padding:20px 14px;font-size:11px;color:var(--text-dim);line-height:1.9;">
+          No sessions recorded yet.<br><br>
+          Start your first task:<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:2px;color:var(--thread-bright);">mycelium task "what you're building"</code><br><br>
+          <span style="color:var(--text-faint);">Run your agent. When done:<br>
+          <code style="background:var(--surface2);padding:2px 6px;border-radius:2px;color:var(--thread-bright);">mycelium task done</code></span>
+        </div>`;
+      return;
+    }
+
+    // Render legacy format (grouped by task)
+    const taskGroups = {};
+    for (const c of changes) {
+      const task = c.task || c.taskName || 'General';
+      if (!taskGroups[task]) taskGroups[task] = [];
+      taskGroups[task].push(c);
+    }
+    if (!data.activeSession) {
+      summEl.style.display = 'block';
+      summEl.innerHTML = `<strong style="color:var(--text)">${changes.length}</strong> saves recorded`;
+    }
+    listEl.innerHTML = Object.entries(taskGroups).map(([task, items]) =>
+      `<div class="history-task-group">
+        <div class="history-task-header">
+          <span class="history-task-label">🎯 ${task}</span>
+          <span class="history-task-count">${items.length} file${items.length!==1?'s':''}</span>
+        </div>
+        ${items.slice(0,30).map(c => _renderHistoryItem(c)).join('')}
+       </div>`
+    ).join('');
+
+  } catch(e) {
+    listEl.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--text-dim)">Could not load history. Is the server running?</div>';
+  }
+}
+
+// Render a complete session card (new format)
+function _renderSession(s) {
+  const isComplete  = s.status === 'complete';
+  const isAbandoned = s.status === 'abandoned';
+  const dur         = s.durationMs ? _relativeElapsed(s.durationMs) : '';
+  const when        = s.completedAt ? _relativeTime(s.completedAt) : (s.startedAt ? _relativeTime(s.startedAt) : '');
+  const totalFiles  = (s.filesAdded?.length||0) + (s.filesChanged?.length||0) + (s.filesDeleted?.length||0);
+
+  const statusColor = isComplete ? 'var(--thread-bright)' : isAbandoned ? 'var(--text-faint)' : 'var(--imported-edge)';
+  const statusIcon  = isComplete ? '✓' : isAbandoned ? '✕' : '…';
+
+  // Build file change list (up to 6, then "+N more")
+  const allChanges = [
+    ...(s.filesAdded    || []).map(f => ({ f, type: 'added' })),
+    ...(s.filesChanged  || []).map(f => ({ f, type: 'modified' })),
+    ...(s.filesDeleted  || []).map(f => ({ f, type: 'deleted' })),
+  ];
+  const SHOW = 6;
+  const shown  = allChanges.slice(0, SHOW);
+  const hidden = allChanges.length - SHOW;
+  const sid    = 'sess-' + s.id.slice(0,8);
+
+  const fileRows = shown.map(({ f, type }) => {
+    const c       = s.changes?.[f];
+    const color   = type === 'added' ? '#7ECBA1' : type === 'deleted' ? '#F28B82' : 'var(--text-dim)';
+    const icon    = type === 'added' ? '+' : type === 'deleted' ? '−' : '~';
+    const delta   = c && type === 'modified'
+      ? `<span style="color:${c.delta>=0?'#7ECBA1':'#F28B82'};margin-left:4px;font-size:9px;">${c.delta>=0?'+':''}${c.delta}</span>`
+      : c && type === 'added'
+      ? `<span style="color:#7ECBA1;margin-left:4px;font-size:9px;">+${c.linesAfter}</span>`
+      : '';
+    const safe    = f.replace(/'/g,"\\'");
+    return `<div class="history-item history-item-clickable" onclick="focusNode('${safe}');switchTab('graph');" title="${f}">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="min-width:0;flex:1;display:flex;align-items:center;gap:5px;">
+          <span style="color:${color};font-size:10px;flex-shrink:0;">${icon}</span>
+          <div>
+            <div class="history-file">${f.split('/').pop()}</div>
+            <div class="history-dirpath">${f.split('/').slice(0,-1).join('/')}/</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">${delta}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const moreRow = hidden > 0
+    ? `<div style="padding:6px 12px;font-size:10px;color:var(--text-faint);">+${hidden} more files</div>`
+    : '';
+
+  const linesSummary = isComplete && (s.totalLinesAdded || s.totalLinesRemoved)
+    ? `<span style="color:#7ECBA1;font-size:10px;">+${s.totalLinesAdded||0}</span> ` +
+      `<span style="color:#F28B82;font-size:10px;">-${s.totalLinesRemoved||0}</span>`
+    : '';
+
+  return `
+    <div class="history-task-group" id="${sid}">
+      <div class="history-task-header" onclick="_toggleSession('${sid}')" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
+          <span style="color:${statusColor};font-size:11px;flex-shrink:0;">${statusIcon}</span>
+          <span class="history-task-label">${s.task}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          ${linesSummary}
+          <span class="history-task-count">${totalFiles ? `${totalFiles} file${totalFiles!==1?'s':''}` : isAbandoned ? 'abandoned' : ''}</span>
+          <span style="color:var(--text-faint);font-size:10px;">${when}${dur ? ' · '+dur : ''}</span>
+          <span id="${sid}-chevron" style="color:var(--text-faint);font-size:10px;">▾</span>
+        </div>
+      </div>
+      <div id="${sid}-body" style="display:none;">
+        ${totalFiles === 0 && isComplete
+          ? `<div style="padding:10px 12px;font-size:10px;color:var(--text-faint);">No file changes detected in this session.</div>`
+          : fileRows + moreRow}
+      </div>
+    </div>`;
+}
+
+function _toggleSession(sid) {
+  const body    = document.getElementById(sid + '-body');
+  const chevron = document.getElementById(sid + '-chevron');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display    = open ? 'none' : 'block';
+  if (chevron) chevron.textContent = open ? '▾' : '▴';
+}
+
+function _relativeElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+
+// ─── History helpers ───────────────────────────────────────────────────────────
+
+function _getFilePath(c) {
+  // Try every field name the server might use
+  return c.file || c.path || c.filePath || c.nodeId || c.fileName
+      || c.name || c.relativePath || c.filepath || '';
+}
+
+function _relativeTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (s < 5)  return 'just now';
+  if (s < 60) return `${s}s ago`;
+  if (m < 60) return `${m}m ago`;
+  if (h < 24) return `${h}h ago`;
+  if (d === 1) return 'yesterday';
+  if (d < 7)  return `${d} days ago`;
+  return new Date(ts).toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
+function _taskDuration(items) {
+  const timestamps = items.map(c => c.timestamp||c.time||c.savedAt||0).filter(Boolean);
+  if (timestamps.length < 2) return '';
+  const span = Math.max(...timestamps) - Math.min(...timestamps);
+  const m = Math.round(span / 60000);
+  if (m < 1) return '';
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m/60)}h ${m%60}m`;
+}
+
+function _renderHistoryItem(c) {
+  const filePath = _getFilePath(c);
+  const basename = filePath ? filePath.split('/').pop() : '';
+  const dirPath  = filePath ? filePath.split('/').slice(0,-1).join('/') : '';
+  const ts       = c.timestamp || c.time || c.savedAt || c.createdAt || 0;
+  const relTime  = _relativeTime(ts);
+  const absTime  = ts ? new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+  const agent    = c.agent || c.agentId || c.model || '';
+  const desc     = c.description || c.summary || c.message || c.changeDescription || c.note || '';
+
+  // Lines delta — try all variants
+  const linesAdded   = c.linesAdded   ?? c.added      ?? c.insertions ?? null;
+  const linesRemoved = c.linesRemoved ?? c.removed     ?? c.deletions  ?? null;
+  const linesBefore  = c.linesBefore  ?? c.lineCountBefore ?? null;
+  const linesAfter   = c.linesAfter   ?? c.lineCountAfter  ?? c.lineCount ?? c.lines ?? null;
+
+  let deltaHtml = '';
+  if (linesAdded != null || linesRemoved != null) {
+    if (linesAdded   != null) deltaHtml += `<span class="delta-add">+${linesAdded}</span>`;
+    if (linesRemoved != null) deltaHtml += `<span class="delta-rm">-${linesRemoved}</span>`;
+  } else if (linesBefore != null && linesAfter != null) {
+    const diff = linesAfter - linesBefore;
+    if      (diff > 0) deltaHtml = `<span class="delta-add">+${diff} lines</span>`;
+    else if (diff < 0) deltaHtml = `<span class="delta-rm">${diff} lines</span>`;
+    else               deltaHtml = `<span class="delta-eq">no change</span>`;
+  } else if (linesAfter != null) {
+    deltaHtml = `<span class="delta-eq">${linesAfter} lines</span>`;
+  }
+
+  const isClickable = !!filePath;
+  const safeId = filePath.replace(/'/g, "\\'");
+
+  return `<div class="history-item${isClickable ? ' history-item-clickable' : ' history-item-unknown'}"
+    ${isClickable ? `onclick="focusNode('${safeId}'); switchTab('graph');" title="Jump to ${filePath} in graph"` : ''}>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+      <div style="min-width:0;flex:1;">
+        <div class="history-file">${basename || '<span style="font-style:italic;color:var(--text-faint);">unknown file</span>'}</div>
+        ${dirPath ? `<div class="history-dirpath">${dirPath}/</div>` : ''}
+        ${desc    ? `<div class="history-change-desc">${desc}</div>` : ''}
+      </div>
+      <div style="text-align:right;flex-shrink:0;min-width:60px;">
+        ${relTime ? `<div style="font-size:10px;color:var(--text-dim);" title="${absTime}">${relTime}</div>` : ''}
+        ${deltaHtml ? `<div style="margin-top:2px;">${deltaHtml}</div>` : ''}
+      </div>
+    </div>
+    ${agent ? `<div class="history-agent-badge">${agent}</div>` : ''}
+  </div>`;
+}
+
+
+// ─── Settings modal ────────────────────────────────────────────────────────────
+document.getElementById('settings-btn').addEventListener('click', () => {
+  document.getElementById('settings-modal').style.display = 'flex';
+  switchModalTab('filters');
+  loadIgnoreConfig();
+});
+document.getElementById('settings-close').addEventListener('click', () => {
+  document.getElementById('settings-modal').style.display = 'none';
+});
+document.getElementById('settings-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+
+async function loadIgnoreConfig() {
+  try {
+    const res  = await fetch(`${API_BASE}/config`);
+    const data = await res.json();
+    renderIgnoreList(data);
+  } catch {
+    document.getElementById('ignore-default-list').innerHTML =
+      '<div style="font-size:11px;color:rgba(255,255,255,.35);padding:4px 0">Could not load config — is the server running?</div>';
+  }
+}
+
+function renderIgnoreList(data) {
+  const defaultIgnore = data.defaultIgnore || [];
+  const userIgnore    = data.userIgnore    || [];
+  const userUnignore  = data.userUnignore  || [];
+
+  document.getElementById('ignore-default-list').innerHTML = defaultIgnore.map(p => {
+    const removed = userUnignore.includes(p);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:12px;">
+      <span style="font-family:'SF Mono',monospace;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        color:${removed ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.75)'};
+        text-decoration:${removed ? 'line-through' : 'none'};">${p}</span>
+      ${removed
+        ? `<button onclick="postIgnoreAction('restore','${p}')" style="background:rgba(237,237,230,.12);border:1px solid rgba(237,237,230,.3);color:#ededE6;cursor:pointer;font-family:inherit;font-size:11px;padding:3px 10px;flex-shrink:0;">Ignore again</button>`
+        : `<button onclick="postIgnoreAction('remove','${p}')" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);cursor:pointer;font-family:inherit;font-size:11px;padding:3px 10px;flex-shrink:0;"
+            onmouseenter="this.style.color='#c9c7ba';this.style.borderColor='#c9c7ba'"
+            onmouseleave="this.style.color='rgba(255,255,255,.4)';this.style.borderColor='rgba(255,255,255,.1)'">Allow</button>`}
+    </div>`;
+  }).join('');
+
+  const customEl = document.getElementById('ignore-custom-list');
+  customEl.innerHTML = userIgnore.length === 0
+    ? '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:4px 0;">None added yet</div>'
+    : userIgnore.map(p =>
+        `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:12px;">
+          <span style="font-family:'SF Mono',monospace;font-size:12px;color:#ededE6;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p}</span>
+          <button onclick="postIgnoreAction('remove','${p}')" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);cursor:pointer;font-family:inherit;font-size:11px;padding:3px 10px;flex-shrink:0;"
+            onmouseenter="this.style.color='#ff8c42';this.style.borderColor='#ff8c42'"
+            onmouseleave="this.style.color='rgba(255,255,255,.4)';this.style.borderColor='rgba(255,255,255,.1)'">Remove</button>
+        </div>`
+      ).join('');
+}
+
+async function postIgnoreAction(action, pattern) {
+  try {
+    await fetch(`${API_BASE}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, pattern }),
+    });
+    await loadIgnoreConfig();
+  } catch { alert('Could not update config. Is the server running?'); }
+}
+
+document.getElementById('ignore-add-btn').addEventListener('click', async () => {
+  const input   = document.getElementById('ignore-input');
+  const pattern = input.value.trim();
+  if (!pattern) return;
+  await postIgnoreAction('add', pattern);
+  input.value = '';
+});
+document.getElementById('ignore-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('ignore-add-btn').click();
+});
+document.getElementById('task-edit-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') setActiveTask();
+  if (e.key === 'Escape') toggleTaskEdit();
+});
+
+// ─── Keyboard shortcuts ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const inField = tag === 'input' || tag === 'textarea';
+  if (e.key === 'Escape') {
+    const sm  = document.getElementById('settings-modal');
+    const ctx = document.getElementById('ctx-menu');
+    if (sm.style.display === 'flex')   { sm.style.display = 'none'; return; }
+    if (ctx.style.display === 'block') { hideCtxMenu(); return; }
+    if (inField) { e.target.blur(); return; }
+    if (multiSelected.size > 0) { clearMultiSelect(); selectNode(null, currentLinkObjs); return; }
+    if (subtreeRoot) { clearSubtreeIsolation(); return; }
+    if (selectedNode) { selectNode(null, currentLinkObjs); return; }
+    if (isolatedDir)  { toggleIsolateDir(isolatedDir); return; }
+    const s = document.getElementById('search');
+    if (s.value.trim()) { s.value = ''; s.dispatchEvent(new Event('input')); }
+    return;
+  }
+  if (e.key === '/' && !inField) { e.preventDefault(); document.getElementById('search').focus(); }
+});
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+// Apply loaded/default colors to pickers and legend
+document.getElementById('color-flow-out').value = FLOW_OUT_COLOR;
+document.getElementById('color-flow-in').value  = FLOW_IN_COLOR;
+document.getElementById('color-out-hex').textContent = FLOW_OUT_COLOR;
+document.getElementById('color-in-hex').textContent  = FLOW_IN_COLOR;
+applyFlowColors(FLOW_OUT_COLOR, FLOW_IN_COLOR, false); // sync legend dots
+
+initMinimap();
+loadGraph();
+updateHiddenRow();
+
+// Wire task edit input keyboard shortcuts
+const _taskEditInp = document.getElementById('task-edit-input');
+if (_taskEditInp) {
+  _taskEditInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  setActiveTask();
+    if (e.key === 'Escape') toggleTaskEdit();
+  });
+}
+</script>
+</body>
+</html>
