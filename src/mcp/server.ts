@@ -160,6 +160,12 @@ export class McpServer {
       if (method === 'POST') { this.handleTaskAbandon(res); return; }
     }
 
+    // ── Session summarization ──────────────────────────────────────────────────
+    if (pathname.startsWith('/session/') && pathname.endsWith('/summarize') && method === 'POST') {
+      const sessionId = pathname.slice('/session/'.length, -'/summarize'.length);
+      if (sessionId) { this.handleSessionSummarize(sessionId, req, res); return; }
+    }
+
     // ── Node detail ───────────────────────────────────────────────────────────
     if (pathname.startsWith('/node/')) {
       const id = decodeURIComponent(pathname.slice('/node/'.length));
@@ -182,7 +188,7 @@ export class McpServer {
         '/status', '/graph', '/node/:id', '/dependencies', '/search',
         '/entry-points', '/teams', '/preflight', '/history',
         '/task', '/task/start', '/task/complete', '/task/abandon',
-        '/config', '/ui', '/debug', '/xref',
+        '/config', '/ui', '/debug', '/xref', '/session/:id/summarize',
       ],
     }));
   }
@@ -499,6 +505,148 @@ export class McpServer {
     }
     res.writeHead(200);
     res.end(JSON.stringify({ message: `Abandoned: "${session.task}"` }));
+  }
+
+
+  // ── AI session summarization ──────────────────────────────────────────────
+
+  /** Make a direct call to Claude Haiku. Returns null if no API key is set. */
+  private async callHaiku(prompt: string): Promise<string | null> {
+    let apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      try {
+        const os = require('os');
+        const cfgPath = path.join(os.homedir(), '.mycelium', 'config.json');
+        if (fs.existsSync(cfgPath)) {
+          apiKey = JSON.parse(fs.readFileSync(cfgPath, 'utf8')).apiKey;
+        }
+      } catch {}
+    }
+    if (!apiKey) return null;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type':    'application/json',
+          'x-api-key':       apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model:      'claude-haiku-4-5-20251001',
+          max_tokens: 256,
+          messages:   [{ role: 'user', content: prompt }],
+        }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as any;
+      return data.content?.[0]?.text ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * POST /session/:id/summarize
+   * Sends session metadata + file descriptions to Haiku and returns a
+   * 2-3 sentence plain-English summary of what the session accomplished.
+   * Result is cached in sessions.json so repeat calls are instant.
+   */
+  private async handleSessionSummarize(sessionId: string, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    this.sessionManager.refresh();
+
+    // Return cached summary unless force: true was sent
+    const bodyStr = await this.readBody(req);
+    const force   = (() => { try { return JSON.parse(bodyStr).force === true; } catch { return false; } })();
+    const cached  = !force && this.sessionManager.getSummary(sessionId);
+    if (cached) {
+      res.writeHead(200);
+      res.end(JSON.stringify({ summary: cached, cached: true }));
+      return;
+    }
+
+    const sessions = this.sessionManager.getSessions(100);
+    const session  = sessions.find(s => s.id === sessionId);
+
+    if (!session) {
+      res.writeHead(404); res.end(JSON.stringify({ error: 'Session not found' })); return;
+    }
+    if (!session.result) {
+      res.writeHead(400); res.end(JSON.stringify({ error: 'Session is not complete yet' })); return;
+    }
+
+    const r = session.result;
+    const fileLines: string[] = [];
+    let hasDiffs = false;
+
+    for (const f of r.filesAdded) {
+      const c    = r.changes[f] as any;
+      const node = this.store.getNode(f);
+      const desc = node?.description ? ` (${node.description})` : '';
+      fileLines.push(`\nADDED: ${f}${desc}`);
+      if (c?.diff) {
+        hasDiffs = true;
+        fileLines.push(c.diff);
+      } else {
+        fileLines.push(`(${c?.linesAfter ?? '?'} lines — no diff available)`);
+      }
+    }
+    for (const f of r.filesChanged) {
+      const c     = r.changes[f] as any;
+      const node  = this.store.getNode(f);
+      const delta = c ? (c.delta >= 0 ? `+${c.delta}` : `${c.delta}`) : '';
+      const desc  = node?.description ? ` (${node.description})` : '';
+      fileLines.push(`\nMODIFIED: ${f}${desc} [${c?.linesBefore}→${c?.linesAfter} lines, ${delta}]`);
+      if (c?.diff) {
+        hasDiffs = true;
+        fileLines.push(c.diff);
+      } else {
+        fileLines.push('(no diff available — re-run task done after committing to git)');
+      }
+    }
+    for (const f of r.filesDeleted) {
+      fileLines.push(`\nDELETED: ${f}`);
+    }
+
+    // If we have no diffs at all, tell Haiku to be honest about it
+    if (!hasDiffs) {
+      fileLines.push('\nNote: No git diff was captured for this session. ' +
+        'Summarize based on file names and descriptions only, and note that details are limited.');
+    }
+
+    const totalFiles = r.filesAdded.length + r.filesChanged.length + r.filesDeleted.length;
+    const dur        = formatDuration(r.durationMs);
+
+    const prompt = [
+      'Summarize this coding session in 2-3 sentences.',
+      'Base your summary ONLY on the actual diff lines shown below — do not infer from file names or descriptions.',
+      'If the changes are minor (e.g. only comments or whitespace), say so plainly.',
+      'Write in past tense. Do not start with "The developer". Be specific and honest.',
+      '',
+      `Task: "${session.task}"`,
+      `Duration: ${dur}`,
+      `Files changed: ${totalFiles}`,
+      '',
+      '--- Changes ---',
+      ...fileLines,
+    ].join('\n');
+
+    const summary = await this.callHaiku(prompt);
+
+    if (!summary) {
+      res.writeHead(400);
+      res.end(JSON.stringify({
+        error: 'No Anthropic API key found. Run: mycelium key sk-ant-...',
+        noKey: true,
+      }));
+      return;
+    }
+
+    // Cache so repeat clicks are instant
+    this.sessionManager.setSummary(sessionId, summary);
+
+    res.writeHead(200);
+    res.end(JSON.stringify({ summary, cached: false }));
   }
 
   // ── Config endpoints ──────────────────────────────────────────────────────

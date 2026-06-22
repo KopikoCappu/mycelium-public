@@ -23,6 +23,7 @@ export class CodeParser {
     const fileNode: GraphNode = {
       id: relativePath,
       kind: 'file',
+        lineCount: content.split('\n').length,
       path: relativePath,
       name: path.basename(filePath),
       description: '',
@@ -139,7 +140,7 @@ function extractImports(
       if (aliasMatch) {
         const [prefix, target] = aliasMatch;
         const rest = source.slice(prefix.length);
-        const resolved = normalizeExt(`${target}${rest}`);
+        const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, '');
         results.push({ source, resolvedPath: resolved });
         continue;
       }

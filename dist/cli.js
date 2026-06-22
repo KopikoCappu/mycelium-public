@@ -3275,7 +3275,7 @@ var require_package = __commonJS({
   "package.json"(exports2, module2) {
     module2.exports = {
       name: "@kopikocappu/mycelium",
-      version: "0.2.7",
+      version: "0.2.10",
       description: "Codebase memory for AI coding agents. Natural language preflight, graph viewer, and agent history in one command.",
       bin: {
         mycelium: "dist/cli.js"
@@ -3302,6 +3302,7 @@ var require_package = __commonJS({
       },
       files: [
         "dist/",
+        "ui/",
         "README.md",
         "LICENSE"
       ],
@@ -16212,12 +16213,32 @@ var cbmAdapter = new CbmAdapter();
 var import_fs3 = __toESM(require("fs"));
 var import_path3 = __toESM(require("path"));
 var import_crypto3 = require("crypto");
+var import_child_process2 = require("child_process");
 function countLines(absPath) {
   try {
     const content = import_fs3.default.readFileSync(absPath, "utf8");
     return content.split("\n").length;
   } catch {
     return 0;
+  }
+}
+function getGitDiff(projectRoot, rel) {
+  const opts = {
+    cwd: projectRoot,
+    encoding: "utf8"
+  };
+  try {
+    const out = (0, import_child_process2.execSync)(`git diff HEAD -- "${rel}"`, opts).trim();
+    if (out)
+      return out;
+  } catch {
+  }
+  try {
+    (0, import_child_process2.execSync)(`git diff --no-index /dev/null "${rel}"`, opts);
+    return null;
+  } catch (e) {
+    const out = (e.stdout ?? "").trim();
+    return out || null;
   }
 }
 function formatDuration(ms) {
@@ -16372,7 +16393,14 @@ var SessionManager = class {
       const before = session.snapshot[rel];
       const curr = after[rel];
       if (!before && curr) {
-        changes[rel] = { status: "added", linesBefore: 0, linesAfter: curr.lines, delta: curr.lines };
+        const newDiff = getGitDiff(this.projectRoot, rel);
+        changes[rel] = {
+          status: "added",
+          linesBefore: 0,
+          linesAfter: curr.lines,
+          delta: curr.lines,
+          ...newDiff ? { diff: newDiff } : {}
+        };
         filesAdded.push(rel);
         totalAdded += curr.lines;
       } else if (before && !curr) {
@@ -16383,11 +16411,13 @@ var SessionManager = class {
         const absPath = import_path3.default.join(this.projectRoot, rel);
         const realLines = countLines(absPath) || curr.lines;
         const delta = realLines - before.lines;
+        const diff = getGitDiff(this.projectRoot, rel);
         changes[rel] = {
           status: "modified",
           linesBefore: before.lines,
           linesAfter: realLines,
-          delta
+          delta,
+          ...diff ? { diff } : {}
         };
         filesChanged.push(rel);
         if (delta > 0)
@@ -16446,6 +16476,19 @@ var SessionManager = class {
   refresh() {
     this._load();
   }
+  /** Cache an AI-generated summary string against a session by ID. */
+  setSummary(sessionId, summary) {
+    const s = this.sessions.find((s2) => s2.id === sessionId);
+    if (!s)
+      return;
+    s.summary = summary;
+    this._save();
+  }
+  /** Return a cached summary if one exists. */
+  getSummary(sessionId) {
+    const s = this.sessions.find((s2) => s2.id === sessionId);
+    return s ? s.summary ?? null : null;
+  }
   // ── History endpoint response shape ──────────────────────────────────────────
   /**
    * Returns the JSON shape expected by the UI's /history endpoint.
@@ -16466,7 +16509,9 @@ var SessionManager = class {
       filesAdded: s.result?.filesAdded ?? [],
       filesDeleted: s.result?.filesDeleted ?? [],
       changes: s.result?.changes ?? {},
-      preflightFiles: s.preflightFiles
+      preflightFiles: s.preflightFiles,
+      // after `preflightFiles: s.preflightFiles,`
+      summary: s.summary ?? null
     }));
     return {
       activeTask: active?.task ?? null,
@@ -16662,6 +16707,13 @@ var McpServer = class {
         return;
       }
     }
+    if (pathname.startsWith("/session/") && pathname.endsWith("/summarize") && method === "POST") {
+      const sessionId = pathname.slice("/session/".length, -"/summarize".length);
+      if (sessionId) {
+        this.handleSessionSummarize(sessionId, req, res);
+        return;
+      }
+    }
     if (pathname.startsWith("/node/")) {
       const id = decodeURIComponent(pathname.slice("/node/".length));
       if (id.includes("..") || path5.isAbsolute(id) || id.startsWith("/")) {
@@ -16699,7 +16751,8 @@ var McpServer = class {
         "/config",
         "/ui",
         "/debug",
-        "/xref"
+        "/xref",
+        "/session/:id/summarize"
       ]
     }));
   }
@@ -17003,6 +17056,143 @@ var McpServer = class {
     res.writeHead(200);
     res.end(JSON.stringify({ message: `Abandoned: "${session.task}"` }));
   }
+  // ── AI session summarization ──────────────────────────────────────────────
+  /** Make a direct call to Claude Haiku. Returns null if no API key is set. */
+  async callHaiku(prompt) {
+    let apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      try {
+        const os2 = require("os");
+        const cfgPath = path5.join(os2.homedir(), ".mycelium", "config.json");
+        if (fs4.existsSync(cfgPath)) {
+          apiKey = JSON.parse(fs4.readFileSync(cfgPath, "utf8")).apiKey;
+        }
+      } catch {
+      }
+    }
+    if (!apiKey)
+      return null;
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 256,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      if (!res.ok)
+        return null;
+      const data = await res.json();
+      return data.content?.[0]?.text ?? null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * POST /session/:id/summarize
+   * Sends session metadata + file descriptions to Haiku and returns a
+   * 2-3 sentence plain-English summary of what the session accomplished.
+   * Result is cached in sessions.json so repeat calls are instant.
+   */
+  async handleSessionSummarize(sessionId, req, res) {
+    this.sessionManager.refresh();
+    const bodyStr = await this.readBody(req);
+    const force = (() => {
+      try {
+        return JSON.parse(bodyStr).force === true;
+      } catch {
+        return false;
+      }
+    })();
+    const cached = !force && this.sessionManager.getSummary(sessionId);
+    if (cached) {
+      res.writeHead(200);
+      res.end(JSON.stringify({ summary: cached, cached: true }));
+      return;
+    }
+    const sessions = this.sessionManager.getSessions(100);
+    const session = sessions.find((s) => s.id === sessionId);
+    if (!session) {
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: "Session not found" }));
+      return;
+    }
+    if (!session.result) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: "Session is not complete yet" }));
+      return;
+    }
+    const r = session.result;
+    const fileLines = [];
+    let hasDiffs = false;
+    for (const f of r.filesAdded) {
+      const c = r.changes[f];
+      const node = this.store.getNode(f);
+      const desc = node?.description ? ` (${node.description})` : "";
+      fileLines.push(`
+ADDED: ${f}${desc}`);
+      if (c?.diff) {
+        hasDiffs = true;
+        fileLines.push(c.diff);
+      } else {
+        fileLines.push(`(${c?.linesAfter ?? "?"} lines \u2014 no diff available)`);
+      }
+    }
+    for (const f of r.filesChanged) {
+      const c = r.changes[f];
+      const node = this.store.getNode(f);
+      const delta = c ? c.delta >= 0 ? `+${c.delta}` : `${c.delta}` : "";
+      const desc = node?.description ? ` (${node.description})` : "";
+      fileLines.push(`
+MODIFIED: ${f}${desc} [${c?.linesBefore}\u2192${c?.linesAfter} lines, ${delta}]`);
+      if (c?.diff) {
+        hasDiffs = true;
+        fileLines.push(c.diff);
+      } else {
+        fileLines.push("(no diff available \u2014 re-run task done after committing to git)");
+      }
+    }
+    for (const f of r.filesDeleted) {
+      fileLines.push(`
+DELETED: ${f}`);
+    }
+    if (!hasDiffs) {
+      fileLines.push("\nNote: No git diff was captured for this session. Summarize based on file names and descriptions only, and note that details are limited.");
+    }
+    const totalFiles = r.filesAdded.length + r.filesChanged.length + r.filesDeleted.length;
+    const dur = formatDuration(r.durationMs);
+    const prompt = [
+      "Summarize this coding session in 2-3 sentences.",
+      "Base your summary ONLY on the actual diff lines shown below \u2014 do not infer from file names or descriptions.",
+      "If the changes are minor (e.g. only comments or whitespace), say so plainly.",
+      'Write in past tense. Do not start with "The developer". Be specific and honest.',
+      "",
+      `Task: "${session.task}"`,
+      `Duration: ${dur}`,
+      `Files changed: ${totalFiles}`,
+      "",
+      "--- Changes ---",
+      ...fileLines
+    ].join("\n");
+    const summary = await this.callHaiku(prompt);
+    if (!summary) {
+      res.writeHead(400);
+      res.end(JSON.stringify({
+        error: "No Anthropic API key found. Run: mycelium key sk-ant-...",
+        noKey: true
+      }));
+      return;
+    }
+    this.sessionManager.setSummary(sessionId, summary);
+    res.writeHead(200);
+    res.end(JSON.stringify({ summary, cached: false }));
+  }
   // ── Config endpoints ──────────────────────────────────────────────────────
   handleConfigGet(res) {
     res.writeHead(200);
@@ -17085,6 +17275,7 @@ var CodeParser = class {
     const fileNode = {
       id: relativePath,
       kind: "file",
+      lineCount: content.split("\n").length,
       path: relativePath,
       name: path6.basename(filePath),
       description: "",
@@ -17168,7 +17359,7 @@ function extractImports(content, fromFile, workspaceRoot, aliases) {
       if (aliasMatch) {
         const [prefix, target] = aliasMatch;
         const rest = source.slice(prefix.length);
-        const resolved = normalizeExt(`${target}${rest}`);
+        const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, "");
         results.push({ source, resolvedPath: resolved });
         continue;
       }

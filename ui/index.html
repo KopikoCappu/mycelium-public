@@ -254,6 +254,22 @@
     100% { r: var(--base-r); }
   }
 
+  @keyframes btnPulse {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1;   }
+  }
+
+.btn-spinner {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 1.5px solid rgba(201,199,186,0.25);
+  border-top-color: var(--thread-bright);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
 
   /* ── Help tab ── */
   .help-code { display:inline-block; background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:1px 5px; font-family:'SF Mono',monospace; font-size:11px; color:var(--thread-bright); }
@@ -369,6 +385,18 @@
       </div>
     </div>
 
+    <!-- API key disclaimer — shown until dismissed -->
+    <div id="history-key-notice" style="display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-soft);background:rgba(237,237,230,0.03);font-size:11px;color:var(--text-dim);line-height:1.6;">
+      <span style="flex-shrink:0;margin-top:1px;">ℹ</span>
+      <span>
+        <strong style="color:var(--text);">Some features require API keys.</strong>
+        File descriptions and session summaries need an <span style="color:var(--thread-bright);">Anthropic key</span> (<code style="background:var(--surface2);padding:1px 4px;">mycelium key sk-ant-...</code>).
+        Semantic search needs an <span style="color:var(--thread-bright);">OpenAI key</span> (<code style="background:var(--surface2);padding:1px 4px;">mycelium key --openai sk-...</code>).
+        Without keys, keyword search and graph navigation still work.
+      </span>
+      <button onclick="document.getElementById('history-key-notice').style.display='none';localStorage.setItem('myc-notice-dismissed','1')"
+        style="flex-shrink:0;background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;" title="Dismiss">✕</button>
+    </div>
     <div id="history-summary" class="history-summary" style="display:none;"></div>
     <div id="history-list"></div>
     <div style="padding:12px;border-top:1px solid var(--border-soft);flex-shrink:0;">
@@ -2009,6 +2037,113 @@ function switchTab(name) {
 }
 
 // ─── History tab — grouped by task, clickable to jump to file ─────────────────
+// ─── Session summarization ────────────────────────────────────────────────────
+
+async function summarizeSession(sessionId, shortId, btnEl) {
+  // Show loading state immediately and visibly
+  const originalText = btnEl.textContent;
+  btnEl.innerHTML = '<span class="btn-spinner"></span>Generating…';
+  btnEl.disabled = true;
+  btnEl.style.opacity = '1';
+  btnEl.style.animation = '';
+
+  // Two rAFs — one to schedule, one to guarantee paint before fetch
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  const summaryEl = document.getElementById('sess-' + shortId + '-ai-summary');
+  if (summaryEl) {
+    summaryEl.style.display = 'block';
+    summaryEl.style.opacity = '0.35';
+    summaryEl.style.fontStyle = 'italic';
+    summaryEl.style.color = 'var(--text-faint)';
+    summaryEl.textContent = 'Asking Claude to summarize this session…';
+  }
+  // Make sure the session body is open so user can see the result
+  const bodyEl = document.getElementById('sess-' + shortId + '-body');
+  if (bodyEl && bodyEl.style.display === 'none') {
+    bodyEl.style.display = 'block';
+    const chevron = document.getElementById('sess-' + shortId + '-chevron');
+    if (chevron) chevron.textContent = '▴';
+  }
+
+  try {
+  const res = await fetch(`${API_BASE}/session/${sessionId}/summarize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ force: true }),
+  });
+    if (!res.ok) {
+      const status = res.status;
+      if (summaryEl) {
+        summaryEl.style.color = '#F28B82';
+        summaryEl.style.fontStyle = 'normal';
+        if (status === 404) {
+          summaryEl.innerHTML = 'Server does not support summarization yet. ' +
+            'Integrate the updated <code style="background:var(--surface2);padding:1px 4px;">server.ts</code> and restart the server.';
+        } else {
+          summaryEl.textContent = 'Server error (' + status + '). Check that the server is running.';
+        }
+      }
+      btnEl.textContent = originalText;
+      btnEl.disabled = false;
+      btnEl.style.opacity = '1';
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.noKey) {
+      if (summaryEl) {
+        summaryEl.style.color = 'var(--text-dim)';
+        summaryEl.style.fontStyle = 'normal';
+        summaryEl.innerHTML =
+          '⚠ No Anthropic API key found. Run: ' +
+          '<code style="background:var(--surface2);padding:1px 4px;color:var(--thread-bright);">mycelium key sk-ant-...</code> ' +
+          'then restart the server.';
+      }
+      btnEl.textContent = originalText;
+      btnEl.disabled = false;
+      btnEl.style.opacity = '1';
+      return;
+    }
+
+    if (data.error) {
+      if (summaryEl) {
+        summaryEl.style.color = '#F28B82';
+        summaryEl.style.fontStyle = 'normal';
+        summaryEl.textContent = 'Error: ' + data.error;
+      }
+      btnEl.textContent = '✦ Retry';
+      btnEl.disabled = false;
+      btnEl.style.opacity = '1';
+      return;
+    }
+
+    // Success
+      if (summaryEl && data.summary) {
+        summaryEl.style.opacity = '1';  // ← restore opacity
+        summaryEl.style.fontStyle = 'normal';
+        summaryEl.style.color = 'var(--text-dim)';
+        summaryEl.textContent = data.summary;
+      }
+    btnEl.innerHTML = '↻ Re-summarize';
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+    btnEl.style.background = 'rgba(201,199,186,0.06)';
+    btnEl.style.borderColor = 'var(--border)';
+    btnEl.style.color = 'var(--text-dim)';
+  } catch (err) {
+    if (summaryEl) {
+      summaryEl.style.color = '#F28B82';
+      summaryEl.style.fontStyle = 'normal';
+      summaryEl.textContent = 'Could not reach server. Is it running?';
+    }
+    btnEl.innerHTML = '✦ Retry';
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+  }
+}
+
 // ─── Active task management ───────────────────────────────────────────────────
 function toggleTaskEdit() {
   const form   = document.getElementById('task-edit-form');
@@ -2061,6 +2196,12 @@ async function setActiveTask() {
 }
 
 async function loadHistory() {
+  // Restore dismissed state of API key notice
+  if (localStorage.getItem('myc-notice-dismissed') === '1') {
+    const notice = document.getElementById('history-key-notice');
+    if (notice) notice.style.display = 'none';
+  }
+
   const listEl = document.getElementById('history-list');
   const taskEl = document.getElementById('history-task');
   const summEl = document.getElementById('history-summary');
@@ -2207,19 +2348,28 @@ function _renderSession(s) {
 
   return `
     <div class="history-task-group" id="${sid}">
-      <div class="history-task-header" onclick="_toggleSession('${sid}')" style="cursor:pointer;">
-        <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
+      <div class="history-task-header" onclick="_toggleSession('${sid}')" style="cursor:pointer;flex-direction:column;align-items:flex-start;gap:4px;">
+        <div style="display:flex;align-items:center;gap:7px;width:100%;">
           <span style="color:${statusColor};font-size:11px;flex-shrink:0;">${statusIcon}</span>
-          <span class="history-task-label">${s.task}</span>
+          <span class="history-task-label" style="flex:1;">${s.task}</span>
+          <span id="${sid}-chevron" style="color:var(--text-faint);font-size:10px;flex-shrink:0;">▾</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:18px;">
           ${linesSummary}
-          <span class="history-task-count">${totalFiles ? `${totalFiles} file${totalFiles!==1?'s':''}` : isAbandoned ? 'abandoned' : ''}</span>
+          <span class="history-task-count" style="color:var(--text-faint);">${totalFiles ? `${totalFiles} file${totalFiles!==1?'s':''}` : isAbandoned ? 'abandoned' : ''}</span>
           <span style="color:var(--text-faint);font-size:10px;">${when}${dur ? ' · '+dur : ''}</span>
-          <span id="${sid}-chevron" style="color:var(--text-faint);font-size:10px;">▾</span>
+          ${isComplete && totalFiles > 0 ? `<button id="${sid}-summarize-btn"
+            onclick="event.stopPropagation();summarizeSession('${s.id}','${sid.replace('sess-','')}',this)"
+            style="background:rgba(201,199,186,0.12);border:1px solid var(--thread-bright);color:var(--thread-bright);cursor:pointer;font-family:inherit;font-size:11px;padding:3px 10px;border-radius:3px;transition:all .15s;font-weight:500;"
+            onmouseenter="this.style.background='rgba(201,199,186,0.22)'"
+            onmouseleave="this.style.background='rgba(201,199,186,0.12)'"
+            title="Summarize this session with AI (~$0.001)">${s.summary ? '↻ Re-summarize' : '✦ Summarize'}</button>` : ''}
         </div>
       </div>
       <div id="${sid}-body" style="display:none;">
+        <!-- AI summary appears here after clicking Summarize -->
+        <div id="sess-${sid.replace('sess-','')}-ai-summary"
+          style="${s.summary ? '' : 'display:none;'}padding:10px 14px;font-size:11px;color:var(--text-dim);line-height:1.7;border-bottom:1px solid var(--border-soft);">${s.summary ?? ''}</div>
         ${totalFiles === 0 && isComplete
           ? `<div style="padding:10px 12px;font-size:10px;color:var(--text-faint);">No file changes detected in this session.</div>`
           : fileRows + moreRow}

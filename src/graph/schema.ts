@@ -15,6 +15,7 @@ export interface GraphNode {
   lineEnd?: number;
   lastHash: string;      // SHA256 of file content at time of parse
   lastUpdated: number;   // unix timestamp
+  lineCount?: number;
 }
 
 // ─── Edge Types ───────────────────────────────────────────────────────────────

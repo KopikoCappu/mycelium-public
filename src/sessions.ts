@@ -13,6 +13,7 @@
 import fs   from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { execSync } from 'child_process';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ export interface FileChange {
   linesBefore: number;
   linesAfter:  number;
   delta:       number;  // positive = lines added, negative = lines removed
+  diff?:       string;  // actual changed lines from git diff, captured at task done
 }
 
 export interface SessionResult {
@@ -59,6 +61,33 @@ function countLines(absPath: string): number {
     return content.split('\n').length;
   } catch {
     return 0;
+  }
+}
+
+/**
+ * Capture the git diff for a single file relative to HEAD.
+ * For untracked/new files, falls back to --no-index diff against /dev/null.
+ * Returns null if git isn't available, the repo isn't initialized, or there's no diff.
+ */
+function getGitDiff(projectRoot: string, rel: string): string | null {
+  const opts = {
+    cwd:      projectRoot,
+    encoding: 'utf8' as const,
+  };
+
+  try {
+    const out = execSync(`git diff HEAD -- "${rel}"`, opts).trim();
+    if (out) return out;
+  } catch {
+    // Not a git repo or HEAD doesn't exist yet
+  }
+
+  try {
+    execSync(`git diff --no-index /dev/null "${rel}"`, opts);
+    return null;
+  } catch (e: any) {
+    const out = (e.stdout ?? '').trim();
+    return out || null;
   }
 }
 
@@ -247,7 +276,11 @@ export class SessionManager {
 
       if (!before && curr) {
         // New file created during session
-        changes[rel] = { status: 'added', linesBefore: 0, linesAfter: curr.lines, delta: curr.lines };
+        const newDiff = getGitDiff(this.projectRoot, rel);
+        changes[rel] = {
+          status: 'added', linesBefore: 0, linesAfter: curr.lines, delta: curr.lines,
+          ...(newDiff ? { diff: newDiff } : {}),
+        };
         filesAdded.push(rel);
         totalAdded += curr.lines;
 
@@ -260,15 +293,18 @@ export class SessionManager {
       } else if (before && curr && curr.mtime !== before.mtime) {
         // File was touched — re-read to get accurate current line count
         // (snapshot only uses cached lines; the real count may differ)
-        const absPath  = path.join(this.projectRoot, rel);
+        const absPath   = path.join(this.projectRoot, rel);
         const realLines = countLines(absPath) || curr.lines;
-        const delta    = realLines - before.lines;
+        const delta     = realLines - before.lines;
+        // Capture actual diff at completion time so summarization is accurate
+        const diff      = getGitDiff(this.projectRoot, rel);
 
         changes[rel] = {
           status:      'modified',
           linesBefore: before.lines,
           linesAfter:  realLines,
           delta,
+          ...(diff ? { diff } : {}),
         };
         filesChanged.push(rel);
         if (delta > 0) totalAdded   += delta;
@@ -329,6 +365,20 @@ export class SessionManager {
     this._load();
   }
 
+  /** Cache an AI-generated summary string against a session by ID. */
+  setSummary(sessionId: string, summary: string): void {
+    const s = this.sessions.find(s => s.id === sessionId);
+    if (!s) return;
+    (s as any).summary = summary;
+    this._save();
+  }
+
+  /** Return a cached summary if one exists. */
+  getSummary(sessionId: string): string | null {
+    const s = this.sessions.find(s => s.id === sessionId);
+    return s ? ((s as any).summary ?? null) : null;
+  }
+
   // ── History endpoint response shape ──────────────────────────────────────────
 
   /**
@@ -354,6 +404,9 @@ export class SessionManager {
         filesDeleted:      s.result?.filesDeleted  ?? [],
         changes:           s.result?.changes       ?? {},
         preflightFiles:    s.preflightFiles,
+        // after `preflightFiles: s.preflightFiles,`
+        summary: (s as any).summary ?? null,
+        
       }));
 
     return {
