@@ -159,3 +159,67 @@ Open at `http://localhost:47821/ui` while the server is running.
 | Click node | Select, center, show connections |
 | Double-click node | Ripple animation through neighbors |
 |
+---
+
+## How descriptions work
+
+`mycelium init` sends each file to Claude Haiku for a one-sentence description, tags, and export summary. Descriptions are cached by file hash — unchanged files are never re-described. Re-running `init` is fast.
+
+Descriptions power semantic search and preflight scoring. You can edit any description inline in the graph viewer if the generated one is weak.
+
+---
+
+## Language support
+
+Built-in parser covers TypeScript and JavaScript with full `tsconfig.json` path alias resolution.
+
+If `codebase-memory-mcp` is installed, Mycelium uses it automatically for structural indexing across 150+ languages — Python, Go, Rust, Java, C++, and more — plus full call graph tracing between functions.
+
+---
+
+## Troubleshooting
+
+**No import edges in the graph**
+Run `mycelium debug`. Most common cause: import aliases (`@/`, `~/`) not resolving to graph node IDs. Check that `tsconfig.json` is readable and paths are set correctly.
+
+**Descriptions are stale after a refactor**
+Run `mycelium scan --clear` to rebuild everything from scratch.
+
+**Server not found from agent**
+Run `mycelium status` in another terminal to confirm the server is up. Check that `.mcp.json` points to the right port (default `47821`).
+
+**`mycelium` not found in terminal**
+```bash
+npm config get prefix
+# add the output path to your PATH
+```
+
+---
+
+## Roadmap
+
+- [ ] Git integration — branch overlay, diff since last commit
+- [ ] Session replay — animate history on the graph
+- [ ] Auto-refresh — live graph updates without page reload
+- [ ] Preflight accuracy metrics — track prediction vs actual edits
+- [ ] LOC/connectivity heatmap
+- [ ] Export PNG
+- [ ] Mycelium Cloud — team sessions, shared history, web dashboard
+
+---
+
+## Configuration files
+
+| Path | Contents |
+|------|----------|
+| `.mycelium/graph.json` | Dependency graph |
+| `.mycelium/sessions.json` | Session history |
+| `.mycelium/config.json` | Ignore patterns |
+| `.mycelium/embeddings.json` | Semantic vectors |
+| `~/.mycelium/config.json` | Global API keys (shared across projects) |
+
+---
+
+<div align="center">
+<sub>Built for developers who want their AI agents to actually understand their codebase.</sub>
+</div>
