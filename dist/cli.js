@@ -3275,7 +3275,7 @@ var require_package = __commonJS({
   "package.json"(exports2, module2) {
     module2.exports = {
       name: "@kopikocappu/mycelium",
-      version: "0.2.10",
+      version: "0.2.11",
       description: "Codebase memory for AI coding agents. Natural language preflight, graph viewer, and agent history in one command.",
       bin: {
         mycelium: "dist/cli.js"
@@ -16564,6 +16564,7 @@ var McpServer = class {
   constructor(store, changeLogger, config, projectRoot) {
     this.rateLimiter = new RateLimiter();
     this.server = null;
+    this.sseClients = /* @__PURE__ */ new Set();
     // Three-way ignore split
     this.defaultIgnore = [];
     this.userIgnore = [];
@@ -16730,6 +16731,14 @@ var McpServer = class {
         this.handleConfigPost(req, res);
         return;
       }
+    }
+    if (pathname === "/describe" && method === "POST") {
+      this.handleDescribe(req, res);
+      return;
+    }
+    if (pathname === "/events" && method === "GET") {
+      this.handleEvents(res);
+      return;
     }
     res.writeHead(404);
     res.end(JSON.stringify({
@@ -16978,6 +16987,46 @@ var McpServer = class {
     this.sessionManager.refresh();
     res.writeHead(200);
     res.end(JSON.stringify(this.sessionManager.toHistoryResponse()));
+  }
+  /** POST /describe — persist an inline description edit to disk */
+  async handleDescribe(req, res) {
+    try {
+      const body = await this.readBody(req);
+      const { nodeId, description, tags } = JSON.parse(body);
+      if (!nodeId || typeof description !== "string") {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: "nodeId and description required" }));
+        return;
+      }
+      this.store.updateDescription(nodeId, description, tags ?? []);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
+    } catch (e) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: String(e) }));
+    }
+  }
+  /** GET /events — SSE stream that pushes graph-updated when the graph changes */
+  handleEvents(res) {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+      "Access-Control-Allow-Origin": "*"
+    });
+    res.write("data: connected\n\n");
+    this.sseClients.add(res);
+    res.on("close", () => this.sseClients.delete(res));
+  }
+  /** Call this whenever the graph is rebuilt — notifies all connected browsers */
+  broadcastGraphUpdate() {
+    for (const client of this.sseClients) {
+      try {
+        client.write("event: graph-updated\ndata: {}\n\n");
+      } catch {
+        this.sseClients.delete(client);
+      }
+    }
   }
   // ── Task / session endpoints ──────────────────────────────────────────────
   /** GET /task — active session status */
@@ -17666,64 +17715,117 @@ function writeClaudeMd(workspaceRoot, store, config) {
 function buildGraphMemSection(stats, teams, port) {
   const teamList = teams.map((t) => `  - \`${t}\``).join("\n");
   return `${GRAPHMEM_SECTION_START}
-## Mycelium \u2014 Codebase Memory
 
-This project uses **Mycelium** for AI agent memory.
-Graph: **${stats.fileCount} files**, **${stats.edgeCount} edges**, AI descriptions on every node.
+# \u{1F344} Mycelium \u2014 Codebase Memory
+
+This project uses **Mycelium** for AI agent memory and task tracking.
+Graph: **${stats.fileCount} files** \xB7 **${stats.edgeCount} edges** \xB7 AI descriptions on every node.
+
+> **You are not the first agent here. Read before you touch anything.**
 
 ---
 
-### MANDATORY: Do this before touching ANY file
+## Mandatory workflow \u2014 follow this every single time
 
-**Step 1 \u2014 Preflight your task**
+### Step 0 \u2014 Start a session
+
+\`\`\`bash
+mycelium task "describe exactly what you are about to do"
+\`\`\`
+
+This takes a snapshot of the codebase so every file you touch gets recorded with a full diff. Skip this and your work goes untracked.
+
+---
+
+### Step 1 \u2014 Preflight your task
+
 \`\`\`bash
 curl "http://localhost:${port}/preflight?task=DESCRIBE_YOUR_TASK_IN_PLAIN_ENGLISH"
 \`\`\`
-Read ONLY the files returned. Do not explore the codebase blindly. The graph knows what's relevant.
 
-**Step 2 \u2014 Check agent history**
-\`\`\`bash
-curl "http://localhost:${port}/history"
-\`\`\`
-See what previous agents changed. Never repeat work or undo someone else's progress.
-
-**Step 3 \u2014 Before modifying a function, check its impact**
-\`\`\`bash
-curl "http://localhost:${port}/xref?file=src/auth/token.ts&fn=refreshToken"
-\`\`\`
-This shows every caller of that function and what it calls. Know the blast radius before changing anything.
-
-**Step 4 \u2014 Make your changes**
-Only now open files and make edits.
-
-**Step 5 \u2014 After finishing**
-Write a one-sentence summary of what you changed as a comment or in your response.
-The next agent will read it.
+Returns the 4\u20138 files most relevant to your task. **Read only these files.** Do not explore the codebase blindly. The graph knows what's relevant \u2014 trust it.
 
 ---
 
-### Other useful queries
+### Step 2 \u2014 Check what previous agents did
 
 \`\`\`bash
-# Semantic search
+curl "http://localhost:${port}/history"
+\`\`\`
+
+See every session that ran before you. What files were touched, how many lines changed, and an AI summary of what was done. Never repeat work or undo someone else's progress.
+
+---
+
+### Step 3 \u2014 Check blast radius before modifying any function
+
+\`\`\`bash
+curl "http://localhost:${port}/xref?file=src/auth/token.ts&fn=refreshToken"
+\`\`\`
+
+Replace the file and function name with whatever you're about to change. This returns every caller and callee. If something imports or calls what you're modifying, read that file too before changing the signature.
+
+---
+
+### Step 4 \u2014 Make your changes
+
+Only now open files and make edits. Stay within the files preflight returned unless xref revealed additional callers you need to update.
+
+---
+
+### Step 5 \u2014 End the session
+
+\`\`\`bash
+mycelium task done
+\`\`\`
+
+This computes the full diff \u2014 every file changed, lines added and removed, recorded in session history. The next agent will see exactly what you did.
+
+---
+
+## Other useful queries
+
+\`\`\`bash
+# Semantic search across all file descriptions
 curl "http://localhost:${port}/search?q=stripe+webhook"
 
 # What a file imports and what imports it
 curl "http://localhost:${port}/dependencies?file=src/payments/stripe.ts"
 
-# Full graph
+# Full dependency graph as JSON
 curl "http://localhost:${port}/graph"
+
+# Single file details
+curl "http://localhost:${port}/node/src%2Fapi%2Forders.ts"
+
+# Server health and graph stats
+curl "http://localhost:${port}/status"
 \`\`\`
 
-### Team lenses: ${teamList.length > 0 ? "" : "none configured"}
-${teamList}
+---
 
-### Rules (non-negotiable)
-1. /preflight before any file read. No exceptions.
-2. /history if continuing existing work.
-3. /xref before modifying any function with callers.
-4. Read only preflight results. Trust the graph.
-5. Summarize what you did when finished.
+## Rules \u2014 non-negotiable
+
+| # | Rule |
+|---|------|
+| 1 | Run \`mycelium task\` before anything else |
+| 2 | Run \`/preflight\` before reading any file |
+| 3 | Run \`/history\` if continuing or building on existing work |
+| 4 | Run \`/xref\` before modifying any function that has callers |
+| 5 | Read only the files preflight returned \u2014 trust the graph |
+| 6 | Run \`mycelium task done\` when finished |
+${teamList.length > 0 ? `
+## Team lenses
+${teamList}` : ""}
+
+---
+
+## Why this matters
+
+Every agent that skips preflight reads 10\xD7 more files than necessary and burns through context that could be used for actual work. Every agent that skips \`mycelium task done\` leaves the next agent blind to what changed.
+
+The graph viewer at **http://localhost:${port}/ui** shows the full dependency map of this codebase. Open it if you want to understand the structure visually before starting.
+
 ${GRAPHMEM_SECTION_END}`;
 }
 
@@ -17893,7 +17995,7 @@ async function runSummarize(root, store, config) {
   });
   ok("Summarization complete");
 }
-async function startWatcher(root, store, config) {
+async function startWatcher(root, store, config, onUpdate) {
   const chokidar = await Promise.resolve().then(() => __toESM(require_chokidar()));
   const sourceGlobs = detectSourceGlobs(root);
   const watcher = chokidar.watch(sourceGlobs, {
@@ -17924,6 +18026,7 @@ async function startWatcher(root, store, config) {
       await summarizer.summarizePending(store, () => content);
     }
     dim(`Updated: ${rel}`);
+    onUpdate?.();
   };
   watcher.on("change", (rel) => handleChange(rel));
   watcher.on("add", (rel) => handleChange(rel));
@@ -17931,6 +18034,7 @@ async function startWatcher(root, store, config) {
     store.deleteNodesForFile(rel);
     store.deleteEdgesForFile(rel);
     dim(`Removed: ${rel}`);
+    onUpdate?.();
   });
 }
 var program2 = new Command();
@@ -17973,7 +18077,7 @@ program2.command("init [path]").description("Scan codebase, build graph, start s
     log(`  ${C.bold}MCP server${C.reset}  ${C.gray}http://localhost:${config.mcp.port}${C.reset}`);
     log("");
     if (opts.watch) {
-      await startWatcher(root, store, config);
+      startWatcher(root, store, config, () => server.broadcastGraphUpdate());
       log(`  ${C.gray}Watching for changes... (Ctrl+C to stop)${C.reset}
 `);
       process.on("SIGINT", () => {
@@ -18004,7 +18108,7 @@ program2.command("serve [path]").description("Start MCP server and file watcher 
   log(`  ${C.bold}MCP server${C.reset}  ${C.gray}http://localhost:${config.mcp.port}${C.reset}`);
   log("");
   if (opts.watch) {
-    await startWatcher(root, store, config);
+    await startWatcher(root, store, config, () => server.broadcastGraphUpdate());
     log(`  ${C.gray}Watching for changes... (Ctrl+C to stop)${C.reset}
 `);
     process.on("SIGINT", () => {

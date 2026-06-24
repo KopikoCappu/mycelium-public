@@ -1,7 +1,3 @@
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/KopikoCappu/Mycelium/main/assets/logo.png" width="80" alt="Mycelium logo" />
-
 # Mycelium
 
 **Codebase memory for AI coding agents**
@@ -811,5 +807,6 @@ npm config get prefix
 
 <div align="center">
 <sub>Built for developers who want their AI agents to actually understand their codebase.</sub>
-</div>#   m y c e l i u m - p u b l i c  
+</div>#   m y c e l i u m - p u b l i c 
+ 
  

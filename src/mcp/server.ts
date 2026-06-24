@@ -33,6 +33,7 @@ export class McpServer {
   private configPath:     string;
   private server:         http.Server | null = null;
   private sessionManager: SessionManager;
+  private sseClients: Set<http.ServerResponse> = new Set();
 
   // Three-way ignore split
   private defaultIgnore: string[] = [];
@@ -179,6 +180,16 @@ export class McpServer {
     if (pathname === '/config') {
       if (method === 'GET')  return this.handleConfigGet(res);
       if (method === 'POST') { this.handleConfigPost(req, res); return; }
+    }
+
+    // ── Describe ──────────────────────────────────────────────────────────────────
+    if (pathname === '/describe' && method === 'POST') {
+      this.handleDescribe(req, res); return;
+    }
+
+    // ── SSE live updates ──────────────────────────────────────────────────────────
+    if (pathname === '/events' && method === 'GET') {
+      this.handleEvents(res); return;
     }
 
     res.writeHead(404);
@@ -427,6 +438,46 @@ export class McpServer {
     this.sessionManager.refresh();
     res.writeHead(200);
     res.end(JSON.stringify(this.sessionManager.toHistoryResponse()));
+  }
+
+  /** POST /describe — persist an inline description edit to disk */
+private async handleDescribe(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  try {
+    const body = await this.readBody(req);
+    const { nodeId, description, tags } = JSON.parse(body) as {
+      nodeId: string;
+      description: string;
+      tags?: string[];
+    };
+    if (!nodeId || typeof description !== 'string') {
+      res.writeHead(400); res.end(JSON.stringify({ error: 'nodeId and description required' })); return;
+    }
+    this.store.updateDescription(nodeId, description, tags ?? []);
+    res.writeHead(200); res.end(JSON.stringify({ ok: true }));
+  } catch (e) {
+    res.writeHead(400); res.end(JSON.stringify({ error: String(e) }));
+  }
+}
+
+/** GET /events — SSE stream that pushes graph-updated when the graph changes */
+  private handleEvents(res: http.ServerResponse): void {
+    res.writeHead(200, {
+      'Content-Type':  'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection':    'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.write('data: connected\n\n');
+    this.sseClients.add(res);
+    res.on('close', () => this.sseClients.delete(res));
+  }
+
+  /** Call this whenever the graph is rebuilt — notifies all connected browsers */
+  public broadcastGraphUpdate(): void {
+    for (const client of this.sseClients) {
+      try { client.write('event: graph-updated\ndata: {}\n\n'); }
+      catch { this.sseClients.delete(client); }
+    }
   }
 
   // ── Task / session endpoints ──────────────────────────────────────────────

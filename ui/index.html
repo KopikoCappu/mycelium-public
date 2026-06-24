@@ -2603,6 +2603,31 @@ if (_taskEditInp) {
     if (e.key === 'Escape') toggleTaskEdit();
   });
 }
+
+// ── Auto-refresh via SSE ───────────────────────────────────────────────────────
+function initSSE() {
+  const es = new EventSource(`${API_BASE}/events`);
+  es.addEventListener('graph-updated', () => {
+    // Reload graph data and rebuild visualization silently
+    fetch(`${API_BASE}/graph`)
+      .then(r => r.json())
+      .then(data => {
+        allNodes = data.nodes || [];
+        allLinks = data.edges || [];
+        detectImportCycles();
+        if (simulation) simulation.stop();
+        buildVis(true);
+        if (_initialFitDone) fitToScreen();
+      })
+      .catch(() => {}); // server went away, ignore
+  });
+  es.onerror = () => {
+    // Connection dropped — retry in 5 seconds
+    es.close();
+    setTimeout(initSSE, 5000);
+  };
+}
+initSSE();
 </script>
 </body>
 </html>

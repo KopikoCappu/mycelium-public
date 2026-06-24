@@ -149,7 +149,7 @@ async function runSummarize(root: string, store: GraphStore, config: GraphMemCon
 // individual saves to history anymore. History is now session-based:
 // use `mycelium task "description"` + `mycelium task done`.
 
-async function startWatcher(root: string, store: GraphStore, config: GraphMemConfig): Promise<void> {
+async function startWatcher(root: string, store: GraphStore, config: GraphMemConfig, onUpdate?: () => void): Promise<void> {
   const chokidar    = await import('chokidar');
   const sourceGlobs = detectSourceGlobs(root);
 
@@ -181,6 +181,7 @@ async function startWatcher(root: string, store: GraphStore, config: GraphMemCon
       await summarizer.summarizePending(store, () => content);
     }
     dim(`Updated: ${rel}`);
+    onUpdate?.();
   };
 
   watcher.on('change', rel => handleChange(rel));
@@ -189,6 +190,7 @@ async function startWatcher(root: string, store: GraphStore, config: GraphMemCon
     store.deleteNodesForFile(rel);
     store.deleteEdgesForFile(rel);
     dim(`Removed: ${rel}`);
+    onUpdate?.();   // ← add this
   });
 }
 
@@ -247,7 +249,7 @@ program
       log(`  ${C.bold}MCP server${C.reset}  ${C.gray}http://localhost:${config.mcp.port}${C.reset}`);
       log('');
       if (opts.watch) {
-        await startWatcher(root, store, config);
+        startWatcher(root, store, config, () => server.broadcastGraphUpdate());
         log(`  ${C.gray}Watching for changes... (Ctrl+C to stop)${C.reset}\n`);
         process.on('SIGINT', () => { store.flush(); server.stop(); process.exit(0); });
         await new Promise(() => {});
@@ -282,7 +284,7 @@ program
     log('');
 
     if (opts.watch) {
-      await startWatcher(root, store, config);
+      await startWatcher(root, store, config, () => server.broadcastGraphUpdate());
       log(`  ${C.gray}Watching for changes... (Ctrl+C to stop)${C.reset}\n`);
       process.on('SIGINT', () => { store.flush(); server.stop(); process.exit(0); });
       await new Promise(() => {});
