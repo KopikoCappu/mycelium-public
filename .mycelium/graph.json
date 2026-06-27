@@ -1,70 +1,436 @@
 {
   "nodes": {
+    ".mcp.json": {
+      "id": ".mcp.json",
+      "kind": "file",
+      "path": ".mcp.json",
+      "name": ".mcp.json",
+      "description": "MCP server configuration file that registers the local GraphMem HTTP server at localhost:47821, enabling Claude Code and other agents to auto-discover codebase memory tools (/preflight, /search, /dependencies, /history).",
+      "tags": [
+        "config",
+        "mcp",
+        "api",
+        "integration"
+      ],
+      "exported": false,
+      "lastHash": "d5d3368a61f8d02e",
+      "lastUpdated": 1782426888516
+    },
     ".mycelium.config.example.json": {
       "id": ".mycelium.config.example.json",
       "kind": "file",
       "path": ".mycelium.config.example.json",
       "name": ".mycelium.config.example.json",
-      "description": "Example configuration file defining team lenses (security, finance, data, ui, api), parser rules (file globs, exclusions), and MCP server settings for Mycelium—used as a template for project-specific `.mycelium/config.json`.",
+      "description": "Example configuration schema defining team-based file filtering (core, security, finance, data, ui, api), parser globs/excludes, summarizer model selection (claude-haiku-4-5), and MCP server port. Serves as template for project-specific .mycelium/config.json.",
       "tags": [
         "config",
+        "schema",
         "teams",
-        "parser",
-        "mcp"
+        "parser"
       ],
       "exported": false,
       "lastHash": "44d51cddd62b9b39",
-      "lastUpdated": 1782156096799
+      "lastUpdated": 1782426888516
+    },
+    ".mycelium/graph.json": {
+      "id": ".mycelium/graph.json",
+      "kind": "file",
+      "path": ".mycelium/graph.json",
+      "name": ".mycelium/graph.json",
+      "description": "Persisted dependency graph state containing semantic nodes (files, functions, classes) and edges (imports, calls, containment). Updated incrementally by the parser and watcher; queried by the MCP server for preflight/search/xref.",
+      "tags": [
+        "graph",
+        "store",
+        "db",
+        "state"
+      ],
+      "exported": false,
+      "lastHash": "b8336dd5ceb7f219",
+      "lastUpdated": 1782426888516
+    },
+    "CLAUDE.md": {
+      "id": "CLAUDE.md",
+      "kind": "file",
+      "path": "CLAUDE.md",
+      "name": "CLAUDE.md",
+      "description": "Agent system prompt auto-generated into project root after `mycelium init`. Documents mandatory 5-step workflow (task start → preflight → history → xref → edit → task done), query examples, and team lens configuration. Read by Claude Code on startup.",
+      "tags": [
+        "docs",
+        "agent-prompt",
+        "workflow",
+        "bootstrap"
+      ],
+      "exported": false,
+      "lastHash": "6ebdb617a8104a77",
+      "lastUpdated": 1782426888516
     },
     "README.md": {
       "id": "README.md",
       "kind": "file",
       "path": "README.md",
       "name": "README.md",
-      "description": "Comprehensive documentation for Mycelium CLI tool, covering installation, quick start, and detailed CLI reference for commands like `init`, `serve`, `scan`, `task`, and `search`—explains how AI agents use the codebase memory graph to reduce token usage.",
+      "description": "High-level project documentation explaining Mycelium's purpose (reduce AI context burn from 30–40 files to 4–6 via semantic preflight), CLI commands (init, serve, scan, task, search), and quick-start workflow with curl examples.",
       "tags": [
-        "documentation",
-        "cli",
-        "agent",
-        "graph"
+        "docs",
+        "guide",
+        "reference"
       ],
       "exported": false,
       "lastHash": "b335630551682c19",
-      "lastUpdated": 1782156096799
+      "lastUpdated": 1782426888516
     },
-    "ui/index.html": {
-      "id": "ui/index.html",
+    "ui/myc-inject.js": {
+      "id": "ui/myc-inject.js",
       "kind": "file",
-      "path": "ui/index.html",
-      "name": "index.html",
-      "description": "Single-page web application for visualizing the Mycelium dependency graph using D3.js, with dark theme styling, sidebar navigation (search, node info, history, legend), canvas visualization, minimap, and task session UI—served by the MCP HTTP server.",
+      "path": "ui/myc-inject.js",
+      "name": "ui/myc-inject.js",
+      "description": "Embedded mascot (SVG fungi character) with voice lines, contextual reactions, drag-to-position UI, easter eggs, and dark theme styling. Injected into graph viewer HTML to provide interactive feedback (preflight alerts, cycle detection, session events).",
       "tags": [
         "ui",
-        "visualization",
-        "d3",
-        "frontend",
-        "components"
+        "components",
+        "animation",
+        "mascot"
       ],
       "exported": false,
-      "lastHash": "88636d2769930e3e",
-      "lastUpdated": 1782156096799
+      "lastHash": "9543603d5977fcd3",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.applyPos": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.applyPos",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "applyPos",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "8254a5465553d529",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.bumpTimers": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.bumpTimers",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "bumpTimers",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "f1d6a25562406e7c",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.centerScreen": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.centerScreen",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "centerScreen",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "1f5d9747741b423b",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.checkEasterEgg": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.checkEasterEgg",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "checkEasterEgg",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "cb93004ea8ccd02a",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.clampToViewport": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.clampToViewport",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "clampToViewport",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "ab5bbfa6c525a8ce",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.clearAnims": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.clearAnims",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "clearAnims",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "7e4b117877577b83",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.dockTopRight": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.dockTopRight",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "dockTopRight",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "0af0f86f02da6fb8",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.fireIdleTip": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.fireIdleTip",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "fireIdleTip",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "3bbd5ff15d67f114",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.frame": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.frame",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "frame",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "5c901fdb4e2ddd94",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.hideMyc": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.hideMyc",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "hideMyc",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "b5798ef361d39337",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.loadPos": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.loadPos",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "loadPos",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "cb983695653e8e9d",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerDown": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerDown",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "onPointerDown",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "bc30eaedfd4345d2",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerMove": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerMove",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "onPointerMove",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "1d9a55b78104b32c",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerUp": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.onPointerUp",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "onPointerUp",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "c2426d823c83ef93",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.playIntro": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.playIntro",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "playIntro",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "9c543aa002b617e3",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.react": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.react",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "react",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "20bb0486ce687523",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.resetIdleTimer": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.resetIdleTimer",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "resetIdleTimer",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "d05eaf706bec22f9",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.savePos": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.savePos",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "savePos",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "674127978d356a26",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.say": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.say",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "say",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "3dd397c51b2ed169",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.schedBored": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.schedBored",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "schedBored",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "113ff68aa27d7ccf",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.settleWiggle": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.settleWiggle",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "settleWiggle",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "79831d88f618d6d3",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.showBubble": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.showBubble",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "showBubble",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "ee792eb77c6f9a79",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.showMyc": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.showMyc",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "showMyc",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "6089796935b26068",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speak": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speak",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "speak",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "2ecc49d9e476dd96",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speakRandom": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speakRandom",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "speakRandom",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "6f5e77a973c10a74",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speakReaction": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.speakReaction",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "speakReaction",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "796bc172de1c3c76",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.startIdle": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.startIdle",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "startIdle",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "8b7fbcf39738c7af",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.stopIdle": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.stopIdle",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "stopIdle",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "8afda8d46a42027e",
+      "lastUpdated": 1782426888516
+    },
+    "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.tip": {
+      "id": "ui/myc-inject.js::C-Users-Minh-Tran-Desktop-mycelium-v2.ui.myc-inject.tip",
+      "kind": "function",
+      "path": "ui/myc-inject.js",
+      "name": "tip",
+      "description": "",
+      "tags": [],
+      "exported": false,
+      "lastHash": "8e5d1125e25d7787",
+      "lastUpdated": 1782426888516
     },
     "src/sessions.ts": {
       "id": "src/sessions.ts",
       "kind": "file",
+      "lineCount": 437,
       "path": "src/sessions.ts",
       "name": "sessions.ts",
-      "description": "SessionManager class that tracks bounded work sessions: captures pre-task file snapshots (line count, mtime), detects changes at task completion, computes diffs via git, and persists results to `sessions.json`—enables accurate change logging without line-by-line diffing.",
+      "description": "SessionManager class tracking bounded work sessions: lightweight file snapshots (line count + mtime) on start, change detection on completion, git diff capture, and structured result recording in .mycelium/sessions.json. Exports types (TaskSession, FileChange, SessionResult) and helpers (formatDuration, walkSourceFiles).",
       "tags": [
         "sessions",
-        "tasks",
-        "state",
-        "history",
-        "utils"
+        "tracking",
+        "store",
+        "utils",
+        "types"
       ],
       "exported": true,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::FileSnapshot": {
       "id": "src/sessions.ts::FileSnapshot",
@@ -78,7 +444,7 @@
       "lineStart": 20,
       "lineEnd": 20,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::FileChange": {
       "id": "src/sessions.ts::FileChange",
@@ -92,7 +458,7 @@
       "lineStart": 25,
       "lineEnd": 25,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::SessionResult": {
       "id": "src/sessions.ts::SessionResult",
@@ -106,7 +472,7 @@
       "lineStart": 33,
       "lineEnd": 33,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::TaskSession": {
       "id": "src/sessions.ts::TaskSession",
@@ -120,7 +486,7 @@
       "lineStart": 44,
       "lineEnd": 44,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::countLines": {
       "id": "src/sessions.ts::countLines",
@@ -134,7 +500,7 @@
       "lineStart": 58,
       "lineEnd": 58,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::getGitDiff": {
       "id": "src/sessions.ts::getGitDiff",
@@ -148,7 +514,7 @@
       "lineStart": 72,
       "lineEnd": 72,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::formatDuration": {
       "id": "src/sessions.ts::formatDuration",
@@ -162,7 +528,7 @@
       "lineStart": 95,
       "lineEnd": 95,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::walk": {
       "id": "src/sessions.ts::walk",
@@ -176,7 +542,7 @@
       "lineStart": 115,
       "lineEnd": 115,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/sessions.ts::SessionManager": {
       "id": "src/sessions.ts::SessionManager",
@@ -190,24 +556,24 @@
       "lineStart": 140,
       "lineEnd": 140,
       "lastHash": "097b85af0956e876",
-      "lastUpdated": 1782156098183
+      "lastUpdated": 1782426890377
     },
     "src/cli.ts": {
       "id": "src/cli.ts",
       "kind": "file",
+      "lineCount": 727,
       "path": "src/cli.ts",
       "name": "cli.ts",
-      "description": "Main CLI entry point using Commander.js; orchestrates core commands (`init`, `serve`, `scan`, `task`) by wiring together GraphStore, Summarizer, McpServer, parser, and SessionManager—handles API key management, project config loading, and file watching.",
+      "description": "Commander.js CLI entry point implementing commands (init, serve, scan, task, search, key, debug) with global ~/.mycelium/config.json for API keys. Orchestrates graph scanning (parser + optional CBM adapter), summarization (Claude Haiku), file watcher, and session management. Generates CLAUDE.md and .mcp.json on first run.",
       "tags": [
         "cli",
         "main",
-        "commands",
-        "middleware",
-        "orchestration"
+        "orchestration",
+        "api-integration"
       ],
       "exported": true,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::GLOBAL_CONFIG_DIR": {
       "id": "src/cli.ts::GLOBAL_CONFIG_DIR",
@@ -220,8 +586,8 @@
       "exported": false,
       "lineStart": 22,
       "lineEnd": 22,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::GLOBAL_CONFIG_FILE": {
       "id": "src/cli.ts::GLOBAL_CONFIG_FILE",
@@ -234,8 +600,8 @@
       "exported": false,
       "lineStart": 23,
       "lineEnd": 23,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::getGlobalConfig": {
       "id": "src/cli.ts::getGlobalConfig",
@@ -248,8 +614,8 @@
       "exported": false,
       "lineStart": 25,
       "lineEnd": 25,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::saveGlobalConfig": {
       "id": "src/cli.ts::saveGlobalConfig",
@@ -262,8 +628,8 @@
       "exported": false,
       "lineStart": 30,
       "lineEnd": 30,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::getApiKey": {
       "id": "src/cli.ts::getApiKey",
@@ -276,8 +642,8 @@
       "exported": false,
       "lineStart": 36,
       "lineEnd": 36,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::getOpenAiKey": {
       "id": "src/cli.ts::getOpenAiKey",
@@ -290,8 +656,8 @@
       "exported": false,
       "lineStart": 37,
       "lineEnd": 37,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::resolveRoot": {
       "id": "src/cli.ts::resolveRoot",
@@ -304,8 +670,8 @@
       "exported": false,
       "lineStart": 41,
       "lineEnd": 41,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::loadProjectConfig": {
       "id": "src/cli.ts::loadProjectConfig",
@@ -318,8 +684,8 @@
       "exported": false,
       "lineStart": 43,
       "lineEnd": 43,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::initProjectDir": {
       "id": "src/cli.ts::initProjectDir",
@@ -332,8 +698,8 @@
       "exported": false,
       "lineStart": 51,
       "lineEnd": 51,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::log": {
       "id": "src/cli.ts::log",
@@ -346,8 +712,8 @@
       "exported": false,
       "lineStart": 73,
       "lineEnd": 73,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::ok": {
       "id": "src/cli.ts::ok",
@@ -360,8 +726,8 @@
       "exported": false,
       "lineStart": 74,
       "lineEnd": 74,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::info": {
       "id": "src/cli.ts::info",
@@ -374,8 +740,8 @@
       "exported": false,
       "lineStart": 75,
       "lineEnd": 75,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::warn": {
       "id": "src/cli.ts::warn",
@@ -388,8 +754,8 @@
       "exported": false,
       "lineStart": 76,
       "lineEnd": 76,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::dim": {
       "id": "src/cli.ts::dim",
@@ -402,8 +768,8 @@
       "exported": false,
       "lineStart": 77,
       "lineEnd": 77,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::err": {
       "id": "src/cli.ts::err",
@@ -416,8 +782,8 @@
       "exported": false,
       "lineStart": 78,
       "lineEnd": 78,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::header": {
       "id": "src/cli.ts::header",
@@ -430,8 +796,8 @@
       "exported": false,
       "lineStart": 80,
       "lineEnd": 80,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::runScan": {
       "id": "src/cli.ts::runScan",
@@ -444,8 +810,8 @@
       "exported": false,
       "lineStart": 86,
       "lineEnd": 86,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::runSummarize": {
       "id": "src/cli.ts::runSummarize",
@@ -458,8 +824,8 @@
       "exported": false,
       "lineStart": 130,
       "lineEnd": 130,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::startWatcher": {
       "id": "src/cli.ts::startWatcher",
@@ -467,13 +833,13 @@
       "path": "src/cli.ts",
       "name": "startWatcher",
       "description": "",
-      "signature": "function startWatcher(root: string, store: GraphStore, config: GraphMemConfig): Promise<void>",
+      "signature": "function startWatcher(root: string, store: GraphStore, config: GraphMemConfig, onUpdate?: (): void",
       "tags": [],
       "exported": false,
       "lineStart": 152,
       "lineEnd": 152,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::handleChange": {
       "id": "src/cli.ts::handleChange",
@@ -486,8 +852,8 @@
       "exported": false,
       "lineStart": 163,
       "lineEnd": 163,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::serverUp": {
       "id": "src/cli.ts::serverUp",
@@ -498,10 +864,10 @@
       "signature": "function serverUp(): Promise<boolean>",
       "tags": [],
       "exported": false,
-      "lineStart": 333,
-      "lineEnd": 333,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lineStart": 348,
+      "lineEnd": 348,
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/cli.ts::timeAgo": {
       "id": "src/cli.ts::timeAgo",
@@ -512,26 +878,27 @@
       "signature": "function timeAgo(ts: number): string",
       "tags": [],
       "exported": false,
-      "lineStart": 704,
-      "lineEnd": 704,
-      "lastHash": "0154f395f574b060",
-      "lastUpdated": 1782156098188
+      "lineStart": 719,
+      "lineEnd": 719,
+      "lastHash": "330e394ce5eee1db",
+      "lastUpdated": 1782426890381
     },
     "src/bootstrap.ts": {
       "id": "src/bootstrap.ts",
       "kind": "file",
+      "lineCount": 223,
       "path": "src/bootstrap.ts",
       "name": "bootstrap.ts",
-      "description": "Writes `CLAUDE.md` and `.mcp.json` files into project root after first scan; `CLAUDE.md` instructs AI agents on mandatory preflight queries and graph usage rules, while `.mcp.json` auto-discovers the MCP server for Claude Code and Cursor.",
+      "description": "Writes agent bootstrap files (CLAUDE.md system prompt + .mcp.json server config) into project root after initial scan. Merges gracefully with existing files; generates both mandatory workflow docs and service discovery for Claude Code.",
       "tags": [
         "bootstrap",
-        "agent",
+        "agent-setup",
         "config",
         "utils"
       ],
       "exported": true,
-      "lastHash": "18dd3c670f19fa09",
-      "lastUpdated": 1782156098192
+      "lastHash": "91f7839ddb2d7aff",
+      "lastUpdated": 1782426890383
     },
     "src/bootstrap.ts::writeMcpJson": {
       "id": "src/bootstrap.ts::writeMcpJson",
@@ -544,8 +911,8 @@
       "exported": false,
       "lineStart": 25,
       "lineEnd": 25,
-      "lastHash": "18dd3c670f19fa09",
-      "lastUpdated": 1782156098192
+      "lastHash": "91f7839ddb2d7aff",
+      "lastUpdated": 1782426890383
     },
     "src/bootstrap.ts::GRAPHMEM_SECTION_START": {
       "id": "src/bootstrap.ts::GRAPHMEM_SECTION_START",
@@ -558,8 +925,8 @@
       "exported": false,
       "lineStart": 62,
       "lineEnd": 62,
-      "lastHash": "18dd3c670f19fa09",
-      "lastUpdated": 1782156098192
+      "lastHash": "91f7839ddb2d7aff",
+      "lastUpdated": 1782426890383
     },
     "src/bootstrap.ts::GRAPHMEM_SECTION_END": {
       "id": "src/bootstrap.ts::GRAPHMEM_SECTION_END",
@@ -572,25 +939,1349 @@
       "exported": false,
       "lineStart": 63,
       "lineEnd": 63,
-      "lastHash": "18dd3c670f19fa09",
-      "lastUpdated": 1782156098192
+      "lastHash": "91f7839ddb2d7aff",
+      "lastUpdated": 1782426890383
+    },
+    "ui/index.html": {
+      "id": "ui/index.html",
+      "kind": "file",
+      "lineCount": 3464,
+      "path": "ui/index.html",
+      "name": "index.html",
+      "description": "Main HTML entry point for a D3.js-based code dependency graph visualization tool called 'Mycelium Graph'. Renders an interactive SVG canvas with sidebar panels for node inspection, search, history, and dependency analysis, featuring dark theme styling with custom CSS variables.",
+      "tags": [
+        "ui",
+        "visualization",
+        "d3js",
+        "html",
+        "frontend",
+        "graph",
+        "interactive"
+      ],
+      "exported": true,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::API_BASE": {
+      "id": "ui/index.html::API_BASE",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "API_BASE",
+      "description": "",
+      "signature": "const API_BASE",
+      "tags": [],
+      "exported": false,
+      "lineStart": 798,
+      "lineEnd": 798,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::DIR_PALETTE": {
+      "id": "ui/index.html::DIR_PALETTE",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "DIR_PALETTE",
+      "description": "",
+      "signature": "const DIR_PALETTE",
+      "tags": [],
+      "exported": false,
+      "lineStart": 800,
+      "lineEnd": 800,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::getDirColor": {
+      "id": "ui/index.html::getDirColor",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "getDirColor",
+      "description": "",
+      "signature": "function getDirColor(nodeId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 808,
+      "lineEnd": 808,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::COLORS": {
+      "id": "ui/index.html::COLORS",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "COLORS",
+      "description": "",
+      "signature": "const COLORS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 818,
+      "lineEnd": 818,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::COLOR_PRESETS": {
+      "id": "ui/index.html::COLOR_PRESETS",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "COLOR_PRESETS",
+      "description": "",
+      "signature": "const COLOR_PRESETS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 829,
+      "lineEnd": 829,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::applyFlowColors": {
+      "id": "ui/index.html::applyFlowColors",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "applyFlowColors",
+      "description": "",
+      "signature": "function applyFlowColors(out, inC, save = true): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 877,
+      "lineEnd": 877,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::resetColors": {
+      "id": "ui/index.html::resetColors",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "resetColors",
+      "description": "",
+      "signature": "function resetColors(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 908,
+      "lineEnd": 908,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::buildColorPresets": {
+      "id": "ui/index.html::buildColorPresets",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "buildColorPresets",
+      "description": "",
+      "signature": "function buildColorPresets(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 910,
+      "lineEnd": 910,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::switchModalTab": {
+      "id": "ui/index.html::switchModalTab",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "switchModalTab",
+      "description": "",
+      "signature": "function switchModalTab(name): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 925,
+      "lineEnd": 925,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::loadGraph": {
+      "id": "ui/index.html::loadGraph",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "loadGraph",
+      "description": "",
+      "signature": "function loadGraph(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 943,
+      "lineEnd": 943,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::buildVis": {
+      "id": "ui/index.html::buildVis",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "buildVis",
+      "description": "",
+      "signature": "function buildVis(silent = false): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 959,
+      "lineEnd": 959,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::ticked": {
+      "id": "ui/index.html::ticked",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "ticked",
+      "description": "",
+      "signature": "function ticked(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1173,
+      "lineEnd": 1173,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::centerOnNode": {
+      "id": "ui/index.html::centerOnNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "centerOnNode",
+      "description": "",
+      "signature": "function centerOnNode(d): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1184,
+      "lineEnd": 1184,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::showCtxMenu": {
+      "id": "ui/index.html::showCtxMenu",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "showCtxMenu",
+      "description": "",
+      "signature": "function showCtxMenu(event, d): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1197,
+      "lineEnd": 1197,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::hideCtxMenu": {
+      "id": "ui/index.html::hideCtxMenu",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "hideCtxMenu",
+      "description": "",
+      "signature": "function hideCtxMenu(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1204,
+      "lineEnd": 1204,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::persistHidden": {
+      "id": "ui/index.html::persistHidden",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "persistHidden",
+      "description": "",
+      "signature": "function persistHidden(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1262,
+      "lineEnd": 1262,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::hideNodeInstant": {
+      "id": "ui/index.html::hideNodeInstant",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "hideNodeInstant",
+      "description": "",
+      "signature": "function hideNodeInstant(nodeId, batch = false): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1264,
+      "lineEnd": 1264,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::unhideNode": {
+      "id": "ui/index.html::unhideNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "unhideNode",
+      "description": "",
+      "signature": "function unhideNode(nodeId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1287,
+      "lineEnd": 1287,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::unhideAll": {
+      "id": "ui/index.html::unhideAll",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "unhideAll",
+      "description": "",
+      "signature": "function unhideAll(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1288,
+      "lineEnd": 1288,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::silentRebuild": {
+      "id": "ui/index.html::silentRebuild",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "silentRebuild",
+      "description": "",
+      "signature": "function silentRebuild(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1289,
+      "lineEnd": 1289,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::toggleHiddenList": {
+      "id": "ui/index.html::toggleHiddenList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "toggleHiddenList",
+      "description": "",
+      "signature": "function toggleHiddenList(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1292,
+      "lineEnd": 1292,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderHiddenList": {
+      "id": "ui/index.html::renderHiddenList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderHiddenList",
+      "description": "",
+      "signature": "function renderHiddenList(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1297,
+      "lineEnd": 1297,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::updateHiddenRow": {
+      "id": "ui/index.html::updateHiddenRow",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "updateHiddenRow",
+      "description": "",
+      "signature": "function updateHiddenRow(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1308,
+      "lineEnd": 1308,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::clusterForce": {
+      "id": "ui/index.html::clusterForce",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "clusterForce",
+      "description": "",
+      "signature": "function clusterForce(groups, strength): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1316,
+      "lineEnd": 1316,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderHulls": {
+      "id": "ui/index.html::renderHulls",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderHulls",
+      "description": "",
+      "signature": "function renderHulls(dirGroups): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1332,
+      "lineEnd": 1332,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::selectNode": {
+      "id": "ui/index.html::selectNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "selectNode",
+      "description": "",
+      "signature": "function selectNode(nodeData, linkObjs): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1355,
+      "lineEnd": 1355,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::startFlowAnimation": {
+      "id": "ui/index.html::startFlowAnimation",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "startFlowAnimation",
+      "description": "",
+      "signature": "function startFlowAnimation(nodeData, links): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1392,
+      "lineEnd": 1392,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::tick": {
+      "id": "ui/index.html::tick",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "tick",
+      "description": "",
+      "signature": "function tick(ts): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1410,
+      "lineEnd": 1410,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::positionFlowEndpoints": {
+      "id": "ui/index.html::positionFlowEndpoints",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "positionFlowEndpoints",
+      "description": "",
+      "signature": "function positionFlowEndpoints(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1421,
+      "lineEnd": 1421,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::stopFlowAnimation": {
+      "id": "ui/index.html::stopFlowAnimation",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "stopFlowAnimation",
+      "description": "",
+      "signature": "function stopFlowAnimation(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1432,
+      "lineEnd": 1432,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::depList": {
+      "id": "ui/index.html::depList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "depList",
+      "description": "",
+      "signature": "function depList(items, cssClass, labelText, key): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1441,
+      "lineEnd": 1441,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::INITIAL": {
+      "id": "ui/index.html::INITIAL",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "INITIAL",
+      "description": "",
+      "signature": "const INITIAL",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1443,
+      "lineEnd": 1443,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderItem": {
+      "id": "ui/index.html::renderItem",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderItem",
+      "description": "",
+      "signature": "function renderItem(l): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1445,
+      "lineEnd": 1445,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::toggleDepSection": {
+      "id": "ui/index.html::toggleDepSection",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "toggleDepSection",
+      "description": "",
+      "signature": "function toggleDepSection(sid): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1458,
+      "lineEnd": 1458,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderNodeInfo": {
+      "id": "ui/index.html::renderNodeInfo",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderNodeInfo",
+      "description": "",
+      "signature": "function renderNodeInfo(nodeData, linkObjs): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1468,
+      "lineEnd": 1468,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::hideNodeFromPanel": {
+      "id": "ui/index.html::hideNodeFromPanel",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "hideNodeFromPanel",
+      "description": "",
+      "signature": "function hideNodeFromPanel(id): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1516,
+      "lineEnd": 1516,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::copyNodePath": {
+      "id": "ui/index.html::copyNodePath",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "copyNodePath",
+      "description": "",
+      "signature": "function copyNodePath(id, btn): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1518,
+      "lineEnd": 1518,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::filterByTag": {
+      "id": "ui/index.html::filterByTag",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "filterByTag",
+      "description": "",
+      "signature": "function filterByTag(tag): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1528,
+      "lineEnd": 1528,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::focusNode": {
+      "id": "ui/index.html::focusNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "focusNode",
+      "description": "",
+      "signature": "function focusNode(nodeId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1539,
+      "lineEnd": 1539,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_rebuildKeepPositions": {
+      "id": "ui/index.html::_rebuildKeepPositions",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_rebuildKeepPositions",
+      "description": "",
+      "signature": "function _rebuildKeepPositions(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1642,
+      "lineEnd": 1642,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::rebuildVis": {
+      "id": "ui/index.html::rebuildVis",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "rebuildVis",
+      "description": "",
+      "signature": "function rebuildVis(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1669,
+      "lineEnd": 1669,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::pinNode": {
+      "id": "ui/index.html::pinNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "pinNode",
+      "description": "",
+      "signature": "function pinNode(id): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1683,
+      "lineEnd": 1683,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::unpinNode": {
+      "id": "ui/index.html::unpinNode",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "unpinNode",
+      "description": "",
+      "signature": "function unpinNode(id): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1697,
+      "lineEnd": 1697,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_persistPins": {
+      "id": "ui/index.html::_persistPins",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_persistPins",
+      "description": "",
+      "signature": "function _persistPins(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1709,
+      "lineEnd": 1709,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::applyMultiSelect": {
+      "id": "ui/index.html::applyMultiSelect",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "applyMultiSelect",
+      "description": "",
+      "signature": "function applyMultiSelect(linkObjs): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1719,
+      "lineEnd": 1719,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::clearMultiSelect": {
+      "id": "ui/index.html::clearMultiSelect",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "clearMultiSelect",
+      "description": "",
+      "signature": "function clearMultiSelect(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1744,
+      "lineEnd": 1744,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderMultiSelectInfo": {
+      "id": "ui/index.html::renderMultiSelectInfo",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderMultiSelectInfo",
+      "description": "",
+      "signature": "function renderMultiSelectInfo(linkObjs): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1749,
+      "lineEnd": 1749,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderSmallList": {
+      "id": "ui/index.html::renderSmallList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderSmallList",
+      "description": "",
+      "signature": "const renderSmallList = (items, color) => unknown",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1772,
+      "lineEnd": 1772,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::expandNeighbors": {
+      "id": "ui/index.html::expandNeighbors",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "expandNeighbors",
+      "description": "",
+      "signature": "function expandNeighbors(nodeData): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1795,
+      "lineEnd": 1795,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::isolateSubtree": {
+      "id": "ui/index.html::isolateSubtree",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "isolateSubtree",
+      "description": "",
+      "signature": "function isolateSubtree(nodeId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1846,
+      "lineEnd": 1846,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::clearSubtreeIsolation": {
+      "id": "ui/index.html::clearSubtreeIsolation",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "clearSubtreeIsolation",
+      "description": "",
+      "signature": "function clearSubtreeIsolation(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1869,
+      "lineEnd": 1869,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::copyAsMarkdown": {
+      "id": "ui/index.html::copyAsMarkdown",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "copyAsMarkdown",
+      "description": "",
+      "signature": "function copyAsMarkdown(nodeData, imports, importedBy, btnEl): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1878,
+      "lineEnd": 1878,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::startDescriptionEdit": {
+      "id": "ui/index.html::startDescriptionEdit",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "startDescriptionEdit",
+      "description": "",
+      "signature": "function startDescriptionEdit(el, nodeId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1903,
+      "lineEnd": 1903,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::save": {
+      "id": "ui/index.html::save",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "save",
+      "description": "",
+      "signature": "const save = () => unknown",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1929,
+      "lineEnd": 1929,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::setSidebarCollapsed": {
+      "id": "ui/index.html::setSidebarCollapsed",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setSidebarCollapsed",
+      "description": "",
+      "signature": "function setSidebarCollapsed(collapsed): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1968,
+      "lineEnd": 1968,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::fitToScreen": {
+      "id": "ui/index.html::fitToScreen",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "fitToScreen",
+      "description": "",
+      "signature": "function fitToScreen(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 1989,
+      "lineEnd": 1989,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::initMinimap": {
+      "id": "ui/index.html::initMinimap",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "initMinimap",
+      "description": "",
+      "signature": "function initMinimap(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2009,
+      "lineEnd": 2009,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::updateMinimapNodes": {
+      "id": "ui/index.html::updateMinimapNodes",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "updateMinimapNodes",
+      "description": "",
+      "signature": "function updateMinimapNodes(nodes): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2011,
+      "lineEnd": 2011,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::updateMinimap": {
+      "id": "ui/index.html::updateMinimap",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "updateMinimap",
+      "description": "",
+      "signature": "function updateMinimap(transform, svgW, svgH): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2034,
+      "lineEnd": 2034,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::showTooltip": {
+      "id": "ui/index.html::showTooltip",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "showTooltip",
+      "description": "",
+      "signature": "function showTooltip(event, d): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2050,
+      "lineEnd": 2050,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::moveTooltip": {
+      "id": "ui/index.html::moveTooltip",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "moveTooltip",
+      "description": "",
+      "signature": "function moveTooltip(event): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2062,
+      "lineEnd": 2062,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::hideTooltip": {
+      "id": "ui/index.html::hideTooltip",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "hideTooltip",
+      "description": "",
+      "signature": "function hideTooltip(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2070,
+      "lineEnd": 2070,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::nodeRadius": {
+      "id": "ui/index.html::nodeRadius",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "nodeRadius",
+      "description": "",
+      "signature": "function nodeRadius(d): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2073,
+      "lineEnd": 2073,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::shortName": {
+      "id": "ui/index.html::shortName",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "shortName",
+      "description": "",
+      "signature": "function shortName(name): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2083,
+      "lineEnd": 2083,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::groupByDirectory": {
+      "id": "ui/index.html::groupByDirectory",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "groupByDirectory",
+      "description": "",
+      "signature": "function groupByDirectory(fileNodes): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2088,
+      "lineEnd": 2088,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::computeConnectionCounts": {
+      "id": "ui/index.html::computeConnectionCounts",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "computeConnectionCounts",
+      "description": "",
+      "signature": "function computeConnectionCounts(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2100,
+      "lineEnd": 2100,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::detectImportCycles": {
+      "id": "ui/index.html::detectImportCycles",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "detectImportCycles",
+      "description": "",
+      "signature": "function detectImportCycles(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2113,
+      "lineEnd": 2113,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::WHITE": {
+      "id": "ui/index.html::WHITE",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "WHITE",
+      "description": "",
+      "signature": "const WHITE",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2120,
+      "lineEnd": 2120,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::dfs": {
+      "id": "ui/index.html::dfs",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "dfs",
+      "description": "",
+      "signature": "function dfs(u): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2122,
+      "lineEnd": 2122,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderCyclesPanel": {
+      "id": "ui/index.html::renderCyclesPanel",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderCyclesPanel",
+      "description": "",
+      "signature": "function renderCyclesPanel(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2150,
+      "lineEnd": 2150,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::focusCycle": {
+      "id": "ui/index.html::focusCycle",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "focusCycle",
+      "description": "",
+      "signature": "function focusCycle(i): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2164,
+      "lineEnd": 2164,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::setLoading": {
+      "id": "ui/index.html::setLoading",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setLoading",
+      "description": "",
+      "signature": "function setLoading(text): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2170,
+      "lineEnd": 2170,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::hideLoading": {
+      "id": "ui/index.html::hideLoading",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "hideLoading",
+      "description": "",
+      "signature": "function hideLoading(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2174,
+      "lineEnd": 2174,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::updateDirLegend": {
+      "id": "ui/index.html::updateDirLegend",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "updateDirLegend",
+      "description": "",
+      "signature": "function updateDirLegend(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2179,
+      "lineEnd": 2179,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::toggleIsolateDir": {
+      "id": "ui/index.html::toggleIsolateDir",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "toggleIsolateDir",
+      "description": "",
+      "signature": "function toggleIsolateDir(dir): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2191,
+      "lineEnd": 2191,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::applyDirIsolation": {
+      "id": "ui/index.html::applyDirIsolation",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "applyDirIsolation",
+      "description": "",
+      "signature": "function applyDirIsolation(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2197,
+      "lineEnd": 2197,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::switchTab": {
+      "id": "ui/index.html::switchTab",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "switchTab",
+      "description": "",
+      "signature": "function switchTab(name): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2214,
+      "lineEnd": 2214,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::summarizeSession": {
+      "id": "ui/index.html::summarizeSession",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "summarizeSession",
+      "description": "",
+      "signature": "function summarizeSession(sessionId, shortId, btnEl): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2227,
+      "lineEnd": 2227,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::toggleTaskEdit": {
+      "id": "ui/index.html::toggleTaskEdit",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "toggleTaskEdit",
+      "description": "",
+      "signature": "function toggleTaskEdit(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2333,
+      "lineEnd": 2333,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::setActiveTask": {
+      "id": "ui/index.html::setActiveTask",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setActiveTask",
+      "description": "",
+      "signature": "function setActiveTask(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2348,
+      "lineEnd": 2348,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::loadHistory": {
+      "id": "ui/index.html::loadHistory",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "loadHistory",
+      "description": "",
+      "signature": "function loadHistory(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2383,
+      "lineEnd": 2383,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_renderSession": {
+      "id": "ui/index.html::_renderSession",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_renderSession",
+      "description": "",
+      "signature": "function _renderSession(s): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2480,
+      "lineEnd": 2480,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::SHOW": {
+      "id": "ui/index.html::SHOW",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "SHOW",
+      "description": "",
+      "signature": "const SHOW",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2496,
+      "lineEnd": 2496,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_toggleSession": {
+      "id": "ui/index.html::_toggleSession",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_toggleSession",
+      "description": "",
+      "signature": "function _toggleSession(sid): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2565,
+      "lineEnd": 2565,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_relativeElapsed": {
+      "id": "ui/index.html::_relativeElapsed",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_relativeElapsed",
+      "description": "",
+      "signature": "function _relativeElapsed(ms): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2574,
+      "lineEnd": 2574,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_getFilePath": {
+      "id": "ui/index.html::_getFilePath",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_getFilePath",
+      "description": "",
+      "signature": "function _getFilePath(c): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2586,
+      "lineEnd": 2586,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_relativeTime": {
+      "id": "ui/index.html::_relativeTime",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_relativeTime",
+      "description": "",
+      "signature": "function _relativeTime(ts): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2592,
+      "lineEnd": 2592,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_taskDuration": {
+      "id": "ui/index.html::_taskDuration",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_taskDuration",
+      "description": "",
+      "signature": "function _taskDuration(items): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2608,
+      "lineEnd": 2608,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_renderHistoryItem": {
+      "id": "ui/index.html::_renderHistoryItem",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_renderHistoryItem",
+      "description": "",
+      "signature": "function _renderHistoryItem(c): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2618,
+      "lineEnd": 2618,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::loadIgnoreConfig": {
+      "id": "ui/index.html::loadIgnoreConfig",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "loadIgnoreConfig",
+      "description": "",
+      "signature": "function loadIgnoreConfig(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2681,
+      "lineEnd": 2681,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderIgnoreList": {
+      "id": "ui/index.html::renderIgnoreList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderIgnoreList",
+      "description": "",
+      "signature": "function renderIgnoreList(data): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2692,
+      "lineEnd": 2692,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::postIgnoreAction": {
+      "id": "ui/index.html::postIgnoreAction",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "postIgnoreAction",
+      "description": "",
+      "signature": "function postIgnoreAction(action, pattern): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2724,
+      "lineEnd": 2724,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::initSSE": {
+      "id": "ui/index.html::initSSE",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "initSSE",
+      "description": "",
+      "signature": "function initSSE(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2793,
+      "lineEnd": 2793,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
     },
     "src/parser/treeSitter.ts": {
       "id": "src/parser/treeSitter.ts",
       "kind": "file",
+      "lineCount": 416,
       "path": "src/parser/treeSitter.ts",
       "name": "treeSitter.ts",
-      "description": "CodeParser class that extracts file metadata, imports (with alias resolution from tsconfig.json), and symbol definitions (functions, classes, const arrows) from source code; produces GraphNode and GraphEdge objects for storage—core AST analysis.",
+      "description": "Parses source files across multiple languages (JS/TS, HTML, CSS, Python, Rust) using regex-based extraction and path alias resolution, producing a GraphNode for the file and GraphEdge entries for imports, exports, and symbol relationships. Caches tsconfig path aliases to resolve @/ and ~/ prefixes.",
       "tags": [
         "parser",
         "ast",
         "imports",
         "symbols",
-        "treesitter"
+        "multi-language",
+        "path-resolution"
       ],
       "exported": true,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::ParseResult": {
       "id": "src/parser/treeSitter.ts::ParseResult",
@@ -603,8 +2294,8 @@
       "exported": true,
       "lineStart": 6,
       "lineEnd": 6,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::CodeParser": {
       "id": "src/parser/treeSitter.ts::CodeParser",
@@ -617,8 +2308,8 @@
       "exported": true,
       "lineStart": 12,
       "lineEnd": 12,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::readPathAliases": {
       "id": "src/parser/treeSitter.ts::readPathAliases",
@@ -631,8 +2322,92 @@
       "exported": false,
       "lineStart": 68,
       "lineEnd": 68,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractJsRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractJsRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractJsRawPaths",
+      "description": "",
+      "signature": "function extractJsRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 106,
+      "lineEnd": 106,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractHtmlRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractHtmlRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractHtmlRawPaths",
+      "description": "",
+      "signature": "function extractHtmlRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 120,
+      "lineEnd": 120,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractCssRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractCssRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractCssRawPaths",
+      "description": "",
+      "signature": "function extractCssRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 151,
+      "lineEnd": 151,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractPythonRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractPythonRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractPythonRawPaths",
+      "description": "",
+      "signature": "function extractPythonRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 167,
+      "lineEnd": 167,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractRustRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractRustRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractRustRawPaths",
+      "description": "",
+      "signature": "function extractRustRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 193,
+      "lineEnd": 193,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
+    },
+    "src/parser/treeSitter.ts::extractCppRawPaths": {
+      "id": "src/parser/treeSitter.ts::extractCppRawPaths",
+      "kind": "function",
+      "path": "src/parser/treeSitter.ts",
+      "name": "extractCppRawPaths",
+      "description": "",
+      "signature": "function extractCppRawPaths(content: string): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 223,
+      "lineEnd": 223,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::ImportInfo": {
       "id": "src/parser/treeSitter.ts::ImportInfo",
@@ -643,10 +2418,10 @@
       "signature": "interface ImportInfo",
       "tags": [],
       "exported": false,
-      "lineStart": 106,
-      "lineEnd": 106,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 239,
+      "lineEnd": 239,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::resolveRelative": {
       "id": "src/parser/treeSitter.ts::resolveRelative",
@@ -657,10 +2432,10 @@
       "signature": "function resolveRelative(fromDir: string, importPath: string): string | null",
       "tags": [],
       "exported": false,
-      "lineStart": 161,
-      "lineEnd": 161,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 330,
+      "lineEnd": 330,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::normalizeExt": {
       "id": "src/parser/treeSitter.ts::normalizeExt",
@@ -671,10 +2446,10 @@
       "signature": "function normalizeExt(base: string): string",
       "tags": [],
       "exported": false,
-      "lineStart": 166,
-      "lineEnd": 166,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 335,
+      "lineEnd": 335,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::extractSymbols": {
       "id": "src/parser/treeSitter.ts::extractSymbols",
@@ -685,10 +2460,10 @@
       "signature": "function extractSymbols(content: string, filePath: string, hash: string, now: number): GraphNode[]",
       "tags": [],
       "exported": false,
-      "lineStart": 175,
-      "lineEnd": 175,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 344,
+      "lineEnd": 344,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::sha256": {
       "id": "src/parser/treeSitter.ts::sha256",
@@ -699,10 +2474,10 @@
       "signature": "function sha256(content: string): string",
       "tags": [],
       "exported": false,
-      "lineStart": 239,
-      "lineEnd": 239,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 408,
+      "lineEnd": 408,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/treeSitter.ts::edgeId": {
       "id": "src/parser/treeSitter.ts::edgeId",
@@ -713,26 +2488,321 @@
       "signature": "function edgeId(from: string, kind: string, to: string): string",
       "tags": [],
       "exported": false,
-      "lineStart": 243,
-      "lineEnd": 243,
-      "lastHash": "8529947a8cfebecd",
-      "lastUpdated": 1782156098193
+      "lineStart": 412,
+      "lineEnd": 412,
+      "lastHash": "f9960aff37cf4ef0",
+      "lastUpdated": 1782426890387
     },
     "src/parser/detect.ts": {
       "id": "src/parser/detect.ts",
       "kind": "file",
+      "lineCount": 247,
       "path": "src/parser/detect.ts",
       "name": "detect.ts",
-      "description": "Auto-detects project source file globs by reading tsconfig.json `include`/`rootDir`, scanning for known directories (src, app, lib), or defaulting to root scan—enables parser to find all application code without manual config.",
+      "description": "Detects project type (TypeScript, Python, Rust, Go, etc.) from config files and intelligently builds glob patterns for source code discovery, falling back to directory scanning when tsconfig is unavailable. Augments globs with asset directories to ensure HTML/CSS imports are extracted.",
       "tags": [
         "parser",
-        "detect",
+        "project-detection",
         "globs",
-        "utils"
+        "configuration"
       ],
       "exported": true,
-      "lastHash": "a13ebc8e9626466a",
-      "lastUpdated": 1782156098194
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::TS_JS": {
+      "id": "src/parser/detect.ts::TS_JS",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "TS_JS",
+      "description": "",
+      "signature": "const TS_JS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 6,
+      "lineEnd": 6,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::WEB": {
+      "id": "src/parser/detect.ts::WEB",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "WEB",
+      "description": "",
+      "signature": "const WEB",
+      "tags": [],
+      "exported": false,
+      "lineStart": 7,
+      "lineEnd": 7,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::PYTHON": {
+      "id": "src/parser/detect.ts::PYTHON",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "PYTHON",
+      "description": "",
+      "signature": "const PYTHON",
+      "tags": [],
+      "exported": false,
+      "lineStart": 8,
+      "lineEnd": 8,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::SYSTEMS": {
+      "id": "src/parser/detect.ts::SYSTEMS",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "SYSTEMS",
+      "description": "",
+      "signature": "const SYSTEMS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 9,
+      "lineEnd": 9,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::JAVA": {
+      "id": "src/parser/detect.ts::JAVA",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "JAVA",
+      "description": "",
+      "signature": "const JAVA",
+      "tags": [],
+      "exported": false,
+      "lineStart": 11,
+      "lineEnd": 11,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::RUBY": {
+      "id": "src/parser/detect.ts::RUBY",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "RUBY",
+      "description": "",
+      "signature": "const RUBY",
+      "tags": [],
+      "exported": false,
+      "lineStart": 12,
+      "lineEnd": 12,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::PHP": {
+      "id": "src/parser/detect.ts::PHP",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "PHP",
+      "description": "",
+      "signature": "const PHP",
+      "tags": [],
+      "exported": false,
+      "lineStart": 13,
+      "lineEnd": 13,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::SWIFT": {
+      "id": "src/parser/detect.ts::SWIFT",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "SWIFT",
+      "description": "",
+      "signature": "const SWIFT",
+      "tags": [],
+      "exported": false,
+      "lineStart": 14,
+      "lineEnd": 14,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::CSHARP": {
+      "id": "src/parser/detect.ts::CSHARP",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "CSHARP",
+      "description": "",
+      "signature": "const CSHARP",
+      "tags": [],
+      "exported": false,
+      "lineStart": 15,
+      "lineEnd": 15,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::SHELL": {
+      "id": "src/parser/detect.ts::SHELL",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "SHELL",
+      "description": "",
+      "signature": "const SHELL",
+      "tags": [],
+      "exported": false,
+      "lineStart": 16,
+      "lineEnd": 16,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::CONFIG": {
+      "id": "src/parser/detect.ts::CONFIG",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "CONFIG",
+      "description": "",
+      "signature": "const CONFIG",
+      "tags": [],
+      "exported": false,
+      "lineStart": 17,
+      "lineEnd": 17,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::ALL_EXTS": {
+      "id": "src/parser/detect.ts::ALL_EXTS",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "ALL_EXTS",
+      "description": "",
+      "signature": "const ALL_EXTS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 20,
+      "lineEnd": 20,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::SOURCE_CANDIDATES": {
+      "id": "src/parser/detect.ts::SOURCE_CANDIDATES",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "SOURCE_CANDIDATES",
+      "description": "",
+      "signature": "const SOURCE_CANDIDATES",
+      "tags": [],
+      "exported": false,
+      "lineStart": 23,
+      "lineEnd": 23,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::ALWAYS_IGNORE": {
+      "id": "src/parser/detect.ts::ALWAYS_IGNORE",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "ALWAYS_IGNORE",
+      "description": "",
+      "signature": "const ALWAYS_IGNORE",
+      "tags": [],
+      "exported": false,
+      "lineStart": 42,
+      "lineEnd": 42,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::ProjectHints": {
+      "id": "src/parser/detect.ts::ProjectHints",
+      "kind": "interface",
+      "path": "src/parser/detect.ts",
+      "name": "ProjectHints",
+      "description": "",
+      "signature": "interface ProjectHints",
+      "tags": [],
+      "exported": false,
+      "lineStart": 54,
+      "lineEnd": 54,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::detectProjectTypes": {
+      "id": "src/parser/detect.ts::detectProjectTypes",
+      "kind": "function",
+      "path": "src/parser/detect.ts",
+      "name": "detectProjectTypes",
+      "description": "",
+      "signature": "function detectProjectTypes(root: string): ProjectHints",
+      "tags": [],
+      "exported": false,
+      "lineStart": 66,
+      "lineEnd": 66,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::exists": {
+      "id": "src/parser/detect.ts::exists",
+      "kind": "function",
+      "path": "src/parser/detect.ts",
+      "name": "exists",
+      "description": "",
+      "signature": "const exists = (f: string) => unknown",
+      "tags": [],
+      "exported": false,
+      "lineStart": 67,
+      "lineEnd": 67,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::buildExtGlob": {
+      "id": "src/parser/detect.ts::buildExtGlob",
+      "kind": "function",
+      "path": "src/parser/detect.ts",
+      "name": "buildExtGlob",
+      "description": "",
+      "signature": "function buildExtGlob(hints: ProjectHints): string",
+      "tags": [],
+      "exported": false,
+      "lineStart": 81,
+      "lineEnd": 81,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::ASSET_DIRS": {
+      "id": "src/parser/detect.ts::ASSET_DIRS",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "ASSET_DIRS",
+      "description": "",
+      "signature": "const ASSET_DIRS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 111,
+      "lineEnd": 111,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::ASSET_EXTS": {
+      "id": "src/parser/detect.ts::ASSET_EXTS",
+      "kind": "constant",
+      "path": "src/parser/detect.ts",
+      "name": "ASSET_EXTS",
+      "description": "",
+      "signature": "const ASSET_EXTS",
+      "tags": [],
+      "exported": false,
+      "lineStart": 112,
+      "lineEnd": 112,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
+    },
+    "src/parser/detect.ts::addAssetDirs": {
+      "id": "src/parser/detect.ts::addAssetDirs",
+      "kind": "function",
+      "path": "src/parser/detect.ts",
+      "name": "addAssetDirs",
+      "description": "",
+      "signature": "function addAssetDirs(root: string, globs: string[]): string[]",
+      "tags": [],
+      "exported": false,
+      "lineStart": 114,
+      "lineEnd": 114,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
     },
     "src/parser/detect.ts::detectSourceGlobs": {
       "id": "src/parser/detect.ts::detectSourceGlobs",
@@ -743,27 +2813,22 @@
       "signature": "function detectSourceGlobs(workspaceRoot: string): string[]",
       "tags": [],
       "exported": true,
-      "lineStart": 12,
-      "lineEnd": 12,
-      "lastHash": "a13ebc8e9626466a",
-      "lastUpdated": 1782156098194
+      "lineStart": 127,
+      "lineEnd": 127,
+      "lastHash": "b9d830f34f0c710e",
+      "lastUpdated": 1782426890388
     },
     "src/mcp/server.ts": {
       "id": "src/mcp/server.ts",
       "kind": "file",
+      "lineCount": 997,
       "path": "src/mcp/server.ts",
       "name": "server.ts",
-      "description": "HTTP server implementing MCP routes: `/preflight` (task-aware file recommendations), `/search` (semantic or keyword), `/dependencies` (import/call graph), `/history` (session diffs), `/task` (session lifecycle), `/xref` (cross-references), `/config` (user-editable ignore lists)—central API for agents and UI.",
-      "tags": [
-        "api",
-        "mcp",
-        "routes",
-        "http",
-        "handlers"
-      ],
+      "description": "",
+      "tags": [],
       "exported": true,
-      "lastHash": "79e4221bdb9cc893",
-      "lastUpdated": 1782156098195
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
     },
     "src/mcp/server.ts::RateLimiter": {
       "id": "src/mcp/server.ts::RateLimiter",
@@ -774,10 +2839,10 @@
       "signature": "class RateLimiter",
       "tags": [],
       "exported": false,
-      "lineStart": 11,
-      "lineEnd": 11,
-      "lastHash": "79e4221bdb9cc893",
-      "lastUpdated": 1782156098195
+      "lineStart": 112,
+      "lineEnd": 112,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
     },
     "src/mcp/server.ts::McpServer": {
       "id": "src/mcp/server.ts::McpServer",
@@ -788,10 +2853,10 @@
       "signature": "class McpServer",
       "tags": [],
       "exported": true,
-      "lineStart": 28,
-      "lineEnd": 28,
-      "lastHash": "79e4221bdb9cc893",
-      "lastUpdated": 1782156098195
+      "lineStart": 129,
+      "lineEnd": 129,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
     },
     "src/mcp/server.ts::force": {
       "id": "src/mcp/server.ts::force",
@@ -802,10 +2867,10 @@
       "signature": "const force = (() => unknown",
       "tags": [],
       "exported": false,
-      "lineStart": 560,
-      "lineEnd": 560,
-      "lastHash": "79e4221bdb9cc893",
-      "lastUpdated": 1782156098195
+      "lineStart": 836,
+      "lineEnd": 836,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
     },
     "src/mcp/server.ts::bt": {
       "id": "src/mcp/server.ts::bt",
@@ -816,27 +2881,28 @@
       "signature": "const bt = (s: string) => unknown",
       "tags": [],
       "exported": false,
-      "lineStart": 701,
-      "lineEnd": 701,
-      "lastHash": "79e4221bdb9cc893",
-      "lastUpdated": 1782156098195
+      "lineStart": 977,
+      "lineEnd": 977,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
     },
     "src/integrations/cbm-adapter.ts": {
       "id": "src/integrations/cbm-adapter.ts",
       "kind": "file",
+      "lineCount": 425,
       "path": "src/integrations/cbm-adapter.ts",
       "name": "cbm-adapter.ts",
-      "description": "Adapter bridging codebase-memory-mcp (cbm) structural graph (call graph, multi-language support) into Mycelium's store; converts cbm nodes/edges to Mycelium format and provides `traceFunction()` for /xref cross-reference queries—optional external indexing layer.",
+      "description": "Adapter bridging codebase-memory-mcp (cbm) CLI into Mycelium's graph store, invoking cbm's multi-language structural analysis (158 languages) and converting nodes/edges to Mycelium format. Provides traceFunction() for call graph queries and detectChanges() for risk analysis.",
       "tags": [
-        "integrations",
-        "cbm",
-        "graph",
-        "adapter",
-        "external"
+        "integration",
+        "cli-adapter",
+        "codebase-memory",
+        "multi-language",
+        "external-tool"
       ],
       "exported": true,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/integrations/cbm-adapter.ts::CbmNode": {
       "id": "src/integrations/cbm-adapter.ts::CbmNode",
@@ -849,8 +2915,8 @@
       "exported": false,
       "lineStart": 19,
       "lineEnd": 19,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/integrations/cbm-adapter.ts::CbmEdge": {
       "id": "src/integrations/cbm-adapter.ts::CbmEdge",
@@ -863,8 +2929,8 @@
       "exported": false,
       "lineStart": 31,
       "lineEnd": 31,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/integrations/cbm-adapter.ts::CbmGraph": {
       "id": "src/integrations/cbm-adapter.ts::CbmGraph",
@@ -877,8 +2943,8 @@
       "exported": true,
       "lineStart": 38,
       "lineEnd": 38,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/integrations/cbm-adapter.ts::CbmAdapterResult": {
       "id": "src/integrations/cbm-adapter.ts::CbmAdapterResult",
@@ -891,8 +2957,8 @@
       "exported": true,
       "lineStart": 43,
       "lineEnd": 43,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/integrations/cbm-adapter.ts::CbmAdapter": {
       "id": "src/integrations/cbm-adapter.ts::CbmAdapter",
@@ -905,25 +2971,26 @@
       "exported": true,
       "lineStart": 57,
       "lineEnd": 57,
-      "lastHash": "efd49e428562c2fb",
-      "lastUpdated": 1782156098196
+      "lastHash": "5e6be411bdf40184",
+      "lastUpdated": 1782426890390
     },
     "src/history/logger.ts": {
       "id": "src/history/logger.ts",
       "kind": "file",
+      "lineCount": 143,
       "path": "src/history/logger.ts",
       "name": "logger.ts",
-      "description": "Tracks file changes and task context for AI agents, logging who made what changes when with debounced persistence to JSON; provides querying by task, file, or agent and generates summaries for MCP servers.",
+      "description": "Tracks file changes with task context and agent attribution (human, claude-code, cursor). Persists ChangeEntry objects to JSON with active task/agent metadata; provides query methods grouped by file, task, or agent for timeline reconstruction.",
       "tags": [
         "history",
-        "logging",
-        "utils",
+        "change-log",
+        "task-tracking",
         "persistence",
-        "agents"
+        "utils"
       ],
       "exported": true,
       "lastHash": "c4d82af7d3f63ed3",
-      "lastUpdated": 1782156098198
+      "lastUpdated": 1782426890391
     },
     "src/history/logger.ts::ChangeEntry": {
       "id": "src/history/logger.ts::ChangeEntry",
@@ -937,7 +3004,7 @@
       "lineStart": 6,
       "lineEnd": 6,
       "lastHash": "c4d82af7d3f63ed3",
-      "lastUpdated": 1782156098198
+      "lastUpdated": 1782426890391
     },
     "src/history/logger.ts::HistoryData": {
       "id": "src/history/logger.ts::HistoryData",
@@ -951,7 +3018,7 @@
       "lineStart": 17,
       "lineEnd": 17,
       "lastHash": "c4d82af7d3f63ed3",
-      "lastUpdated": 1782156098198
+      "lastUpdated": 1782426890391
     },
     "src/history/logger.ts::ChangeLogger": {
       "id": "src/history/logger.ts::ChangeLogger",
@@ -965,24 +3032,25 @@
       "lineStart": 25,
       "lineEnd": 25,
       "lastHash": "c4d82af7d3f63ed3",
-      "lastUpdated": 1782156098198
+      "lastUpdated": 1782426890391
     },
     "src/graph/summarizer.ts": {
       "id": "src/graph/summarizer.ts",
       "kind": "file",
+      "lineCount": 147,
       "path": "src/graph/summarizer.ts",
       "name": "summarizer.ts",
-      "description": "Batches file nodes to Claude Haiku for AI-generated 1–2 sentence descriptions and tag inference, handling API errors gracefully and parsing structured JSON responses into the graph store.",
+      "description": "Batches file nodes to Claude Haiku API for AI-generated 1–2 sentence descriptions and tag arrays. Parses responses into structured descriptions and updates GraphStore; handles graceful fallback if API key is missing or request fails.",
       "tags": [
         "summarizer",
         "ai",
-        "claude",
-        "graph",
-        "batch-processing"
+        "anthropic",
+        "batch-processing",
+        "descriptions"
       ],
       "exported": true,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/summarizer.ts::SummarizerConfig": {
       "id": "src/graph/summarizer.ts::SummarizerConfig",
@@ -996,7 +3064,7 @@
       "lineStart": 8,
       "lineEnd": 8,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/summarizer.ts::SummarizeResponse": {
       "id": "src/graph/summarizer.ts::SummarizeResponse",
@@ -1010,7 +3078,7 @@
       "lineStart": 14,
       "lineEnd": 14,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/summarizer.ts::Summarizer": {
       "id": "src/graph/summarizer.ts::Summarizer",
@@ -1024,7 +3092,7 @@
       "lineStart": 20,
       "lineEnd": 20,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/summarizer.ts::buildSummaryPrompt": {
       "id": "src/graph/summarizer.ts::buildSummaryPrompt",
@@ -1038,7 +3106,7 @@
       "lineStart": 103,
       "lineEnd": 103,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/summarizer.ts::parseSummaryResponse": {
       "id": "src/graph/summarizer.ts::parseSummaryResponse",
@@ -1052,24 +3120,25 @@
       "lineStart": 132,
       "lineEnd": 132,
       "lastHash": "830b40f21700bc05",
-      "lastUpdated": 1782156098199
+      "lastUpdated": 1782426890392
     },
     "src/graph/store.ts": {
       "id": "src/graph/store.ts",
       "kind": "file",
+      "lineCount": 304,
       "path": "src/graph/store.ts",
       "name": "store.ts",
-      "description": "Persistent in-memory graph store for nodes and edges with debounced JSON serialization; supports filtered subgraph queries by team lens, dependency lookups, keyword search with stop-word filtering, and edge resolution.",
+      "description": "In-memory graph database persisting nodes and edges to JSON, with lazy save scheduling. Supports upsert, search by keyword (with stop-word filtering), dependency lookup, team-based filtering via TeamLens, and entry-point detection. Resolves import edges to handle path aliasing.",
       "tags": [
         "store",
-        "graph",
+        "graph-db",
+        "search",
         "persistence",
-        "queries",
-        "types"
+        "filtering"
       ],
       "exported": true,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/store.ts::GraphData": {
       "id": "src/graph/store.ts::GraphData",
@@ -1082,8 +3151,8 @@
       "exported": false,
       "lineStart": 12,
       "lineEnd": 12,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/store.ts::GraphStore": {
       "id": "src/graph/store.ts::GraphStore",
@@ -1096,8 +3165,8 @@
       "exported": true,
       "lineStart": 18,
       "lineEnd": 18,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/store.ts::STOP": {
       "id": "src/graph/store.ts::STOP",
@@ -1110,8 +3179,8 @@
       "exported": false,
       "lineStart": 127,
       "lineEnd": 127,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/store.ts::toSummary": {
       "id": "src/graph/store.ts::toSummary",
@@ -1122,10 +3191,10 @@
       "signature": "function toSummary(node: GraphNode): NodeSummary",
       "tags": [],
       "exported": false,
-      "lineStart": 252,
-      "lineEnd": 252,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lineStart": 284,
+      "lineEnd": 284,
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/store.ts::matchGlob": {
       "id": "src/graph/store.ts::matchGlob",
@@ -1136,26 +3205,27 @@
       "signature": "function matchGlob(pattern: string, filePath: string): boolean",
       "tags": [],
       "exported": false,
-      "lineStart": 256,
-      "lineEnd": 256,
-      "lastHash": "2618a75bb04ce129",
-      "lastUpdated": 1782156098200
+      "lineStart": 288,
+      "lineEnd": 288,
+      "lastHash": "ef52dffa8fa5d5f4",
+      "lastUpdated": 1782426890393
     },
     "src/graph/schema.ts": {
       "id": "src/graph/schema.ts",
       "kind": "file",
+      "lineCount": 120,
       "path": "src/graph/schema.ts",
       "name": "schema.ts",
-      "description": "TypeScript schema definitions for the code graph: nodes (files, functions, classes), edges (imports, calls, extends), team lenses for role-based filtering, and configuration structures for parser, summarizer, and MCP server.",
+      "description": "TypeScript type definitions for the core graph model: GraphNode (file, function, class, etc.), GraphEdge (imports, calls, extends, etc.), TeamLens for role-based filtering, and GraphMemConfig for project settings. Also defines NodeSummary and SubGraph for API responses.",
       "tags": [
-        "types",
         "schema",
-        "graph",
-        "config"
+        "types",
+        "graph-model",
+        "configuration"
       ],
       "exported": true,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::NodeKind": {
       "id": "src/graph/schema.ts::NodeKind",
@@ -1169,7 +3239,7 @@
       "lineStart": 3,
       "lineEnd": 3,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::GraphNode": {
       "id": "src/graph/schema.ts::GraphNode",
@@ -1183,7 +3253,7 @@
       "lineStart": 5,
       "lineEnd": 5,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::EdgeKind": {
       "id": "src/graph/schema.ts::EdgeKind",
@@ -1197,7 +3267,7 @@
       "lineStart": 23,
       "lineEnd": 23,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::GraphEdge": {
       "id": "src/graph/schema.ts::GraphEdge",
@@ -1211,7 +3281,7 @@
       "lineStart": 32,
       "lineEnd": 32,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::GraphCluster": {
       "id": "src/graph/schema.ts::GraphCluster",
@@ -1225,7 +3295,7 @@
       "lineStart": 42,
       "lineEnd": 42,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::TeamLens": {
       "id": "src/graph/schema.ts::TeamLens",
@@ -1239,7 +3309,7 @@
       "lineStart": 52,
       "lineEnd": 52,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::GraphMemConfig": {
       "id": "src/graph/schema.ts::GraphMemConfig",
@@ -1253,7 +3323,7 @@
       "lineStart": 62,
       "lineEnd": 62,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::NodeSummary": {
       "id": "src/graph/schema.ts::NodeSummary",
@@ -1267,7 +3337,7 @@
       "lineStart": 99,
       "lineEnd": 99,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::SubGraph": {
       "id": "src/graph/schema.ts::SubGraph",
@@ -1281,7 +3351,7 @@
       "lineStart": 108,
       "lineEnd": 108,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/schema.ts::DependencyMap": {
       "id": "src/graph/schema.ts::DependencyMap",
@@ -1295,24 +3365,25 @@
       "lineStart": 115,
       "lineEnd": 115,
       "lastHash": "039c52da84e50bb8",
-      "lastUpdated": 1782156098201
+      "lastUpdated": 1782426890394
     },
     "src/graph/embedding-engine.ts": {
       "id": "src/graph/embedding-engine.ts",
       "kind": "file",
+      "lineCount": 281,
       "path": "src/graph/embedding-engine.ts",
       "name": "embedding-engine.ts",
-      "description": "Semantic vector search engine using OpenAI embeddings with SHA256 caching per node; supports single/expanded queries, similarity search, and orphan pruning with graceful fallback when API key is missing.",
+      "description": "Semantic vector search using OpenAI's text-embedding-3-small with local cache in .mycelium/embeddings.json. Supports single/expanded queries, similarity search, and orphan pruning; gracefully degrades if API key is absent.",
       "tags": [
-        "embeddings",
-        "semantic-search",
+        "embedding",
+        "search",
         "openai",
         "vector-db",
-        "cache"
+        "similarity"
       ],
       "exported": true,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::EmbeddingRecord": {
       "id": "src/graph/embedding-engine.ts::EmbeddingRecord",
@@ -1326,7 +3397,7 @@
       "lineStart": 14,
       "lineEnd": 14,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::EmbeddingStore": {
       "id": "src/graph/embedding-engine.ts::EmbeddingStore",
@@ -1340,7 +3411,7 @@
       "lineStart": 21,
       "lineEnd": 21,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::SearchHit": {
       "id": "src/graph/embedding-engine.ts::SearchHit",
@@ -1354,7 +3425,7 @@
       "lineStart": 27,
       "lineEnd": 27,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::EmbeddingEngine": {
       "id": "src/graph/embedding-engine.ts::EmbeddingEngine",
@@ -1368,7 +3439,7 @@
       "lineStart": 35,
       "lineEnd": 35,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::BATCH": {
       "id": "src/graph/embedding-engine.ts::BATCH",
@@ -1382,7 +3453,7 @@
       "lineStart": 115,
       "lineEnd": 115,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::expandQuery": {
       "id": "src/graph/embedding-engine.ts::expandQuery",
@@ -1396,7 +3467,7 @@
       "lineStart": 244,
       "lineEnd": 244,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::cosine": {
       "id": "src/graph/embedding-engine.ts::cosine",
@@ -1410,7 +3481,7 @@
       "lineStart": 257,
       "lineEnd": 257,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::initEngine": {
       "id": "src/graph/embedding-engine.ts::initEngine",
@@ -1424,7 +3495,7 @@
       "lineStart": 273,
       "lineEnd": 273,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
     },
     "src/graph/embedding-engine.ts::getEngine": {
       "id": "src/graph/embedding-engine.ts::getEngine",
@@ -1438,10 +3509,507 @@
       "lineStart": 278,
       "lineEnd": 278,
       "lastHash": "a3929fa969670cf5",
-      "lastUpdated": 1782156098202
+      "lastUpdated": 1782426890395
+    },
+    "src/mcp/server.ts::RoadmapFeature": {
+      "id": "src/mcp/server.ts::RoadmapFeature",
+      "kind": "interface",
+      "path": "src/mcp/server.ts",
+      "name": "RoadmapFeature",
+      "description": "",
+      "signature": "interface RoadmapFeature",
+      "tags": [],
+      "exported": false,
+      "lineStart": 12,
+      "lineEnd": 12,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "src/mcp/server.ts::Roadmap": {
+      "id": "src/mcp/server.ts::Roadmap",
+      "kind": "interface",
+      "path": "src/mcp/server.ts",
+      "name": "Roadmap",
+      "description": "",
+      "signature": "interface Roadmap",
+      "tags": [],
+      "exported": false,
+      "lineStart": 26,
+      "lineEnd": 26,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "src/mcp/server.ts::_roadmapPath": {
+      "id": "src/mcp/server.ts::_roadmapPath",
+      "kind": "function",
+      "path": "src/mcp/server.ts",
+      "name": "_roadmapPath",
+      "description": "",
+      "signature": "function _roadmapPath(storeDir: string): string",
+      "tags": [],
+      "exported": false,
+      "lineStart": 32,
+      "lineEnd": 32,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "src/mcp/server.ts::loadRoadmapFile": {
+      "id": "src/mcp/server.ts::loadRoadmapFile",
+      "kind": "function",
+      "path": "src/mcp/server.ts",
+      "name": "loadRoadmapFile",
+      "description": "",
+      "signature": "function loadRoadmapFile(storeDir: string): Roadmap",
+      "tags": [],
+      "exported": false,
+      "lineStart": 36,
+      "lineEnd": 36,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "src/mcp/server.ts::saveRoadmapFile": {
+      "id": "src/mcp/server.ts::saveRoadmapFile",
+      "kind": "function",
+      "path": "src/mcp/server.ts",
+      "name": "saveRoadmapFile",
+      "description": "",
+      "signature": "function saveRoadmapFile(storeDir: string, roadmap: Roadmap): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 45,
+      "lineEnd": 45,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "src/mcp/server.ts::buildRoadmapContext": {
+      "id": "src/mcp/server.ts::buildRoadmapContext",
+      "kind": "function",
+      "path": "src/mcp/server.ts",
+      "name": "buildRoadmapContext",
+      "description": "",
+      "signature": "function buildRoadmapContext(features: RoadmapFeature[]): string",
+      "tags": [],
+      "exported": false,
+      "lineStart": 50,
+      "lineEnd": 50,
+      "lastHash": "a682d60d77532cd3",
+      "lastUpdated": 1782529828516
+    },
+    "ui/index.html::loadRoadmapTab": {
+      "id": "ui/index.html::loadRoadmapTab",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "loadRoadmapTab",
+      "description": "",
+      "signature": "function loadRoadmapTab(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2821,
+      "lineEnd": 2821,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_renderRoadmapList": {
+      "id": "ui/index.html::_renderRoadmapList",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_renderRoadmapList",
+      "description": "",
+      "signature": "function _renderRoadmapList(features): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2848,
+      "lineEnd": 2848,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_renderFeatureCard": {
+      "id": "ui/index.html::_renderFeatureCard",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_renderFeatureCard",
+      "description": "",
+      "signature": "function _renderFeatureCard(f, allFeatures): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2870,
+      "lineEnd": 2870,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::highlightFeatureFiles": {
+      "id": "ui/index.html::highlightFeatureFiles",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "highlightFeatureFiles",
+      "description": "",
+      "signature": "function highlightFeatureFiles(featureId): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 2920,
+      "lineEnd": 2920,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::setRoadmapFilter": {
+      "id": "ui/index.html::setRoadmapFilter",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setRoadmapFilter",
+      "description": "",
+      "signature": "function setRoadmapFilter(filter): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3044,
+      "lineEnd": 3044,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::setRoadmapView": {
+      "id": "ui/index.html::setRoadmapView",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setRoadmapView",
+      "description": "",
+      "signature": "function setRoadmapView(mode): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3020,
+      "lineEnd": 3020,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::stopRoadmapTree": {
+      "id": "ui/index.html::stopRoadmapTree",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "stopRoadmapTree",
+      "description": "",
+      "signature": "function stopRoadmapTree(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3055,
+      "lineEnd": 3055,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_calcFeatureDepths": {
+      "id": "ui/index.html::_calcFeatureDepths",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_calcFeatureDepths",
+      "description": "",
+      "signature": "function _calcFeatureDepths(features): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3088,
+      "lineEnd": 3088,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::renderRoadmapTree": {
+      "id": "ui/index.html::renderRoadmapTree",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "renderRoadmapTree",
+      "description": "",
+      "signature": "function renderRoadmapTree(allFeatures): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3127,
+      "lineEnd": 3127,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::STATUS_COLOR": {
+      "id": "ui/index.html::STATUS_COLOR",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "STATUS_COLOR",
+      "description": "",
+      "signature": "const STATUS_COLOR",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3175,
+      "lineEnd": 3175,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::STATUS_GLOW": {
+      "id": "ui/index.html::STATUS_GLOW",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "STATUS_GLOW",
+      "description": "",
+      "signature": "const STATUS_GLOW",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3182,
+      "lineEnd": 3182,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::STATUS_ICON": {
+      "id": "ui/index.html::STATUS_ICON",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "STATUS_ICON",
+      "description": "",
+      "signature": "const STATUS_ICON",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3189,
+      "lineEnd": 3189,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::bezierD": {
+      "id": "ui/index.html::bezierD",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "bezierD",
+      "description": "",
+      "signature": "function bezierD(sx, sy, tx, ty): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3252,
+      "lineEnd": 3252,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_rmapHover": {
+      "id": "ui/index.html::_rmapHover",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_rmapHover",
+      "description": "",
+      "signature": "function _rmapHover(d, edges, nodeGs, simLinks, svg, nodeR): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3335,
+      "lineEnd": 3335,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::_rmapUnhover": {
+      "id": "ui/index.html::_rmapUnhover",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_rmapUnhover",
+      "description": "",
+      "signature": "function _rmapUnhover(edges, nodeGs, svg): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3386,
+      "lineEnd": 3386,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::SIDEBAR_MIN": {
+      "id": "ui/index.html::SIDEBAR_MIN",
+      "kind": "constant",
+      "path": "ui/index.html",
+      "name": "SIDEBAR_MIN",
+      "description": "",
+      "signature": "const SIDEBAR_MIN",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3394,
+      "lineEnd": 3394,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::SIDEBAR_MAX": {
+      "id": "ui/index.html::SIDEBAR_MAX",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "SIDEBAR_MAX",
+      "description": "",
+      "signature": "const SIDEBAR_MAX = () => unknown",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3395,
+      "lineEnd": 3395,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::setSidebarWidth": {
+      "id": "ui/index.html::setSidebarWidth",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "setSidebarWidth",
+      "description": "",
+      "signature": "function setSidebarWidth(w, save = true): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3397,
+      "lineEnd": 3397,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::onMouseMove": {
+      "id": "ui/index.html::onMouseMove",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onMouseMove",
+      "description": "",
+      "signature": "function onMouseMove(e): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3446,
+      "lineEnd": 3446,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::onMouseUp": {
+      "id": "ui/index.html::onMouseUp",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onMouseUp",
+      "description": "",
+      "signature": "function onMouseUp(e): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3452,
+      "lineEnd": 3452,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::onTouchMove": {
+      "id": "ui/index.html::onTouchMove",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onTouchMove",
+      "description": "",
+      "signature": "function onTouchMove(e): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3467,
+      "lineEnd": 3467,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::onTouchEnd": {
+      "id": "ui/index.html::onTouchEnd",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onTouchEnd",
+      "description": "",
+      "signature": "function onTouchEnd(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3474,
+      "lineEnd": 3474,
+      "lastHash": "57cb48dfd75d217d",
+      "lastUpdated": 1782511126957
+    },
+    "ui/index.html::_stopTreeResizeObs": {
+      "id": "ui/index.html::_stopTreeResizeObs",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_stopTreeResizeObs",
+      "description": "",
+      "signature": "function _stopTreeResizeObs(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3061,
+      "lineEnd": 3061,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_startTreeResizeObs": {
+      "id": "ui/index.html::_startTreeResizeObs",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_startTreeResizeObs",
+      "description": "",
+      "signature": "function _startTreeResizeObs(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3065,
+      "lineEnd": 3065,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_fitRoadmapTree": {
+      "id": "ui/index.html::_fitRoadmapTree",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_fitRoadmapTree",
+      "description": "",
+      "signature": "function _fitRoadmapTree(svg, zoom, containerW, containerH, nodes): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3107,
+      "lineEnd": 3107,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::mkBtn": {
+      "id": "ui/index.html::mkBtn",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "mkBtn",
+      "description": "",
+      "signature": "const mkBtn = (label, title, fn) => unknown",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3340,
+      "lineEnd": 3340,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_startTreeParticles": {
+      "id": "ui/index.html::_startTreeParticles",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_startTreeParticles",
+      "description": "",
+      "signature": "function _startTreeParticles(simLinks, edgeLayer, particleLayer, STATUS_COLOR): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3366,
+      "lineEnd": 3366,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_rmapHoverV2": {
+      "id": "ui/index.html::_rmapHoverV2",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_rmapHoverV2",
+      "description": "",
+      "signature": "function _rmapHoverV2(d, edges, nodeGs, simLinks, gMain, nodeR): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3411,
+      "lineEnd": 3411,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
+    },
+    "ui/index.html::_rmapUnhoverV2": {
+      "id": "ui/index.html::_rmapUnhoverV2",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "_rmapUnhoverV2",
+      "description": "",
+      "signature": "function _rmapUnhoverV2(edges, nodeGs, gMain): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3454,
+      "lineEnd": 3454,
+      "lastHash": "3fc9978b65264d11",
+      "lastUpdated": 1782529825201
     }
   },
   "edges": {
+    "ui/myc-inject.js::calls::ui/myc-inject": {
+      "id": "ui/myc-inject.js::calls::ui/myc-inject",
+      "from": "ui/myc-inject.js",
+      "to": "ui/myc-inject",
+      "kind": "calls",
+      "weight": 1
+    },
     "src/sessions.ts::imports::src/sessions.ts": {
       "id": "src/sessions.ts::imports::src/sessions.ts",
       "from": "src/sessions.ts",
@@ -1582,6 +4150,13 @@
       "kind": "imports",
       "weight": 1
     },
+    "ui/index.html::imports::ui/myc-inject.js": {
+      "id": "ui/index.html::imports::ui/myc-inject.js",
+      "from": "ui/index.html",
+      "to": "ui/myc-inject.js",
+      "kind": "imports",
+      "weight": 18
+    },
     "src/parser/treeSitter.ts::imports::src/graph/schema.ts": {
       "id": "src/parser/treeSitter.ts::imports::src/graph/schema.ts",
       "from": "src/parser/treeSitter.ts",
@@ -1657,7 +4232,7 @@
       "from": "src/mcp/server.ts",
       "to": "src/mcp/server.ts::McpServer",
       "kind": "exports",
-      "weight": 1
+      "weight": 5
     },
     "src/integrations/cbm-adapter.ts::imports::src/graph/schema.ts": {
       "id": "src/integrations/cbm-adapter.ts::imports::src/graph/schema.ts",
@@ -1856,5 +4431,5 @@
       "weight": 1
     }
   },
-  "lastUpdated": 1782156116267
+  "lastUpdated": 1782538700833
 }

@@ -8,6 +8,107 @@ import { getEngine, expandQuery }        from '../graph/embedding-engine';
 import { cbmAdapter }                    from '../integrations/cbm-adapter';
 import { SessionManager, formatDuration } from '../sessions';
 
+
+interface RoadmapFeature {
+  id: string;
+  name: string;
+  status: 'complete' | 'in-progress' | 'planned' | 'blocked' | 'backlog';
+  description: string;
+  files: string[];
+  dependsOn: string[];
+  tags: string[];
+  priority?: 'p0' | 'p1' | 'p2';
+  notes?: string;
+  completedAt?: number;
+  updatedAt?: number;
+}
+ 
+interface Roadmap {
+  version: number;
+  updatedAt: number;
+  features: RoadmapFeature[];
+}
+ 
+function _roadmapPath(storeDir: string): string {
+  return path.join(storeDir, 'roadmap.json');
+}
+ 
+function loadRoadmapFile(storeDir: string): Roadmap {
+  try {
+    const raw = fs.readFileSync(_roadmapPath(storeDir), 'utf-8');
+    return JSON.parse(raw) as Roadmap;
+  } catch {
+    return { version: 1, updatedAt: Date.now(), features: [] };
+  }
+}
+ 
+function saveRoadmapFile(storeDir: string, roadmap: Roadmap): void {
+  roadmap.updatedAt = Date.now();
+  fs.writeFileSync(_roadmapPath(storeDir), JSON.stringify(roadmap, null, 2), 'utf-8');
+}
+ 
+function buildRoadmapContext(features: RoadmapFeature[]): string {
+  const byStatus: Record<string, RoadmapFeature[]> = {
+    complete:     features.filter(f => f.status === 'complete'),
+    'in-progress': features.filter(f => f.status === 'in-progress'),
+    planned:      features.filter(f => f.status === 'planned'),
+    blocked:      features.filter(f => f.status === 'blocked'),
+    backlog:      features.filter(f => f.status === 'backlog'),
+  };
+ 
+  let ctx = '## Mycelium Project Roadmap\n\n';
+ 
+  if (byStatus.complete.length) {
+    ctx += 'COMPLETE (' + byStatus.complete.length + '):\n';
+    byStatus.complete.forEach(f => {
+      ctx += '- ' + f.name;
+      if (f.files.length) {
+        const shown = f.files.slice(0, 3).join(', ');
+        const extra = f.files.length > 3 ? ', +' + (f.files.length - 3) + ' more' : '';
+        ctx += ' [' + shown + extra + ']';
+      }
+      ctx += '\n';
+    });
+    ctx += '\n';
+  }
+ 
+  if (byStatus['in-progress'].length) {
+    ctx += 'IN PROGRESS (' + byStatus['in-progress'].length + '):\n';
+    byStatus['in-progress'].forEach(f => {
+      ctx += '- ' + f.name;
+      if (f.files.length) ctx += ' [' + f.files.join(', ') + ']';
+      if (f.notes) ctx += '\n  → ' + f.notes;
+      ctx += '\n';
+    });
+    ctx += '\n';
+  }
+ 
+  if (byStatus.planned.length) {
+    ctx += 'PLANNED (' + byStatus.planned.length + '):\n';
+    byStatus.planned.forEach(f => {
+      ctx += '- ' + f.name;
+      if (f.dependsOn.length) {
+        const names = f.dependsOn
+          .map(id => features.find(x => x.id === id)?.name || id)
+          .join(', ');
+        ctx += ' (requires: ' + names + ')';
+      }
+      ctx += '\n';
+    });
+  }
+ 
+  if (byStatus.blocked.length) {
+    ctx += '\nBLOCKED (' + byStatus.blocked.length + '):\n';
+    byStatus.blocked.forEach(f => {
+      ctx += '- ' + f.name;
+      if (f.notes) ctx += ' — ' + f.notes;
+      ctx += '\n';
+    });
+  }
+ 
+  return ctx;
+}
+
 class RateLimiter {
   private counts = new Map<string, { count: number; resetAt: number }>();
   private readonly MAX    = 60;
@@ -34,6 +135,7 @@ export class McpServer {
   private server:         http.Server | null = null;
   private sessionManager: SessionManager;
   private sseClients: Set<http.ServerResponse> = new Set();
+  private storeDir: string;
 
   // Three-way ignore split
   private defaultIgnore: string[] = [];
@@ -50,6 +152,7 @@ export class McpServer {
     this.changeLogger   = changeLogger;
     this.config         = config;
     this.configPath     = path.join(projectRoot, '.mycelium', 'config.json');
+    this.storeDir = path.join(projectRoot, '.mycelium');
     this.defaultIgnore  = [...config.parser.exclude];
     this.sessionManager = new SessionManager(
       projectRoot,
@@ -58,6 +161,92 @@ export class McpServer {
     this.loadUserOverrides();
     this.syncEffectiveExclude();
   }
+
+  private handleRoadmapGet(res: http.ServerResponse): void {
+  const roadmap = loadRoadmapFile(this.storeDir);
+  const context = buildRoadmapContext(roadmap.features);
+  const stats = {
+    total:      roadmap.features.length,
+    complete:   roadmap.features.filter(f => f.status === 'complete').length,
+    inProgress: roadmap.features.filter(f => f.status === 'in-progress').length,
+    planned:    roadmap.features.filter(f => f.status === 'planned').length,
+    blocked:    roadmap.features.filter(f => f.status === 'blocked').length,
+  };
+  res.writeHead(200);
+  res.end(JSON.stringify({ ...roadmap, context, stats }));
+}
+ 
+private async handleRoadmapFeaturePost(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  try {
+    const body    = await this.readBody(req);
+    const feature = JSON.parse(body) as Partial<RoadmapFeature>;
+    if (!feature.id || !feature.name) {
+      res.writeHead(400); res.end(JSON.stringify({ error: '"id" and "name" are required' })); return;
+    }
+    const roadmap = loadRoadmapFile(this.storeDir);
+    const idx     = roadmap.features.findIndex(f => f.id === feature.id);
+    const next: RoadmapFeature = {
+      id:          feature.id,
+      name:        feature.name,
+      status:      feature.status || 'planned',
+      description: feature.description || '',
+      files:       feature.files    || [],
+      dependsOn:   feature.dependsOn || [],
+      tags:        feature.tags     || [],
+      priority:    feature.priority,
+      notes:       feature.notes,
+      completedAt: feature.completedAt,
+      updatedAt:   Date.now(),
+    };
+    if (idx >= 0) roadmap.features[idx] = { ...roadmap.features[idx], ...next };
+    else          roadmap.features.push(next);
+    saveRoadmapFile(this.storeDir, roadmap);
+    this.broadcastRoadmapUpdate();
+    res.writeHead(200);
+    res.end(JSON.stringify({ ok: true, feature: next }));
+  } catch (e) {
+    res.writeHead(400); res.end(JSON.stringify({ error: String(e) }));
+  }
+}
+ 
+private async handleRoadmapFeaturePatch(
+  featureId: string,
+  req:       http.IncomingMessage,
+  res:       http.ServerResponse,
+): Promise<void> {
+  try {
+    const body    = await this.readBody(req);
+    const patch   = JSON.parse(body) as Partial<RoadmapFeature>;
+    const roadmap = loadRoadmapFile(this.storeDir);
+    const idx     = roadmap.features.findIndex(f => f.id === featureId);
+    if (idx < 0) {
+      res.writeHead(404); res.end(JSON.stringify({ error: 'Feature not found: ' + featureId })); return;
+    }
+    roadmap.features[idx] = {
+      ...roadmap.features[idx],
+      ...patch,
+      id:        featureId,   // id is always immutable
+      updatedAt: Date.now(),
+    };
+    if (patch.status === 'complete' && !roadmap.features[idx].completedAt) {
+      roadmap.features[idx].completedAt = Date.now();
+    }
+    saveRoadmapFile(this.storeDir, roadmap);
+    this.broadcastRoadmapUpdate();
+    res.writeHead(200);
+    res.end(JSON.stringify({ ok: true, feature: roadmap.features[idx] }));
+  } catch (e) {
+    res.writeHead(400); res.end(JSON.stringify({ error: String(e) }));
+  }
+}
+ 
+/** Push 'roadmap-updated' to all connected SSE clients — triggers tab refresh in UI */
+private broadcastRoadmapUpdate(): void {
+  for (const client of this.sseClients) {
+    try { client.write('event: roadmap-updated\ndata: {}\n\n'); }
+    catch { this.sseClients.delete(client); }
+  }
+}
 
   // ── Persistence helpers ────────────────────────────────────────────────────
 
@@ -125,6 +314,8 @@ export class McpServer {
 
   stop(): void { this.server?.close(); }
 
+  
+
   // ── Router ─────────────────────────────────────────────────────────────────
 
   private route(req: http.IncomingMessage, res: http.ServerResponse): void {
@@ -138,6 +329,8 @@ export class McpServer {
     if (pathname === '/search')                    return this.handleSearch(url, res);
     if (pathname === '/entry-points')              return this.handleEntryPoints(url, res);
     if (pathname === '/ui' || pathname === '/ui/') return this.handleUI(res);
+    if (pathname === '/myc-inject.js')             return this.handleStaticAsset('myc-inject.js', res, 'application/javascript');
+    if (pathname === '/roadmap-main.js')           return this.handleStaticAsset('roadmap-main.js', res, 'application/javascript');
     if (pathname === '/teams')                     return this.handleTeams(res);
     if (pathname === '/debug')                     return this.handleDebug(res);
     if (pathname === '/preflight')                 return this.handlePreflight(url, res);
@@ -187,6 +380,17 @@ export class McpServer {
       this.handleDescribe(req, res); return;
     }
 
+    if (pathname === '/roadmap' && method === 'GET') {
+      this.handleRoadmapGet(res); return;
+    }
+    if (pathname === '/roadmap/feature' && method === 'POST') {
+      this.handleRoadmapFeaturePost(req, res); return;
+    }
+    if (pathname.startsWith('/roadmap/feature/') && method === 'PATCH') {
+      const featureId = decodeURIComponent(pathname.slice('/roadmap/feature/'.length));
+      if (featureId) { this.handleRoadmapFeaturePatch(featureId, req, res); return; }
+    }
+
     // ── SSE live updates ──────────────────────────────────────────────────────────
     if (pathname === '/events' && method === 'GET') {
       this.handleEvents(res); return;
@@ -205,6 +409,27 @@ export class McpServer {
   }
 
   // ── Existing handlers (unchanged) ─────────────────────────────────────────
+
+
+  private handleStaticAsset(filename: string, res: http.ServerResponse, contentType: string): void {
+    const candidates = [
+      path.join(__dirname, '..', '..', 'ui', filename),
+      path.join(__dirname, '..', 'ui', filename),
+      path.join(process.cwd(), 'ui', filename),
+    ];
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        try {
+          const content = fs.readFileSync(candidate);
+          res.writeHead(200, { 'Content-Type': contentType });
+          res.end(content);
+          return;
+        } catch {}
+      }
+    }
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: `Static asset not found: ${filename}` }));
+  }
 
   private handleStatus(res: http.ServerResponse): void {
     const stats = this.store.getStats();
@@ -768,3 +993,4 @@ function buildContextSummary(
     ),
   ].join('\n');
 }
+

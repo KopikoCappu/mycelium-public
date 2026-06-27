@@ -85,7 +85,7 @@ export class GraphStore {
     fileNodeIds.add(filePath);
     for (const id of Object.keys(this.data.edges)) {
       const e = this.data.edges[id];
-      if (fileNodeIds.has(e.from) || fileNodeIds.has(e.to)) delete this.data.edges[id];
+      if (fileNodeIds.has(e.from)) delete this.data.edges[id];
     }
     this.scheduleSave();
   }
@@ -207,21 +207,53 @@ export class GraphStore {
   }
 
   resolveNodeId(targetPath: string): string | null {
+    // 1. Exact match — fastest path, handles files that already have the right extension
     if (this.data.nodes[targetPath]) return targetPath;
-    const base = targetPath.replace(/\.(tsx?|jsx?)$/, '');
-    const exts = ['.ts', '.tsx', '.js', '.jsx'];
+
+    // 2. Strip any known extension to get a bare base path, then try all extensions.
+    //    This covers: bare paths from aliases, Python/Rust/C paths without extensions,
+    //    and TS paths where the wrong extension was guessed.
+    const base = targetPath.replace(
+      /\.(tsx?|jsx?|mjs|cjs|py|pyi|go|rs|cpp?|cc|cxx|h(?:pp|h)?|java|html?|css|s[ac]ss|less)$/i,
+      ''
+    );
+
+    const exts = [
+      // TS/JS first — most common in the average Mycelium project
+      '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+      // Python
+      '.py', '.pyi',
+      // Systems languages
+      '.go',
+      '.rs',
+      '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.hh', '.hxx',
+      // JVM
+      '.java',
+      // Web assets (HTML/CSS added last since they're less likely to be bare references)
+      '.html', '.htm',
+      '.css', '.scss', '.sass', '.less',
+    ];
+
     for (const ext of exts) {
       if (this.data.nodes[base + ext]) return base + ext;
     }
-    for (const ext of exts) {
+
+    // 3. Index file variants for TS/JS (e.g. import 'utils' → utils/index.ts)
+    for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
       if (this.data.nodes[base + '/index' + ext]) return base + '/index' + ext;
     }
+
+    // 4. Python package __init__ (e.g. import 'utils' → utils/__init__.py)
+    if (this.data.nodes[base + '/__init__.py']) return base + '/__init__.py';
+
+    // 5. Case-insensitive fallback — catches Windows path mismatches
     const lower = base.toLowerCase();
     const found = Object.keys(this.data.nodes).find(k =>
-      k.toLowerCase().replace(/\.(tsx?|jsx?)$/, '') === lower
+      k.toLowerCase().replace(/\.[^.]+$/, '') === lower
     );
     return found ?? null;
   }
+
   // ─── New methods for graph viewer v2, cbm adapter, and embedding engine ───
 
   getAllNodes(): GraphNode[] {

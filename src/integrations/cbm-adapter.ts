@@ -129,8 +129,8 @@ export class CbmAdapter {
     const fileNodes: CbmNode[] = fileResult?.results ?? [];
     const allCbmNodes = [...fileNodes, ...fnNodes];
 
-    const myceliumNodes = this.convertNodes(allCbmNodes, repoPath, exclude);
-    const callEdges = await this.buildCallEdges(fnNodes, repoPath, project);
+    const myceliumNodes = this.convertNodes(allCbmNodes, absPath, exclude);
+    const callEdges = await this.buildCallEdges(fnNodes, absPath, project);
     const languages: string[] = archResult?.languages ?? [];
 
     const importEdges = callEdges.filter(e => e.kind === 'imports');
@@ -170,16 +170,15 @@ export class CbmAdapter {
 
     if (!result) return { callers: [], callees: [] };
 
-    // cbm returns 'callers' for inbound and 'callees' for outbound
     const callers = (result.callers ?? result.inbound ?? []).map((n: any) => ({
       name: n.name,
-      file: n.file_path ?? n.file ?? (n.qualified_name ? this.qualifiedNameToFilePath(n.qualified_name, project, n.name) : ''),
+      file: this.resolveNodeFilePath(n, absPath, project, n.name),
       line: n.line,
     }));
 
     const callees = (result.callees ?? result.outbound ?? []).map((n: any) => ({
       name: n.name,
-      file: n.file_path ?? n.file ?? (n.qualified_name ? this.qualifiedNameToFilePath(n.qualified_name, project, n.name) : ''),
+      file: this.resolveNodeFilePath(n, absPath, project, n.name),
       line: n.line,
     }));
 
@@ -230,10 +229,72 @@ export class CbmAdapter {
   }
 
   /**
+   * Resolve a CBM node's file reference to a Mycelium-style relative path.
+   *
+   * Priority order:
+   *   1. file_path field — may be absolute, needs path.relative()
+   *   2. file field (legacy) — same treatment
+   *   3. qualified_name — derive via qualifiedNameToFilePath()
+   *   4. name — last resort
+   *
+   * This is the single source of truth for "what file does this CBM node live in?"
+   * Used by convertNodes(), buildCallEdges(), and traceFunction().
+   */
+  private resolveNodeFilePath(
+    node: CbmNode | Record<string, any>,
+    repoPath: string,   // absolute path to repo root
+    project: string,
+    funcName: string
+  ): string {
+    const absRepoPath = path.resolve(repoPath);
+
+    // 1. file_path (most reliable — cbm 0.6+ always populates this)
+    if (node.file_path) {
+      return this.toRelative(node.file_path, absRepoPath);
+    }
+
+    // 2. Legacy file field
+    if (node.file) {
+      return this.toRelative(node.file, absRepoPath);
+    }
+
+    // 3. Derive from qualified_name
+    if (node.qualified_name) {
+      return this.qualifiedNameToFilePath(node.qualified_name, project, funcName);
+    }
+
+    // 4. Last resort
+    return node.name ?? '';
+  }
+
+  /**
+   * Convert any path (absolute or already relative) to a Mycelium node ID.
+   * Mycelium stores all nodes as paths relative to the workspace root,
+   * using forward slashes.
+   *
+   * Bug this fixes: CBM returns absolute paths like
+   *   "C:/Users/Minh Tran/Desktop/pakky/src/components/File.tsx"
+   * but Mycelium nodes are keyed by
+   *   "src/components/File.tsx"
+   * so every edge had from/to = absolute path → matched nothing in the store.
+   */
+  private toRelative(filePath: string, absRepoPath: string): string {
+    if (!filePath) return '';
+
+    // Already relative (doesn't start with drive letter or /)
+    if (!path.isAbsolute(filePath)) return filePath.replace(/\\/g, '/');
+
+    // Make relative to repo root
+    return path.relative(absRepoPath, filePath).replace(/\\/g, '/');
+  }
+
+  /**
    * Derive a relative file path from a cbm qualified_name.
    * Format: "{project-slug}.{path.with.dots}.{functionName}"
    * e.g. "C-Users-Minh-Tran-Desktop-pakky.src.components.BroadcastButton.deletePreset"
    * → "src/components/BroadcastButton"
+   *
+   * Note: the result has no extension — resolveNodeId() in store.ts will add it.
    */
   private qualifiedNameToFilePath(qualifiedName: string, project: string, funcName: string): string {
     const withoutProject = qualifiedName.startsWith(project + '.')
@@ -250,16 +311,14 @@ export class CbmAdapter {
 
   private matchesExclude(filePath: string, exclude: string[]): boolean {
     return exclude.some(pat => {
-      // Strip glob syntax down to the meaningful directory/file name
       const clean = pat
-        .replace(/^\*\*\//, '')   // remove leading **/
-        .replace(/\/\*\*$/, '')   // remove trailing /**
-        .replace(/\/\*$/, '')     // remove trailing /*
-        .replace(/\/$/, '');      // remove trailing /
+        .replace(/^\*\*\//, '')
+        .replace(/\/\*\*$/, '')
+        .replace(/\/\*$/, '')
+        .replace(/\/$/, '');
 
       if (!clean || clean.includes('*')) return false;
 
-      // Exact file match, or the file is inside the excluded directory
       return (
         filePath === clean ||
         filePath.startsWith(clean + '/') ||
@@ -274,13 +333,14 @@ export class CbmAdapter {
 
     for (const n of cbmNodes) {
       const label = n.label?.toLowerCase() ?? 'file';
-      const kind = this.mapLabel(label);
+      const kind  = this.mapLabel(label);
 
-      const filePath = n.file_path
-        ? n.file_path
-        : n.file
-          ? path.relative(repoPath, n.file).replace(/\\/g, '/')
-          : n.name;
+      // ── FIX: always resolve to a relative path ──────────────────────────
+      // Previously: n.file_path was used raw (often absolute) which meant
+      // node IDs didn't match anything in the Mycelium store.
+      const filePath = this.resolveNodeFilePath(n, repoPath, '', n.name);
+
+      if (!filePath) continue;
 
       // Skip files matching the ignore list
       if (this.matchesExclude(filePath, exclude)) continue;
@@ -322,7 +382,7 @@ export class CbmAdapter {
     project: string
   ): Promise<GraphEdge[]> {
     const edges: GraphEdge[] = [];
-    const seen = new Set<string>();
+    const seen   = new Set<string>();
     const sample = fnNodes.slice(0, 200);
 
     for (const fn of sample) {
@@ -333,18 +393,21 @@ export class CbmAdapter {
         depth: 1,
       });
 
-      // cbm returns 'callees' for outbound direction (not 'outbound')
       if (!result?.callees) continue;
 
+      // ── FIX: make fromFile relative ───────────────────────────────────────
+      // Previously: fn.file_path was used raw (often an absolute OS path)
+      // so the edge from-ID never matched any node in the store.
+      const fromFile = this.resolveNodeFilePath(fn, repoPath, project, fn.name);
+      if (!fromFile) continue;
+
       for (const callee of result.callees) {
-        const fromFile = fn.file_path ?? '';
+        // ── FIX: resolve callee file path the same way ─────────────────────
+        const toFile = this.resolveNodeFilePath(callee, repoPath, project, callee.name);
+        if (!toFile) continue;
 
-        // Callees have no file_path field — derive from qualified_name
-        const toFile = callee.qualified_name
-          ? this.qualifiedNameToFilePath(callee.qualified_name, project, callee.name)
-          : (callee.file_path ?? '');
-
-        if (!fromFile || !toFile || fromFile === toFile) continue;
+        // Skip self-references and obvious noise
+        if (fromFile === toFile) continue;
 
         const edgeId = `${fromFile}::calls::${toFile}`;
         if (seen.has(edgeId)) continue;

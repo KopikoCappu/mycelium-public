@@ -1,0 +1,610 @@
+{
+  "version": 1,
+  "updatedAt": 1782535223543,
+  "features": [
+    {
+      "id": "core-graph",
+      "name": "Dependency graph",
+      "status": "complete",
+      "description": "D3 force-directed graph with file nodes, import/call edges, directory cluster hulls, minimap, and cycle detection. The foundation everything else builds on.",
+      "files": [
+        "src/graph/store.ts",
+        "ui/index.html"
+      ],
+      "dependsOn": [],
+      "tags": [
+        "visualization",
+        "core",
+        "d3"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000,
+      "updatedAt": 1782531592003
+    },
+    {
+      "id": "ts-parser",
+      "name": "TypeScript/JS parser",
+      "status": "complete",
+      "description": "Regex-based parser with tsconfig alias resolution (@/ paths). Extracts import edges and symbol definitions. Fixed outgoing-only edge deletion bug on rescan.",
+      "files": [
+        "src/parser/treeSitter.ts",
+        "src/parser/detect.ts"
+      ],
+      "dependsOn": [],
+      "tags": [
+        "parsing",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "haiku-summarization",
+      "name": "Claude Haiku summarization",
+      "status": "complete",
+      "description": "Batch file summarization using Claude Haiku. Hash-based cache skips unchanged files. Fixed re-summarization bug by preserving description+tags before deleteNodesForFile wipes them.",
+      "files": [
+        "src/graph/summarizer.ts"
+      ],
+      "dependsOn": [],
+      "tags": [
+        "ai",
+        "anthropic",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "openai-embeddings",
+      "name": "OpenAI semantic search",
+      "status": "complete",
+      "description": "text-embedding-3-small embeddings power the /search endpoint. Falls back to keyword search when no OpenAI key is configured.",
+      "files": [
+        "src/graph/embeddings.ts"
+      ],
+      "dependsOn": [],
+      "tags": [
+        "ai",
+        "openai",
+        "search"
+      ],
+      "priority": "p1",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "mcp-server",
+      "name": "MCP HTTP server",
+      "status": "complete",
+      "description": "Express server with 12 HTTP endpoints: /preflight, /search, /dependencies, /xref, /graph, /history, /status, /events (SSE), /config, /describe, /task, /debug. Rate limiting + CORS included.",
+      "files": [
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "core-graph"
+      ],
+      "tags": [
+        "mcp",
+        "api",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "preflight",
+      "name": "Preflight endpoint",
+      "status": "complete",
+      "description": "GET /preflight?task= scores every file for relevance to a natural-language task. Returns ranked file list with reasons and estimated token savings. Core value prop: 4-6 files instead of 40.",
+      "files": [
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "mcp-server",
+        "openai-embeddings"
+      ],
+      "tags": [
+        "mcp",
+        "ai",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "file-watcher",
+      "name": "File watcher + live graph updates",
+      "status": "complete",
+      "description": "chokidar watcher triggers rescan on every file save. SSE /events endpoint pushes graph-updated to the UI so the graph refreshes without manual reload.",
+      "files": [
+        "src/cli.ts",
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "core-graph",
+        "mcp-server"
+      ],
+      "tags": [
+        "dx",
+        "realtime"
+      ],
+      "priority": "p1",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "bootstrap",
+      "name": "Agent bootstrap (CLAUDE.md + .mcp.json)",
+      "status": "complete",
+      "description": "mycelium init writes CLAUDE.md and .mcp.json so Claude Code auto-discovers the MCP server and calls /preflight before touching files. Zero manual setup for agents.",
+      "files": [
+        "src/bootstrap.ts"
+      ],
+      "dependsOn": [
+        "mcp-server"
+      ],
+      "tags": [
+        "dx",
+        "agent",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "graph-ui",
+      "name": "Graph viewer UI",
+      "status": "complete",
+      "description": "Full D3 graph viewer in ui/index.html. Tabbed sidebar (Graph/History/Help), edge toggles, file/symbol zoom levels, directory cluster hulls, minimap, search, legend, settings modal.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "core-graph"
+      ],
+      "tags": [
+        "ui",
+        "visualization",
+        "d3"
+      ],
+      "priority": "p0",
+      "completedAt": 1749000000000
+    },
+    {
+      "id": "flow-animation",
+      "name": "Flow dot animation + color presets",
+      "status": "complete",
+      "description": "Animated dots flow along edges when a node is selected. Lime = import source flowing in, pink = imported-by flowing out. 5 colorblind presets + custom color pickers, saved to localStorage.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "graph-ui"
+      ],
+      "tags": [
+        "ui",
+        "animation",
+        "accessibility"
+      ],
+      "priority": "p1",
+      "completedAt": 1749500000000
+    },
+    {
+      "id": "graph-interactions",
+      "name": "Advanced graph interactions",
+      "status": "complete",
+      "description": "Multi-select (shift+click), node pinning with localStorage persistence, subtree isolation, BFS neighbor expand with cascade ripple animation, inline description editing, copy-as-markdown, tag filtering.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "graph-ui"
+      ],
+      "tags": [
+        "ui",
+        "ux"
+      ],
+      "priority": "p1",
+      "completedAt": 1749500000000
+    },
+    {
+      "id": "cycle-detection",
+      "name": "Import cycle detection",
+      "status": "complete",
+      "description": "DFS-based cycle detection runs on every graph load. Cycles show as red edges in graph and are listed in the sidebar. Click a cycle to focus its root node.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "core-graph"
+      ],
+      "tags": [
+        "analysis",
+        "dx"
+      ],
+      "priority": "p1",
+      "completedAt": 1749500000000
+    },
+    {
+      "id": "settings-modal",
+      "name": "Settings modal",
+      "status": "complete",
+      "description": "Two-tab modal: Scan Filters (ignore list management, default pattern toggle/allow) and Appearance (flow dot color presets + custom pickers). All settings saved to localStorage.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "graph-ui",
+        "mcp-server"
+      ],
+      "tags": [
+        "ui",
+        "settings"
+      ],
+      "priority": "p2",
+      "completedAt": 1749500000000
+    },
+    {
+      "id": "session-architecture",
+      "name": "Session management architecture",
+      "status": "complete",
+      "description": "SessionManager class: snapshot-on-start, diff-on-complete model. Uses git diff HEAD for accurate session summaries instead of stored descriptions. Files written — needs integration into build.",
+      "files": [
+        "src/sessions.ts"
+      ],
+      "dependsOn": [
+        "mcp-server"
+      ],
+      "tags": [
+        "sessions",
+        "history",
+        "core"
+      ],
+      "priority": "p0",
+      "completedAt": 1750500000000,
+      "notes": "sessions.ts is written. Server routes + cli 'mycelium task' command are written but not yet built and installed."
+    },
+    {
+      "id": "history-ui",
+      "name": "History tab UI",
+      "status": "complete",
+      "description": "Collapsible session cards with per-file line deltas (+/-), active session live banner, AI summarize button with loading states, dismissable API key notice. Handles both new session format and legacy flat list.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "graph-ui",
+        "session-architecture"
+      ],
+      "tags": [
+        "ui",
+        "history",
+        "sessions"
+      ],
+      "priority": "p1",
+      "completedAt": 1750500000000
+    },
+    {
+      "id": "myc-mascot",
+      "name": "Myc mascot",
+      "status": "complete",
+      "description": "Animated SVG mushroom injected into graph viewer. Idle bob, walks between UI buttons, contextual tip bubbles, drag with corner snap, contextual item carries (🔍📦🔄☕), double-click spin, localStorage hide/show toggle.",
+      "files": [
+        "ui/myc-inject.js"
+      ],
+      "dependsOn": [
+        "graph-ui"
+      ],
+      "tags": [
+        "ui",
+        "animation",
+        "mascot"
+      ],
+      "priority": "p2",
+      "completedAt": 1750800000000
+    },
+    {
+      "id": "session-integration",
+      "name": "Session system integration",
+      "status": "in-progress",
+      "description": "Drop sessions.ts into src/, merge session route handlers into server.ts, merge 'mycelium task' subcommands into cli.ts. Then npm run build + npm install -g . to pick up changes.",
+      "files": [
+        "src/sessions.ts",
+        "src/mcp/server.ts",
+        "src/cli.ts"
+      ],
+      "dependsOn": [
+        "session-architecture"
+      ],
+      "tags": [
+        "sessions",
+        "cli"
+      ],
+      "priority": "p0",
+      "notes": "Files are all written. Just needs: copy sessions.ts → src/, merge server additions, merge cli additions, build + install, then test 'mycelium task X' in compound-hub."
+    },
+    {
+      "id": "call-edge-verification",
+      "name": "CBM call edges on pakky",
+      "status": "in-progress",
+      "description": "Call edges return 0 on pakky (React Native/Expo). Need to run mycelium debug in pakky to confirm alias resolution and CBM detection paths. compound-hub import edges also need post-fix verification.",
+      "files": [
+        "src/parser/treeSitter.ts",
+        "src/graph/store.ts"
+      ],
+      "dependsOn": [
+        "ts-parser"
+      ],
+      "tags": [
+        "debugging",
+        "parsing"
+      ],
+      "priority": "p1",
+      "notes": "Run: cd compound-hub && mycelium debug — check that import edges are present post-fix."
+    },
+    {
+      "id": "landing-page-myc",
+      "name": "Landing page Myc integration",
+      "status": "in-progress",
+      "description": "Embed Myc on getmycelium.net: nav logo, browser favicon, animated hero character, scroll-triggered toast reactions at section boundaries, walking mode activates at 82% scroll depth.",
+      "files": [
+        "ui/myc-inject.js"
+      ],
+      "dependsOn": [
+        "myc-mascot"
+      ],
+      "tags": [
+        "marketing",
+        "landing-page",
+        "mascot"
+      ],
+      "priority": "p1",
+      "notes": "Behaviors designed. Pending: hook into landing page scroll events + Vercel deploy."
+    },
+    {
+      "id": "roadmap-feature",
+      "name": "Roadmap feature (this file)",
+      "status": "in-progress",
+      "description": "Feature→feature dependency graph stored in .mycelium/roadmap.json. GET /roadmap returns features + agent-ready context string. Roadmap tab in graph viewer with click-to-highlight-files.",
+      "files": [
+        ".mycelium/roadmap.json",
+        "src/mcp/server.ts",
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "mcp-server",
+        "graph-ui"
+      ],
+      "tags": [
+        "meta",
+        "agent",
+        "ui"
+      ],
+      "priority": "p0",
+      "notes": "You are here. roadmap.json ✓ — server endpoints and UI tab pending."
+    },
+    {
+      "id": "describe-endpoint",
+      "name": "POST /describe persistence",
+      "status": "planned",
+      "description": "Server-side endpoint to persist inline description edits made in the graph viewer. Currently edits save to in-memory graph only — lost on server restart.",
+      "files": [
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "mcp-server"
+      ],
+      "tags": [
+        "api",
+        "dx"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "npm-publish",
+      "name": "Publish updated npm package",
+      "status": "planned",
+      "description": "Publish @kopikocappu/mycelium with session integration, roadmap feature, /describe endpoint, and all bug fixes since last publish.",
+      "files": [
+        "package.json"
+      ],
+      "dependsOn": [
+        "session-integration",
+        "roadmap-feature"
+      ],
+      "tags": [
+        "release",
+        "npm"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "landing-page-deploy",
+      "name": "Deploy landing page to Vercel",
+      "status": "planned",
+      "description": "Deploy getmycelium.net to Vercel with Myc integration and full landing page polish.",
+      "files": [],
+      "dependsOn": [
+        "landing-page-myc"
+      ],
+      "tags": [
+        "marketing",
+        "deployment"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "tree-sitter",
+      "name": "Tree-sitter universal parser",
+      "status": "planned",
+      "description": "Replace regex parser with tree-sitter for Python, Go, Rust, Java support. Enables multi-language codebases. Architecture designed, node-tree-sitter bindings tested.",
+      "files": [
+        "src/parser/treeSitter.ts"
+      ],
+      "dependsOn": [
+        "ts-parser"
+      ],
+      "tags": [
+        "parsing",
+        "core",
+        "multi-language"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "git-integration",
+      "name": "Git integration",
+      "status": "planned",
+      "description": "Read current branch, files changed vs main, last commit hash. Overlay git changes on the dependency graph. Connect sessions to git history for richer session context.",
+      "files": [
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "mcp-server",
+        "session-integration"
+      ],
+      "tags": [
+        "git",
+        "dx",
+        "sessions"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "benchmarks",
+      "name": "Formal benchmarks",
+      "status": "planned",
+      "description": "Controlled benchmarks on compound-hub: files read with vs without Mycelium, token reduction percentage, task completion time. Document methodology for arXiv.",
+      "files": [],
+      "dependsOn": [
+        "preflight",
+        "session-integration"
+      ],
+      "tags": [
+        "research",
+        "marketing"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "blog-post",
+      "name": "Technical blog post",
+      "status": "planned",
+      "description": "Write the technical post explaining Mycelium's architecture, benchmark results, and design decisions. Target: HN front page, Anthropic developer blog.",
+      "files": [],
+      "dependsOn": [
+        "benchmarks"
+      ],
+      "tags": [
+        "marketing",
+        "research"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "anthropic-outreach",
+      "name": "Anthropic outreach",
+      "status": "planned",
+      "description": "Reach out with benchmark results, blog post, and product demo. Target: Claude Corps fellowship or developer relations team. Portfolio piece for Anthropic application.",
+      "files": [],
+      "dependsOn": [
+        "blog-post",
+        "benchmarks"
+      ],
+      "tags": [
+        "career",
+        "marketing"
+      ],
+      "priority": "p0"
+    },
+    {
+      "id": "arxiv-submission",
+      "name": "arXiv paper submission",
+      "status": "planned",
+      "description": "Short paper on codebase intelligence for AI coding agents. Benchmark methodology, results, comparison to naive agent approaches.",
+      "files": [],
+      "dependsOn": [
+        "benchmarks",
+        "blog-post"
+      ],
+      "tags": [
+        "research",
+        "career"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "session-replay",
+      "name": "Session replay UI",
+      "status": "planned",
+      "description": "Click through a completed session's file changes as a graph animation. Each file lights up in order of modification, with line delta shown as node size pulse.",
+      "files": [
+        "ui/index.html"
+      ],
+      "dependsOn": [
+        "session-integration",
+        "history-ui",
+        "git-integration"
+      ],
+      "tags": [
+        "ui",
+        "sessions",
+        "visualization"
+      ],
+      "priority": "p2"
+    },
+    {
+      "id": "preflight-accuracy",
+      "name": "Preflight accuracy tracking",
+      "status": "planned",
+      "description": "Compare /preflight predicted files against files actually modified per session. Track accuracy score over time. Feedback loop to improve scoring.",
+      "files": [
+        "src/mcp/server.ts"
+      ],
+      "dependsOn": [
+        "session-integration",
+        "preflight"
+      ],
+      "tags": [
+        "research",
+        "sessions",
+        "ai"
+      ],
+      "priority": "p2"
+    },
+    {
+      "id": "cloud-backend",
+      "name": "○ Cloud backend",
+      "status": "planned",
+      "description": "Supabase + Clerk + Next.js dashboard for team graph sharing, cross-session history, and preflight accuracy analytics across teammates.",
+      "files": [],
+      "dependsOn": [
+        "session-integration",
+        "git-integration"
+      ],
+      "tags": [
+        "cloud",
+        "business",
+        "saas"
+      ],
+      "priority": "p2",
+      "notes": "$12/mo Pro, $49/mo Team tiers. Self-hosted graph + cloud session history.",
+      "updatedAt": 1782535223543
+    },
+    {
+      "id": "stripe-billing",
+      "name": "Stripe billing",
+      "status": "planned",
+      "description": "Stripe integration for Pro ($12/mo) and Team ($49/mo) tiers on the cloud backend.",
+      "files": [],
+      "dependsOn": [
+        "cloud-backend"
+      ],
+      "tags": [
+        "business",
+        "billing",
+        "saas"
+      ],
+      "priority": "p2"
+    }
+  ]
+}

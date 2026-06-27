@@ -23,7 +23,7 @@ export class CodeParser {
     const fileNode: GraphNode = {
       id: relativePath,
       kind: 'file',
-        lineCount: content.split('\n').length,
+      lineCount: content.split('\n').length,
       path: relativePath,
       name: path.basename(filePath),
       description: '',
@@ -82,7 +82,6 @@ function readPathAliases(workspaceRoot: string): Record<string, string> {
         .replace(/\/\*[\s\S]*?\*\//g, '');
       const tsconfig = JSON.parse(raw);
       const paths = tsconfig.compilerOptions?.paths ?? {};
-      const baseUrl = tsconfig.compilerOptions?.baseUrl ?? '.';
 
       for (const [alias, targets] of Object.entries(paths) as [string, string[]][]) {
         if (targets.length > 0) {
@@ -101,6 +100,140 @@ function readPathAliases(workspaceRoot: string): Record<string, string> {
   return result;
 }
 
+// ─── Language-specific raw path extractors ────────────────────────────────────
+// Each returns raw path strings. Relative-path resolution happens in extractImports().
+
+function extractJsRawPaths(content: string): string[] {
+  const paths: string[] = [];
+  const patterns = [
+    /import\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g,
+    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    /export\s+[\s\S]*?\s+from\s+['"]([^'"]+)['"]/g,
+  ];
+  for (const p of patterns) {
+    let m: RegExpExecArray | null;
+    while ((m = p.exec(content)) !== null) paths.push(m[1]);
+  }
+  return paths;
+}
+
+function extractHtmlRawPaths(content: string): string[] {
+  const paths: string[] = [];
+
+  // <script src="path.js"> or <script src='path.js'>
+  for (const m of content.matchAll(/<script[^>]+\bsrc=["']([^"']+)["']/gi)) {
+    const p = m[1].trim();
+    if (!p.startsWith('http') && !p.startsWith('//') && !p.startsWith('#'))
+      // Prefix ./ so the resolver treats it as relative even without an explicit dot
+      paths.push(p.startsWith('.') ? p : './' + p);
+  }
+
+  // <link href="styles.css"> — only grab stylesheet/preload hrefs, not navigation
+  for (const m of content.matchAll(/<link[^>]+\bhref=["']([^"'#?]+)["']/gi)) {
+    const p = m[1].trim();
+    // Only local CSS/JS assets (skip http, //, data:, mailto:)
+    if (!p.startsWith('http') && !p.startsWith('//') && !p.startsWith('data:')) {
+      if (/\.(css|js|mjs)$/.test(p))
+        paths.push(p.startsWith('.') ? p : './' + p);
+    }
+  }
+
+  // Inline <script type="module"> — pick up ES import statements inside
+  for (const block of content.matchAll(
+    /<script[^>]+type=["']module["'][^>]*>([\s\S]*?)<\/script>/gi
+  )) {
+    paths.push(...extractJsRawPaths(block[1]));
+  }
+
+  return paths;
+}
+
+function extractCssRawPaths(content: string): string[] {
+  const paths: string[] = [];
+
+  // @import "path", @import url("path")
+  // @use "path" (SCSS), @forward "path" (SCSS)
+  for (const m of content.matchAll(
+    /^\s*@(?:import|use|forward)\s+(?:url\()?["']([^"')]+)["']/gm
+  )) {
+    const p = m[1].trim();
+    if (!p.startsWith('http') && !p.startsWith('//'))
+      paths.push(p.startsWith('.') ? p : './' + p);
+  }
+
+  return paths;
+}
+
+function extractPythonRawPaths(content: string): string[] {
+  const paths: string[] = [];
+
+  // from .module.submodule import x  (relative import with named module)
+  for (const m of content.matchAll(/^from\s+(\.+)([\w.]+)\s+import\s+/gm)) {
+    const dots = m[1];
+    const mod  = m[2].replace(/\./g, '/');   // utils.helpers → utils/helpers
+    const prefix = dots.length === 1 ? './' : '../'.repeat(dots.length - 1);
+    paths.push(prefix + mod);
+  }
+
+  // from . import name1, name2  (import names from current package)
+  for (const m of content.matchAll(/^from\s+(\.+)\s+import\s+([\w,\s]+)/gm)) {
+    const dots  = m[1];
+    const names = m[2].split(',').map(n => n.trim()).filter(Boolean);
+    const prefix = dots.length === 1 ? './' : '../'.repeat(dots.length - 1);
+    for (const name of names) paths.push(prefix + name);
+  }
+
+  // Absolute imports (e.g. import os, import mypackage.utils) are skipped:
+  // we can't reliably distinguish stdlib from local packages without analysing
+  // the project structure. Add go.mod / pyproject.toml parsing later if needed.
+
+  return paths;
+}
+
+function extractRustRawPaths(content: string): string[] {
+  const paths: string[] = [];
+
+  // mod submodule;  (includes ./submodule.rs or ./submodule/mod.rs)
+  for (const m of content.matchAll(/^\s*(?:pub\s+)?mod\s+(\w+)\s*;/gm)) {
+    paths.push('./' + m[1]);
+  }
+
+  // use super::module  →  ../module
+  for (const m of content.matchAll(/^\s*use\s+super::([\w:]+)/gm)) {
+    const p = m[1].split('::')[0];   // take the first segment only
+    paths.push('../' + p);
+  }
+
+  // use crate::path::to::module  →  path/to/module  (crate-root relative)
+  // We store these without the leading ./ — resolveNodeId will find them.
+  for (const m of content.matchAll(/^\s*use\s+crate::([\w:]+)/gm)) {
+    const p = m[1]
+      .replace(/\{[^}]*\}$/, '')   // strip trailing { ... }
+      .split('::')
+      .filter(Boolean)
+      .join('/');
+    if (p) paths.push(p);
+  }
+
+  // External crates (e.g. "use serde::Serialize") are skipped.
+
+  return paths;
+}
+
+function extractCppRawPaths(content: string): string[] {
+  const paths: string[] = [];
+
+  // #include "local_header.h"  — quoted = project-local
+  for (const m of content.matchAll(/^\s*#include\s+"([^"]+)"/gm)) {
+    const p = m[1].replace(/^\.\//, '');   // normalise any existing ./
+    paths.push('./' + p);
+  }
+
+  // #include <system.h>  — angle brackets = system / third-party, skip
+
+  return paths;
+}
+
 // ─── Import extraction ────────────────────────────────────────────────────────
 
 interface ImportInfo {
@@ -116,37 +249,73 @@ function extractImports(
 ): ImportInfo[] {
   const results: ImportInfo[] = [];
   const fromDir = path.dirname(fromFile);
+  const ext     = path.extname(fromFile).toLowerCase();
 
-  const patterns = [
-    /import\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g,
-    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /export\s+[\s\S]*?\s+from\s+['"]([^'"]+)['"]/g,
-  ];
+  // ── Dispatch to the right extractor ──────────────────────────────────────
+  let rawPaths: string[];
+  switch (ext) {
+    case '.html': case '.htm': case '.xhtml':
+      rawPaths = extractHtmlRawPaths(content);
+      break;
+    case '.css': case '.scss': case '.sass': case '.less':
+      rawPaths = extractCssRawPaths(content);
+      break;
+    case '.py': case '.pyi':
+      rawPaths = extractPythonRawPaths(content);
+      break;
+    case '.rs':
+      rawPaths = extractRustRawPaths(content);
+      break;
+    case '.c': case '.cpp': case '.cc': case '.cxx':
+    case '.h': case '.hpp': case '.hh': case '.hxx':
+      rawPaths = extractCppRawPaths(content);
+      break;
+    // Go: skipped for now — local vs external package is indistinguishable
+    // without parsing go.mod. Add go.mod-aware resolution when needed.
+    default:
+      rawPaths = extractJsRawPaths(content);
+      break;
+  }
 
-  for (const pattern of patterns) {
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(content)) !== null) {
-      const source = match[1];
+  // ── Resolve each raw path to a graph node ID ──────────────────────────────
+  for (const source of rawPaths) {
+    if (!source) continue;
 
-      // Relative import: ./foo or ../foo
-      if (source.startsWith('.')) {
-        const resolved = resolveRelative(fromDir, source);
-        if (resolved) results.push({ source, resolvedPath: resolved });
-        continue;
-      }
+    // Skip URLs, protocol-relative, anchors, data URIs
+    if (
+      source.startsWith('http') ||
+      source.startsWith('//') ||
+      source.startsWith('#') ||
+      source.startsWith('data:') ||
+      source.startsWith('mailto:')
+    ) continue;
 
-      // Path alias: @/foo, ~/foo, or custom from tsconfig
-      const aliasMatch = Object.entries(aliases).find(([prefix]) => source.startsWith(prefix));
-      if (aliasMatch) {
-        const [prefix, target] = aliasMatch;
-        const rest = source.slice(prefix.length);
-        const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, '');
-        results.push({ source, resolvedPath: resolved });
-        continue;
-      }
-
-      // Everything else is node_modules -- skip
+    // ── Relative path (starts with . or ../) ──────────────────────────────
+    if (source.startsWith('.')) {
+      const resolved = resolveRelative(fromDir, source);
+      if (resolved) results.push({ source, resolvedPath: resolved });
+      continue;
     }
+
+    // ── TS/JS path alias: @/foo, ~/foo, custom tsconfig paths ─────────────
+    const aliasMatch = Object.entries(aliases).find(([prefix]) => source.startsWith(prefix));
+    if (aliasMatch) {
+      const [prefix, target] = aliasMatch;
+      const rest     = source.slice(prefix.length);
+      const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, '');
+      results.push({ source, resolvedPath: resolved });
+      continue;
+    }
+
+    // ── Rust crate-root paths (no leading ./ from crate::) ────────────────
+    // These look like "src/utils/auth" — pass through as-is;
+    // resolveNodeId() in the store will try adding extensions.
+    if (ext === '.rs' && !source.startsWith('.')) {
+      results.push({ source, resolvedPath: source });
+      continue;
+    }
+
+    // Everything else is an external package/module — skip.
   }
 
   // Deduplicate by resolvedPath

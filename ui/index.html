@@ -32,7 +32,7 @@
 
   /* ── Collapse pill — FIXED & outside sidebar so overflow:hidden can't clip it ── */
   #sidebar-collapse-btn {
-    position:fixed; left:340px; top:50%; transform:translateY(-50%);
+    position:fixed; left:var(--sidebar-w); top:50%; transform:translateY(-50%);
     width:20px; height:64px; border-radius:0 10px 10px 0;
     background:var(--surface2); border:1px solid var(--border); border-left:none;
     color:var(--text-dim); cursor:pointer; z-index:50;
@@ -284,6 +284,120 @@
   .ignore-pattern { font-family:'SF Mono',monospace; font-size:11px; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .ignore-btn { background:none; border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-family:inherit; font-size:10px; padding:2px 7px; flex-shrink:0; transition:all .12s; }
   .ignore-btn:hover { color:var(--text); border-color:rgba(255,255,255,.3); }
+
+  /* ── Sidebar resize handle ── */
+  #sidebar-resize-handle {
+    position: fixed;
+    left: var(--sidebar-w);
+    top: 0;
+    width: 10px;
+    height: 100vh;
+    cursor: col-resize;
+    z-index: 49;
+    user-select: none;
+    transform: translateX(-5px); /* center the hit area on the border */
+  }
+  /* Vertical line — visible on hover */
+  #sidebar-resize-handle::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+    transition: background .15s, width .15s;
+  }
+  /* Grip dots — appear on hover, centered vertically */
+  #sidebar-resize-handle::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 36px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      var(--border) 3px, var(--border) 5px
+    );
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  #sidebar-resize-handle:hover::before,
+  #sidebar-resize-handle.rz-dragging::before {
+    background: rgba(201,199,186,.55);
+    width: 2px;
+    left: 4px;
+  }
+  #sidebar-resize-handle:hover::after,
+  #sidebar-resize-handle.rz-dragging::after {
+    opacity: 1;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      var(--thread-bright) 3px, var(--thread-bright) 5px
+    );
+  }
+  /* Kill sidebar transition during drag — otherwise resize feels laggy */
+  body.sidebar-resizing #sidebar {
+    transition: none !important;
+  }
+  /* Keep global cursor col-resize while dragging, even when mouse moves fast */
+  body.sidebar-resizing {
+    cursor: col-resize !important;
+    user-select: none !important;
+  }
+  
+
+  .roadmap-card { padding:10px 12px; border-bottom:1px solid var(--border-soft); cursor:pointer; transition:background .1s; border-left:2px solid transparent; }
+  .roadmap-card:hover { background:rgba(255,255,255,.03); }
+  .roadmap-card-active { background:rgba(255,255,255,.05) !important; border-left-color:var(--thread-bright) !important; }
+  .roadmap-filter-btn { background:var(--surface2); border:1px solid var(--border); border-radius:3px; color:var(--text-dim); font-family:inherit; font-size:10px; padding:3px 8px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .roadmap-filter-btn.active { background:var(--thread-bright); border-color:var(--thread-bright); color:#0a0a0a; }
+  .roadmap-status-done   { color:#7ECBA1; }
+  .roadmap-status-active { color:var(--imported-edge); }
+  .roadmap-status-plan   { color:var(--text-faint); }
+  .roadmap-status-block  { color:#e0524a; }
+
+  .roadmap-view-toggle {
+    display:flex; background:var(--surface3); border:1px solid var(--border);
+    border-radius:4px; overflow:hidden; flex-shrink:0;
+  }
+  .roadmap-view-btn {
+    background:none; border:none; border-right:1px solid var(--border);
+    color:var(--text-dim); font-family:inherit; font-size:11px;
+    padding:4px 10px; cursor:pointer; transition:all .15s;
+    white-space:nowrap; display:flex; align-items:center; gap:4px;
+    letter-spacing:.02em;
+  }
+  .roadmap-view-btn:last-child { border-right:none; }
+  .roadmap-view-btn:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .roadmap-view-btn.active { background:var(--thread-bright); color:#0a0a0a; }
+  .roadmap-view-btn .vb-icon { font-size:12px; line-height:1; }
+ 
+  /* ── Roadmap glow animation ── */
+  @keyframes rmapGlow { 0%,100%{opacity:.15} 50%{opacity:.5} }
+  .rmap-node-active .rmap-glow { animation:rmapGlow 3s ease-in-out infinite; }
+  @keyframes rmapPulseStroke { 0%,100%{stroke-opacity:.6} 50%{stroke-opacity:1} }
+  .rmap-node-active circle.rmap-circle { animation:rmapPulseStroke 3s ease-in-out infinite; }
+ 
+  /* ── Tree zoom overlay buttons ── */
+  .rmap-zoom-controls {
+    position:absolute; bottom:12px; right:12px;
+    display:flex; flex-direction:column; gap:4px; z-index:5;
+  }
+  .rmap-zoom-btn {
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); width:28px; height:28px; cursor:pointer;
+    font-family:inherit; font-size:14px; border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .1s;
+  }
+  .rmap-zoom-btn:hover { background:var(--surface3); }
+  #roadmap-tree-canvas { flex:1; position:relative; overflow:hidden; }
+ 
 </style>
 </head>
 <body>
@@ -303,7 +417,9 @@
   <div style="display:flex;border-bottom:1px solid var(--border-soft);flex-shrink:0;">
     <button class="sidebar-tab active" id="tab-graph"   onclick="switchTab('graph')">Graph</button>
     <button class="sidebar-tab"        id="tab-history" onclick="switchTab('history')">History</button>
+    <button class="sidebar-tab"        id="tab-roadmap" onclick="switchTab('roadmap')">⬡ Roadmap</button>
     <button class="sidebar-tab"        id="tab-help"    onclick="switchTab('help')">? Help</button>
+
   </div>
 
   <!-- GRAPH TAB -->
@@ -404,6 +520,57 @@
     </div>
   </div>
 
+<!-- ROADMAP TAB -->
+
+    <div id="tab-content-roadmap" class="tab-content" style="display:none;flex-direction:column;">
+
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border-soft);flex-shrink:0;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+
+          <div id="roadmap-stats" style="font-size:11px;line-height:1.6;color:var(--text-dim);"></div>
+
+          <button onclick="loadRoadmapTab()" title="Refresh" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:13px;font-family:inherit;padding:0;line-height:1;">↻</button>
+
+        </div>
+
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+
+         <button class="roadmap-filter-btn active" data-filter="all"      onclick="setRoadmapFilter('all')">All</button>
+
+          <button class="roadmap-filter-btn"         data-filter="active"  onclick="setRoadmapFilter('active')">Active</button>
+
+          <button class="roadmap-filter-btn"         data-filter="done"    onclick="setRoadmapFilter('done')">Done</button>
+
+          <button class="roadmap-filter-btn"         data-filter="planned" onclick="setRoadmapFilter('planned')">Planned</button>
+
+          <button class="roadmap-filter-btn"         data-filter="blocked" onclick="setRoadmapFilter('blocked')">Blocked</button>
+
+        </div>
+
+      </div>
+      <div id="roadmap-feature-detail" style="flex:1;overflow-y:auto;padding:16px;">
+
+        <div style="color:var(--text-dim);font-size:12px;text-align:center;margin-top:40px;line-height:1.9;">
+
+          Click any node in the<br>network to see its details<br><br>
+
+          <span style="font-size:10px;opacity:.6">Right-click to hide a feature</span>
+
+        </div>
+
+      </div>
+
+      <div style="padding:10px 14px;border-top:1px solid var(--border-soft);flex-shrink:0;font-size:10px;color:var(--text-faint);">
+
+        Edit <code style="background:var(--surface2);padding:1px 4px;color:var(--thread-bright);">.mycelium/roadmap.json</code>
+
+        · <span style="color:var(--thread-bright);cursor:pointer;" onclick="loadRoadmapTab()">refresh</span>
+
+      </div>
+
+    </div>
+
   <!-- HELP TAB -->
   <div id="tab-content-help" class="tab-content" style="display:none;overflow-y:auto;flex:1;padding:14px;font-size:12px;line-height:1.7;">
     <div class="help-section">
@@ -479,6 +646,7 @@
 
 <!-- ═══ Collapse pill — OUTSIDE sidebar so overflow:hidden can't clip it ═══ -->
 <button id="sidebar-collapse-btn" title="Collapse sidebar">‹</button>
+<div id="sidebar-resize-handle" title="Drag to resize"></div>
 
 <!-- ═══ Settings modal (Scan Filters + Appearance tabs) ═══ -->
 <div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;">
@@ -548,8 +716,16 @@
   </div>
 </div>
 
-<!-- Context menu -->
-<div id="ctx-menu">
+    <div id="roadmap-ctx-menu" style="display:none;position:fixed;background:#0c0c0c;border:1px solid rgba(255,255,255,.15);z-index:400;padding:4px 0;min-width:190px;box-shadow:0 8px 32px rgba(0,0,0,.7);font-family:'SF Mono','Fira Code',monospace;">
+      <div class="ctx-item" id="rmap-ctx-hide">👁 Hide this feature</div>
+      <div class="ctx-divider"></div>
+      <div class="ctx-item" id="rmap-ctx-focus" style="color:var(--thread-bright);">🔍 Focus</div>
+      <div class="ctx-item" id="rmap-ctx-unhide" style="color:var(--text-dim);">↩ Show all hidden</div>
+    </div>
+
+    <!-- Context menu -->
+
+    <div id="ctx-menu">
   <div class="ctx-item" id="ctx-hide-file">👁 Hide this file</div>
   <div class="ctx-item" id="ctx-hide-dir">📁 Hide entire folder</div>
   <div class="ctx-divider"></div>
@@ -570,8 +746,9 @@
       <button id="task-submit">→</button>
     </div>
   </div>
-  <svg id="graph-svg"></svg>
-  <div id="subtree-banner">
+<svg id="graph-svg"></svg>
+   <div id="roadmap-canvas" style="position:absolute;inset:0;display:none;overflow:hidden;"></div>
+    <div id="subtree-banner">
     Subtree of <strong id="subtree-root-name" style="color:var(--text);margin:0 2px;"></strong>
     <button onclick="clearSubtreeIsolation()" style="background:none;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:inherit;font-size:10px;padding:2px 8px;">✕ Clear</button>
   </div>
@@ -677,6 +854,9 @@ let currentLinkObjs = [];
 let flowRafId = null;
 let flowParticles = [];
 let sidebarCollapsed = false;
+    // Sidebar resize — persisted to localStorage
+let _sidebarW = 340;
+try { _sidebarW = parseInt(localStorage.getItem('mycelium-sidebar-w') || '340') || 340; } catch {}
 
 let hiddenNodes = new Set();
 try { hiddenNodes = new Set(JSON.parse(localStorage.getItem('mycelium-hidden') || '[]')); } catch {}
@@ -1787,12 +1967,16 @@ function startDescriptionEdit(el, nodeId) {
 // ─── Sidebar collapse — position:fixed, JS-managed left ───────────────────────
 function setSidebarCollapsed(collapsed) {
   sidebarCollapsed = collapsed;
-  const sidebar     = document.getElementById('sidebar');
-  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  const sidebar      = document.getElementById('sidebar');
+  const collapseBtn  = document.getElementById('sidebar-collapse-btn');
+  const resizeHandle = document.getElementById('sidebar-resize-handle');
   sidebar.classList.toggle('collapsed', collapsed);
   collapseBtn.textContent = collapsed ? '›' : '‹';
   collapseBtn.title       = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
-  collapseBtn.style.left  = collapsed ? '0px' : '340px';
+  // When collapsed: pin pill at 0. When expanded: clear inline style so
+  // CSS left:var(--sidebar-w) takes over and tracks width changes automatically.
+  collapseBtn.style.left = collapsed ? '0px' : '';
+  if (resizeHandle) resizeHandle.style.display = collapsed ? 'none' : '';
   setTimeout(() => { if (selectedNode) centerOnNode(selectedNode); }, 340);
 }
 document.getElementById('sidebar-collapse-btn').addEventListener('click', () => setSidebarCollapsed(!sidebarCollapsed));
@@ -2028,12 +2212,13 @@ function applyDirIsolation() {
 
 // ─── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(name) {
-  ['graph', 'history', 'help'].forEach(t => {
-    document.getElementById('tab-content-' + t).style.display = t === name ? 'flex' : 'none';
+    ['graph', 'history', 'help', 'roadmap'].forEach(t => {    document.getElementById('tab-content-' + t).style.display = t === name ? 'flex' : 'none';
     const btn = document.getElementById('tab-' + t);
     if (btn) btn.classList.toggle('active', t === name);
   });
   if (name === 'history') loadHistory();
+  if (name === 'roadmap') loadRoadmapTab();
+  if (name !== 'roadmap') stopRoadmapTree();
 }
 
 // ─── History tab — grouped by task, clickable to jump to file ─────────────────
@@ -2626,8 +2811,654 @@ function initSSE() {
     es.close();
     setTimeout(initSSE, 5000);
   };
-}
+} 
 initSSE();
+
+// ─── Roadmap tab ───────────────────────────────────────────────────────────────
+let _roadmapData  = null;
+let _roadmapFilter = 'all';
+ 
+async function loadRoadmapTab() {
+  const listEl  = document.getElementById('roadmap-list');
+  const statsEl = document.getElementById('roadmap-stats');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--text-dim)">Loading…</div>';
+ 
+  try {
+    const res  = await fetch(API_BASE + '/roadmap');
+    const data = await res.json();
+    _roadmapData = data;
+    _renderRoadmapList(data.features);
+ 
+    // Stats bar
+    const s = data.stats || {};
+    if (statsEl) {
+      statsEl.innerHTML =
+        '<span class="roadmap-status-done">' + (s.complete   || 0) + ' done</span> &nbsp;' +
+        '<span class="roadmap-status-active">' + (s.inProgress|| 0) + ' active</span> &nbsp;' +
+        '<span class="roadmap-status-plan">'  + (s.planned   || 0) + ' planned</span>' +
+        (s.blocked ? ' &nbsp;<span class="roadmap-status-block">' + s.blocked + ' blocked</span>' : '') +
+        ' <span style="color:var(--text-faint);font-size:10px;margin-left:4px;">/ ' + (s.total||0) + ' total</span>';
+    }
+  } catch {
+    listEl.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--text-dim)">Could not load roadmap. Is the server running?</div>';
+  }
+}
+ 
+function _renderRoadmapList(features) {
+  const listEl = document.getElementById('roadmap-list');
+  if (!listEl || !features) return;
+ 
+  const filtered = _roadmapFilter === 'all'
+    ? features
+    : features.filter(f => {
+        if (_roadmapFilter === 'done')    return f.status === 'complete';
+        if (_roadmapFilter === 'active')  return f.status === 'in-progress';
+        if (_roadmapFilter === 'planned') return f.status === 'planned' || f.status === 'backlog';
+        if (_roadmapFilter === 'blocked') return f.status === 'blocked';
+        return true;
+      });
+ 
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:16px 14px;font-size:11px;color:var(--text-dim)">No features in this view.</div>';
+    return;
+  }
+ 
+  listEl.innerHTML = filtered.map(f => _renderFeatureCard(f, features)).join('');
+}
+ 
+function _renderFeatureCard(f, allFeatures) {
+  const statusMeta = {
+    complete:    { icon: '✓', cls: 'roadmap-status-done'   },
+    'in-progress':{ icon: '◐', cls: 'roadmap-status-active' },
+    planned:     { icon: '○', cls: 'roadmap-status-plan'   },
+    blocked:     { icon: '✕', cls: 'roadmap-status-block'  },
+    backlog:     { icon: '·', cls: 'roadmap-status-plan'   },
+  };
+  const meta = statusMeta[f.status] || statusMeta.planned;
+ 
+  const depNames = (f.dependsOn || [])
+    .map(id => {
+      const dep = (allFeatures || []).find(x => x.id === id);
+      return dep ? dep.name : id;
+    })
+    .join(', ');
+ 
+  const fileCount = (f.files || []).length;
+  const safe = (f.id || '').replace(/'/g, "\\'");
+ 
+  const tagsHtml = (f.tags || []).slice(0, 4).map(t =>
+    '<span style="background:var(--surface2);border:1px solid var(--border);border-radius:2px;font-size:9px;padding:1px 5px;color:var(--text-faint);">' + t + '</span>'
+  ).join('');
+ 
+  return (
+    '<div class="roadmap-card" id="rcard-' + f.id + '" onclick="highlightFeatureFiles(\'' + safe + '\')">' +
+      '<div style="display:flex;align-items:flex-start;gap:8px;">' +
+        '<span class="' + meta.cls + '" style="font-size:12px;flex-shrink:0;margin-top:2px;">' + meta.icon + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;">' + f.name + '</div>' +
+          '<div style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-bottom:5px;">' + f.description + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+            (fileCount
+              ? '<span style="font-size:10px;color:var(--thread-bright);" title="' + (f.files || []).join(', ') + '">' +
+                  fileCount + ' file' + (fileCount !== 1 ? 's' : '') + '</span>'
+              : '') +
+            (depNames
+              ? '<span style="font-size:10px;color:var(--text-faint);">needs: ' + depNames + '</span>'
+              : '') +
+            tagsHtml +
+          '</div>' +
+          (f.notes
+            ? '<div style="font-size:10px;color:var(--text-faint);margin-top:5px;padding:4px 6px;background:rgba(255,255,255,.02);border-left:2px solid var(--border);border-radius:0 2px 2px 0;">→ ' + f.notes + '</div>'
+            : '') +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+ 
+function highlightFeatureFiles(featureId) {
+  if (!_roadmapData) return;
+  const feature = _roadmapData.features.find(f => f.id === featureId);
+  if (!feature) return;
+ 
+  // Switch to graph tab so the highlights are visible
+  switchTab('graph');
+ 
+  const fileSet = new Set(feature.files || []);
+ 
+  if (fileSet.size > 0) {
+    d3.selectAll('.node')
+      .classed('highlighted', d => fileSet.has(d.id))
+      .classed('dimmed',      d => !fileSet.has(d.id));
+    d3.selectAll('.link').classed('dimmed', l => {
+      const from = l.source?.id ?? l.from;
+      const to   = l.target?.id ?? l.to;
+      return !fileSet.has(from) && !fileSet.has(to);
+    });
+  } else {
+    // Feature has no files yet — clear highlights
+    d3.selectAll('.node').classed('highlighted dimmed', false);
+    d3.selectAll('.link').classed('highlighted dimmed', false);
+  }
+ 
+  // Show feature detail in the node info panel
+  const panel = document.getElementById('node-info');
+  const meta  = {
+    complete:     { icon: '✓', color: '#7ECBA1' },
+    'in-progress': { icon: '◐', color: 'var(--imported-edge)' },
+    planned:      { icon: '○', color: 'var(--text-dim)' },
+    blocked:      { icon: '✕', color: '#e0524a' },
+    backlog:      { icon: '·', color: 'var(--text-faint)' },
+  }[feature.status] || { icon: '○', color: 'var(--text-dim)' };
+ 
+  const depHtml = (feature.dependsOn || []).length
+    ? '<div class="section-title">Depends on</div><div class="dep-list">' +
+      (feature.dependsOn || []).map(id => {
+        const dep  = _roadmapData.features.find(x => x.id === id);
+        const safe = id.replace(/'/g, "\\'");
+        return '<div class="dep-item dep-import" onclick="highlightFeatureFiles(\'' + safe + '\')">' + (dep ? dep.name : id) + '</div>';
+      }).join('') + '</div>'
+    : '';
+ 
+  const usedByIds  = (_roadmapData.features || []).filter(f => (f.dependsOn || []).includes(featureId));
+  const usedByHtml = usedByIds.length
+    ? '<div class="section-title">Needed by</div><div class="dep-list">' +
+      usedByIds.map(f => {
+        const safe = f.id.replace(/'/g, "\\'");
+        return '<div class="dep-item dep-import" onclick="highlightFeatureFiles(\'' + safe + '\')">' + f.name + '</div>';
+      }).join('') + '</div>'
+    : '';
+ 
+  panel.innerHTML =
+    '<div class="node-detail">' +
+      '<div class="node-kind-badge kind-file">feature</div>' +
+      '<div class="node-name" style="color:' + meta.color + ';">' + meta.icon + ' ' + feature.name + '</div>' +
+      '<div class="node-description">' + feature.description + '</div>' +
+      (feature.notes
+        ? '<div style="font-size:11px;color:var(--text-faint);margin:8px 0;padding:6px 8px;background:rgba(255,255,255,.02);border-left:2px solid var(--border);">→ ' + feature.notes + '</div>'
+        : '') +
+      (fileSet.size > 0
+        ? '<div class="section-title">Files (' + fileSet.size + ')</div>' +
+          '<div class="dep-list">' +
+          [...fileSet].map(fid => {
+            const safe = fid.replace(/'/g, "\\'");
+            return '<div class="dep-item dep-import" onclick="focusNode(\'' + safe + '\')" title="' + fid + '">' + fid.split('/').pop() + '</div>';
+          }).join('') +
+          '</div>'
+        : '<div style="font-size:11px;color:var(--text-faint);margin-top:8px;">No files linked yet.</div>') +
+      depHtml + usedByHtml +
+    '</div>';
+ 
+  // Highlight active card in the roadmap list (if it's still in the DOM)
+  document.querySelectorAll('.roadmap-card').forEach(el => {
+    el.classList.toggle('roadmap-card-active', el.id === 'rcard-' + featureId);
+  });
+}
+
+ 
+// Hook into the SSE auto-refresh so roadmap tab updates live when the server
+// receives a PATCH (e.g. an agent marks a feature complete)
+// This works automatically — the existing initSSE() in the main script picks up
+// 'roadmap-updated' events just like 'graph-updated'.
+// If you want the roadmap tab to auto-refresh on those events, add this inside
+// the existing initSSE() function:
+//
+//   es.addEventListener('roadmap-updated', () => {
+//     if (document.getElementById('tab-content-roadmap').style.display !== 'none') {
+//       loadRoadmapTab();
+//     }
+//   });
+
+let _roadmapViewMode  = 'list';
+let _treeAnimRaf      = null;
+let _treeSimulation   = null;
+let _treeResizeObs    = null;
+let _treeZoomRef      = null; // holds the d3 zoom behavior for external access
+ 
+// ─── View switching ────────────────────────────────────────────────────────────
+function setRoadmapView(mode) {
+  _roadmapViewMode = mode;
+  document.querySelectorAll('.roadmap-view-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === mode);
+  });
+  const listEl = document.getElementById('roadmap-list');
+  const treeEl = document.getElementById('roadmap-tree-canvas');
+ 
+  if (mode === 'list') {
+    if (listEl) listEl.style.display = 'block';
+    if (treeEl) treeEl.style.display = 'none';
+    stopRoadmapTree();
+    _stopTreeResizeObs();
+  } else {
+    if (listEl) listEl.style.display = 'none';
+    if (treeEl) treeEl.style.display = 'block';
+    if (_roadmapData) {
+      renderRoadmapTree(_roadmapData.features);
+      _startTreeResizeObs();
+    }
+  }
+}
+ 
+// Update filter to also re-render tree if that's the active view
+function setRoadmapFilter(filter) {
+  _roadmapFilter = filter;
+  document.querySelectorAll('.roadmap-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  if (!_roadmapData) return;
+  if (_roadmapViewMode === 'tree') renderRoadmapTree(_roadmapData.features);
+  else _renderRoadmapList(_roadmapData.features);
+}
+ 
+// ─── Cleanup ───────────────────────────────────────────────────────────────────
+function stopRoadmapTree() {
+  if (_treeAnimRaf)    { cancelAnimationFrame(_treeAnimRaf); _treeAnimRaf = null; }
+  if (_treeSimulation) { _treeSimulation.stop(); _treeSimulation = null; }
+  _treeZoomRef = null;
+}
+ 
+function _stopTreeResizeObs() {
+  if (_treeResizeObs) { _treeResizeObs.disconnect(); _treeResizeObs = null; }
+}
+ 
+function _startTreeResizeObs() {
+  _stopTreeResizeObs();
+  const canvas = document.getElementById('roadmap-tree-canvas');
+  if (!canvas || !window.ResizeObserver) return;
+  let lastW = canvas.clientWidth;
+  let debounce = null;
+  _treeResizeObs = new ResizeObserver(() => {
+    if (_roadmapViewMode !== 'tree' || !_roadmapData) return;
+    // Only re-render if width changed meaningfully (ignore tiny flex adjustments)
+    const w = canvas.clientWidth;
+    if (Math.abs(w - lastW) < 8) return;
+    lastW = w;
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      if (_roadmapViewMode === 'tree' && _roadmapData) {
+        renderRoadmapTree(_roadmapData.features);
+      }
+    }, 180);
+  });
+  _treeResizeObs.observe(canvas);
+}
+ 
+// ─── Depth calculation ────────────────────────────────────────────────────────
+function _calcFeatureDepths(features) {
+  const depMap = {};
+  features.forEach(f => { depMap[f.id] = f.dependsOn || []; });
+  const depths = {};
+  const visiting = new Set();
+  function dfs(id) {
+    if (depths[id] !== undefined) return depths[id];
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
+    const deps = (depMap[id] || []).filter(d => depMap[d] !== undefined);
+    depths[id] = deps.length ? 1 + Math.max(...deps.map(dfs)) : 0;
+    visiting.delete(id);
+    return depths[id];
+  }
+  features.forEach(f => dfs(f.id));
+  return depths;
+}
+ 
+// ─── Fit tree to container ────────────────────────────────────────────────────
+function _fitRoadmapTree(svg, zoom, containerW, containerH, nodes) {
+  if (!nodes.length) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  nodes.forEach(n => {
+    if (n.x < minX) minX = n.x; if (n.y < minY) minY = n.y;
+    if (n.x > maxX) maxX = n.x; if (n.y > maxY) maxY = n.y;
+  });
+  const pad   = 48;
+  const scale = Math.min(
+    (containerW - pad * 2) / Math.max(1, maxX - minX),
+    (containerH - pad * 2) / Math.max(1, maxY - minY),
+    2.5
+  );
+  const tx = containerW / 2 - ((minX + maxX) / 2) * scale;
+  const ty = containerH / 2 - ((minY + maxY) / 2) * scale;
+  svg.transition().duration(600).ease(d3.easeCubicOut)
+    .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+ 
+// ─── Main render ──────────────────────────────────────────────────────────────
+function renderRoadmapTree(allFeatures) {
+  stopRoadmapTree();
+ 
+  const container = document.getElementById('roadmap-tree-canvas');
+  if (!container || !window.d3) return;
+ 
+  // Respect current filter
+  const features = allFeatures.filter(f => {
+    if (_roadmapFilter === 'all')     return true;
+    if (_roadmapFilter === 'done')    return f.status === 'complete';
+    if (_roadmapFilter === 'active')  return f.status === 'in-progress';
+    if (_roadmapFilter === 'planned') return f.status === 'planned' || f.status === 'backlog';
+    if (_roadmapFilter === 'blocked') return f.status === 'blocked';
+    return true;
+  });
+ 
+  container.innerHTML = '';
+ 
+  if (!features.length) {
+    container.innerHTML = '<div style="padding:20px;font-size:11px;color:var(--text-dim);">No features in this view.</div>';
+    return;
+  }
+ 
+  // Dimensions — fill whatever space the container has right now
+  const W = container.clientWidth  || 300;
+  const H = container.clientHeight || 440;
+ 
+  const featureIds = new Set(features.map(f => f.id));
+  const depths     = _calcFeatureDepths(features);
+  const maxDepth   = Math.max(0, ...Object.values(depths));
+ 
+  // In-degree (how many others depend on this → determines node size)
+  const inDegree = {};
+  features.forEach(f => { inDegree[f.id] = 0; });
+  features.forEach(f => {
+    (f.dependsOn || []).forEach(d => {
+      if (inDegree[d] !== undefined) inDegree[d]++;
+    });
+  });
+ 
+  const linkDefs = [];
+  features.forEach(f => {
+    (f.dependsOn || []).forEach(depId => {
+      if (featureIds.has(depId)) linkDefs.push({ source: depId, target: f.id });
+    });
+  });
+ 
+  // ── Status palette ──────────────────────────────────────────────────────────
+  const STATUS_COLOR = {
+    complete:      '#7ECBA1',
+    'in-progress': '#ff8c42',
+    planned:       '#4a4a48',
+    blocked:       '#e0524a',
+    backlog:       '#3a3836',
+  };
+  const STATUS_GLOW = {
+    complete:      'rgba(126,203,161,.18)',
+    'in-progress': 'rgba(255,140,66,.22)',
+    planned:       'rgba(74,74,72,.12)',
+    blocked:       'rgba(224,82,74,.22)',
+    backlog:       'rgba(58,56,54,.1)',
+  };
+  const STATUS_ICON = { complete:'✓', 'in-progress':'◐', planned:'○', blocked:'✕', backlog:'·' };
+ 
+  const nodeR = d => 7 + Math.min(8, (inDegree[d.id] || 0) * 2.2);
+ 
+  // ── Simulation nodes with depth-based initial y ─────────────────────────────
+  const simNodes = features.map(f => ({
+    ...f,
+    x: W / 2 + (Math.random() - 0.5) * 40,
+    y: 48 + ((depths[f.id] || 0) / Math.max(1, maxDepth)) * (H - 80),
+  }));
+  const nodeById = new Map(simNodes.map(n => [n.id, n]));
+  const simLinks = linkDefs.map(l => ({
+    source: nodeById.get(l.source),
+    target: nodeById.get(l.target),
+    sourceId: l.source,
+    targetId: l.target,
+  })).filter(l => l.source && l.target);
+ 
+  // ── SVG: width+height 100% so it fills the container and responds to resize ─
+  const svg = d3.select(container).append('svg')
+    .attr('width',  '100%')
+    .attr('height', '100%')
+    .style('display', 'block');
+ 
+  // ── D3 zoom ─────────────────────────────────────────────────────────────────
+  // All drawn content lives in gMain — zoom transforms this group.
+  const gMain = svg.append('g').attr('class', 'rmap-main');
+ 
+  const treeZoom = d3.zoom()
+    .scaleExtent([0.08, 7])
+    .filter(e => e.type !== 'dblclick') // double-click canvas reserved for fit
+    .on('zoom', ({ transform }) => {
+      gMain.attr('transform', transform);
+    });
+ 
+  svg.call(treeZoom);
+  _treeZoomRef = treeZoom;
+ 
+  // Double-click canvas → fit to screen
+  svg.on('dblclick', e => {
+    if (e.target.closest && e.target.closest('.rmap-node')) return;
+    _fitRoadmapTree(svg, treeZoom, W, H, simNodes);
+  });
+ 
+  svg.append('defs').append('marker')
+    .attr('id', 'rmap-arr2')
+    .attr('viewBox', '0 0 8 8')
+    .attr('refX', 5).attr('refY', 4)
+    .attr('markerWidth', 4).attr('markerHeight', 4)
+    .attr('orient', 'auto-start-reverse')
+    .append('path')
+    .attr('d', 'M1 1L7 4L1 7')
+    .attr('fill', 'none')
+    .attr('stroke', 'context-stroke')
+    .attr('stroke-width', 1.5)
+    .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+ 
+  // ── Layers ──────────────────────────────────────────────────────────────────
+  const edgeLayer     = gMain.append('g').attr('class', 'rmap-edges');
+  const particleLayer = gMain.append('g').attr('class', 'rmap-particles');
+  const nodeLayer     = gMain.append('g').attr('class', 'rmap-nodes');
+ 
+  // ── Edges ───────────────────────────────────────────────────────────────────
+  function bezierD(sx, sy, tx, ty) {
+    const dy = ty - sy, dx = tx - sx;
+    return `M ${sx} ${sy} C ${sx + dx * .12} ${sy + dy * .48}, ${tx - dx * .12} ${ty - dy * .48}, ${tx} ${ty}`;
+  }
+ 
+  const edges = edgeLayer.selectAll('path')
+    .data(simLinks)
+    .join('path')
+    .attr('fill', 'none')
+    .attr('stroke', d => STATUS_COLOR[d.source.status] || '#4a4a48')
+    .attr('stroke-width', 0.9)
+    .attr('stroke-opacity', 0.18)
+    .attr('marker-end', 'url(#rmap-arr2)');
+ 
+  // ── Nodes ───────────────────────────────────────────────────────────────────
+  const nodeGs = nodeLayer.selectAll('g')
+    .data(simNodes)
+    .join('g')
+    .attr('class', d => 'rmap-node' + (d.status === 'in-progress' ? ' rmap-node-active' : ''))
+    .style('cursor', 'pointer')
+    .on('click', (event, d) => {
+      event.stopPropagation();
+      highlightFeatureFiles(d.id);
+    })
+    .on('mouseenter', (event, d) => _rmapHoverV2(d, edges, nodeGs, simLinks, gMain, nodeR))
+    .on('mouseleave', ()          => _rmapUnhoverV2(edges, nodeGs, gMain));
+ 
+  // Glow ring (pulses when in-progress)
+  nodeGs.append('circle')
+    .attr('class', 'rmap-glow')
+    .attr('r', d => nodeR(d) + 5)
+    .attr('fill', d => STATUS_GLOW[d.status] || 'transparent')
+    .attr('stroke', 'none');
+ 
+  // Main circle
+  nodeGs.append('circle')
+    .attr('class', 'rmap-circle')
+    .attr('r', nodeR)
+    .attr('fill', d => STATUS_COLOR[d.status] || '#4a4a48')
+    .attr('fill-opacity', 0.15)
+    .attr('stroke', d => STATUS_COLOR[d.status] || '#4a4a48')
+    .attr('stroke-width', 1)
+    .attr('stroke-opacity', 0.65);
+ 
+  // Status glyph
+  nodeGs.append('text')
+    .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+    .attr('font-size', d => Math.max(7, nodeR(d) * .82))
+    .attr('font-family', "'SF Mono','Fira Code',monospace")
+    .attr('fill', d => STATUS_COLOR[d.status] || '#4a4a48')
+    .attr('pointer-events', 'none').attr('user-select', 'none')
+    .text(d => STATUS_ICON[d.status] || '○');
+ 
+  // Label below
+  nodeGs.append('text')
+    .attr('text-anchor', 'middle').attr('dominant-baseline', 'hanging')
+    .attr('y', d => nodeR(d) + 5)
+    .attr('font-size', 8.5)
+    .attr('font-family', "'SF Mono','Fira Code',monospace")
+    .attr('fill', 'var(--text-dim)')
+    .attr('pointer-events', 'none').attr('user-select', 'none')
+    .text(d => { const n = d.name || d.id; return n.length > 14 ? n.slice(0,12)+'…' : n; });
+ 
+  // ── Force simulation ─────────────────────────────────────────────────────────
+  _treeSimulation = d3.forceSimulation(simNodes)
+    .force('link', d3.forceLink(simLinks).id(d => d.id).distance(68).strength(0.38))
+    .force('charge', d3.forceManyBody().strength(-110).distanceMax(180))
+    .force('x', d3.forceX(W / 2).strength(0.05))
+    .force('y', d3.forceY(d => {
+      const depth = depths[d.id] || 0;
+      return 48 + (depth / Math.max(1, maxDepth)) * (H - 80);
+    }).strength(0.52))
+    .force('collision', d3.forceCollide(d => nodeR(d) + 13))
+    .alphaDecay(0.025)
+    .on('tick', () => {
+      edges.attr('d', d => bezierD(d.source.x, d.source.y, d.target.x, d.target.y));
+      nodeGs.attr('transform', d => `translate(${d.x},${d.y})`);
+    })
+    .on('end', () => {
+      // Auto-fit once the simulation settles on first render
+      _fitRoadmapTree(svg, treeZoom, W, H, simNodes);
+      // Start particle flow after fit
+      _startTreeParticles(simLinks, edgeLayer, particleLayer, STATUS_COLOR);
+    });
+ 
+  // ── Floating zoom controls overlay ──────────────────────────────────────────
+  const ctrlDiv = document.createElement('div');
+  ctrlDiv.className = 'rmap-zoom-controls';
+  const mkBtn = (label, title, fn) => {
+    const b = document.createElement('button');
+    b.className = 'rmap-zoom-btn';
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+    return b;
+  };
+  ctrlDiv.appendChild(mkBtn('+', 'Zoom in',
+    () => svg.transition().duration(250).call(treeZoom.scaleBy, 1.5)));
+  ctrlDiv.appendChild(mkBtn('⊡', 'Fit all (or double-click canvas)',
+    () => _fitRoadmapTree(svg, treeZoom, W, H, simNodes)));
+  ctrlDiv.appendChild(mkBtn('−', 'Zoom out',
+    () => svg.transition().duration(250).call(treeZoom.scaleBy, 0.667)));
+  container.appendChild(ctrlDiv);
+ 
+  // Click background → clear highlights
+  svg.on('click', () => {
+    d3.selectAll('.node').classed('highlighted dimmed', false);
+    d3.selectAll('.link').classed('highlighted dimmed', false);
+    const panel = document.getElementById('node-info');
+    if (panel) panel.innerHTML = '<div class="node-info-empty" style="line-height:1.8">Click any dot to see<br>what it imports, exports,<br>and connects to</div>';
+  });
+}
+ 
+// ─── Particle flow ────────────────────────────────────────────────────────────
+function _startTreeParticles(simLinks, edgeLayer, particleLayer, STATUS_COLOR) {
+  const pathEls   = edgeLayer.selectAll('path').nodes();
+  const particles = [];
+ 
+  simLinks.forEach((link, i) => {
+    const pathEl = pathEls[i];
+    if (!pathEl) return;
+    const isActive   = link.source.status === 'in-progress' || link.target.status === 'in-progress';
+    const isComplete = link.source.status === 'complete' && link.target.status === 'complete';
+    const color      = STATUS_COLOR[link.source.status] || '#4a4a48';
+    const opacity    = isActive ? 0.7 : isComplete ? 0.45 : 0.15;
+    const speed      = isActive ? 0.16 + Math.random() * .08
+                     : isComplete ? 0.10 + Math.random() * .05
+                     : 0.05 + Math.random() * .04;
+ 
+    const dot = particleLayer.append('circle')
+      .attr('r', isActive ? 2 : 1.5)
+      .attr('fill', color)
+      .attr('opacity', opacity)
+      .attr('pointer-events', 'none');
+ 
+    particles.push({ dot, pathEl, t: Math.random(), speed });
+  });
+ 
+  let lastTs = null;
+  function tick(ts) {
+    if (!lastTs) lastTs = ts;
+    const dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+    particles.forEach(p => {
+      p.t += p.speed * dt;
+      if (p.t > 1) p.t -= 1;
+      try {
+        const len = p.pathEl.getTotalLength();
+        const pt  = p.pathEl.getPointAtLength(p.t * len);
+        p.dot.attr('cx', pt.x).attr('cy', pt.y);
+      } catch { /* path removed, ignore */ }
+    });
+    _treeAnimRaf = requestAnimationFrame(tick);
+  }
+  _treeAnimRaf = requestAnimationFrame(tick);
+}
+ 
+// ─── Hover helpers ────────────────────────────────────────────────────────────
+// Tooltip is appended to gMain so it transforms correctly with zoom.
+function _rmapHoverV2(d, edges, nodeGs, simLinks, gMain, nodeR) {
+  const connected = new Set([d.id]);
+  simLinks.forEach(l => {
+    const s = l.source?.id ?? l.sourceId;
+    const t = l.target?.id ?? l.targetId;
+    if (s === d.id) connected.add(t);
+    if (t === d.id) connected.add(s);
+  });
+ 
+  edges
+    .attr('stroke-opacity', l => {
+      const s = l.source?.id ?? l.sourceId, t = l.target?.id ?? l.targetId;
+      return (s === d.id || t === d.id) ? 0.75 : 0.04;
+    })
+    .attr('stroke-width', l => {
+      const s = l.source?.id ?? l.sourceId, t = l.target?.id ?? l.targetId;
+      return (s === d.id || t === d.id) ? 1.6 : 0.9;
+    });
+ 
+  nodeGs.select('circle.rmap-circle')
+    .attr('fill-opacity',   n => connected.has(n.id) ? 0.22 : 0.05)
+    .attr('stroke-opacity', n => connected.has(n.id) ? 0.8  : 0.1);
+  nodeGs.selectAll('text').attr('opacity', n => connected.has(n.id) ? 1 : 0.15);
+ 
+  // Tooltip inside gMain — inherits zoom transform
+  gMain.selectAll('.rmap-tip').remove();
+  const label = (d.name || d.id).length > 22 ? (d.name || d.id).slice(0, 20) + '…' : (d.name || d.id);
+  const tw    = label.length * 6.2 + 18;
+  const col   = {
+    complete:'#7ECBA1','in-progress':'#ff8c42',planned:'#4a4a48',blocked:'#e0524a'
+  }[d.status] || '#c9c7ba';
+  const tip = gMain.append('g').attr('class', 'rmap-tip')
+    .attr('transform', `translate(${d.x}, ${d.y - nodeR(d) - 20})`)
+    .attr('pointer-events', 'none');
+  tip.append('rect')
+    .attr('x', -tw / 2).attr('y', -13).attr('width', tw).attr('height', 17).attr('rx', 3)
+    .attr('fill', '#0d0d0d').attr('stroke', col).attr('stroke-width', 0.5).attr('stroke-opacity', 0.7);
+  tip.append('text')
+    .attr('text-anchor', 'middle').attr('y', 0)
+    .attr('font-size', 9.5).attr('font-family', "'SF Mono','Fira Code',monospace")
+    .attr('fill', col).text(label);
+}
+ 
+function _rmapUnhoverV2(edges, nodeGs, gMain) {
+  edges.attr('stroke-opacity', 0.18).attr('stroke-width', 0.9);
+  nodeGs.select('circle.rmap-circle').attr('fill-opacity', 0.15).attr('stroke-opacity', 0.65);
+  nodeGs.selectAll('text').attr('opacity', 1);
+  gMain.selectAll('.rmap-tip').remove();
+}
 </script>
+<script src="myc-inject.js"></script>
+<script src="roadmap-main.js"></script>
 </body>
 </html>

@@ -3275,7 +3275,7 @@ var require_package = __commonJS({
   "package.json"(exports2, module2) {
     module2.exports = {
       name: "@kopikocappu/mycelium",
-      version: "0.2.11",
+      version: "0.2.13",
       description: "Codebase memory for AI coding agents. Natural language preflight, graph viewer, and agent history in one command.",
       bin: {
         mycelium: "dist/cli.js"
@@ -14557,10 +14557,10 @@ var Ignore = class {
   ignored(p) {
     const fullpath = p.fullpath();
     const fullpaths = `${fullpath}/`;
-    const relative3 = p.relative() || ".";
-    const relatives = `${relative3}/`;
+    const relative4 = p.relative() || ".";
+    const relatives = `${relative4}/`;
     for (const m of this.relative) {
-      if (m.match(relative3) || m.match(relatives))
+      if (m.match(relative4) || m.match(relatives))
         return true;
     }
     for (const m of this.absolute) {
@@ -14571,9 +14571,9 @@ var Ignore = class {
   }
   childrenIgnored(p) {
     const fullpath = p.fullpath() + "/";
-    const relative3 = (p.relative() || ".") + "/";
+    const relative4 = (p.relative() || ".") + "/";
     for (const m of this.relativeChildren) {
-      if (m.match(relative3))
+      if (m.match(relative4))
         return true;
     }
     for (const m of this.absoluteChildren) {
@@ -15466,7 +15466,7 @@ var GraphStore = class {
     fileNodeIds.add(filePath);
     for (const id of Object.keys(this.data.edges)) {
       const e = this.data.edges[id];
-      if (fileNodeIds.has(e.from) || fileNodeIds.has(e.to))
+      if (fileNodeIds.has(e.from))
         delete this.data.edges[id];
     }
     this.scheduleSave();
@@ -15618,19 +15618,55 @@ var GraphStore = class {
   resolveNodeId(targetPath) {
     if (this.data.nodes[targetPath])
       return targetPath;
-    const base = targetPath.replace(/\.(tsx?|jsx?)$/, "");
-    const exts = [".ts", ".tsx", ".js", ".jsx"];
+    const base = targetPath.replace(
+      /\.(tsx?|jsx?|mjs|cjs|py|pyi|go|rs|cpp?|cc|cxx|h(?:pp|h)?|java|html?|css|s[ac]ss|less)$/i,
+      ""
+    );
+    const exts = [
+      // TS/JS first — most common in the average Mycelium project
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      // Python
+      ".py",
+      ".pyi",
+      // Systems languages
+      ".go",
+      ".rs",
+      ".cpp",
+      ".cc",
+      ".cxx",
+      ".c",
+      ".h",
+      ".hpp",
+      ".hh",
+      ".hxx",
+      // JVM
+      ".java",
+      // Web assets (HTML/CSS added last since they're less likely to be bare references)
+      ".html",
+      ".htm",
+      ".css",
+      ".scss",
+      ".sass",
+      ".less"
+    ];
     for (const ext2 of exts) {
       if (this.data.nodes[base + ext2])
         return base + ext2;
     }
-    for (const ext2 of exts) {
+    for (const ext2 of [".ts", ".tsx", ".js", ".jsx"]) {
       if (this.data.nodes[base + "/index" + ext2])
         return base + "/index" + ext2;
     }
+    if (this.data.nodes[base + "/__init__.py"])
+      return base + "/__init__.py";
     const lower = base.toLowerCase();
     const found = Object.keys(this.data.nodes).find(
-      (k) => k.toLowerCase().replace(/\.(tsx?|jsx?)$/, "") === lower
+      (k) => k.toLowerCase().replace(/\.[^.]+$/, "") === lower
     );
     return found ?? null;
   }
@@ -16047,8 +16083,8 @@ var CbmAdapter = class {
     const fnNodes = fnResult?.results ?? [];
     const fileNodes = fileResult?.results ?? [];
     const allCbmNodes = [...fileNodes, ...fnNodes];
-    const myceliumNodes = this.convertNodes(allCbmNodes, repoPath, exclude);
-    const callEdges = await this.buildCallEdges(fnNodes, repoPath, project);
+    const myceliumNodes = this.convertNodes(allCbmNodes, absPath, exclude);
+    const callEdges = await this.buildCallEdges(fnNodes, absPath, project);
     const languages = archResult?.languages ?? [];
     const importEdges = callEdges.filter((e) => e.kind === "imports");
     const calls = callEdges.filter((e) => e.kind === "calls");
@@ -16078,12 +16114,12 @@ var CbmAdapter = class {
       return { callers: [], callees: [] };
     const callers = (result.callers ?? result.inbound ?? []).map((n) => ({
       name: n.name,
-      file: n.file_path ?? n.file ?? (n.qualified_name ? this.qualifiedNameToFilePath(n.qualified_name, project, n.name) : ""),
+      file: this.resolveNodeFilePath(n, absPath, project, n.name),
       line: n.line
     }));
     const callees = (result.callees ?? result.outbound ?? []).map((n) => ({
       name: n.name,
-      file: n.file_path ?? n.file ?? (n.qualified_name ? this.qualifiedNameToFilePath(n.qualified_name, project, n.name) : ""),
+      file: this.resolveNodeFilePath(n, absPath, project, n.name),
       line: n.line
     }));
     return { callers, callees };
@@ -16122,10 +16158,55 @@ var CbmAdapter = class {
     }
   }
   /**
+   * Resolve a CBM node's file reference to a Mycelium-style relative path.
+   *
+   * Priority order:
+   *   1. file_path field — may be absolute, needs path.relative()
+   *   2. file field (legacy) — same treatment
+   *   3. qualified_name — derive via qualifiedNameToFilePath()
+   *   4. name — last resort
+   *
+   * This is the single source of truth for "what file does this CBM node live in?"
+   * Used by convertNodes(), buildCallEdges(), and traceFunction().
+   */
+  resolveNodeFilePath(node, repoPath, project, funcName) {
+    const absRepoPath = import_path2.default.resolve(repoPath);
+    if (node.file_path) {
+      return this.toRelative(node.file_path, absRepoPath);
+    }
+    if (node.file) {
+      return this.toRelative(node.file, absRepoPath);
+    }
+    if (node.qualified_name) {
+      return this.qualifiedNameToFilePath(node.qualified_name, project, funcName);
+    }
+    return node.name ?? "";
+  }
+  /**
+   * Convert any path (absolute or already relative) to a Mycelium node ID.
+   * Mycelium stores all nodes as paths relative to the workspace root,
+   * using forward slashes.
+   *
+   * Bug this fixes: CBM returns absolute paths like
+   *   "C:/Users/Minh Tran/Desktop/pakky/src/components/File.tsx"
+   * but Mycelium nodes are keyed by
+   *   "src/components/File.tsx"
+   * so every edge had from/to = absolute path → matched nothing in the store.
+   */
+  toRelative(filePath, absRepoPath) {
+    if (!filePath)
+      return "";
+    if (!import_path2.default.isAbsolute(filePath))
+      return filePath.replace(/\\/g, "/");
+    return import_path2.default.relative(absRepoPath, filePath).replace(/\\/g, "/");
+  }
+  /**
    * Derive a relative file path from a cbm qualified_name.
    * Format: "{project-slug}.{path.with.dots}.{functionName}"
    * e.g. "C-Users-Minh-Tran-Desktop-pakky.src.components.BroadcastButton.deletePreset"
    * → "src/components/BroadcastButton"
+   *
+   * Note: the result has no extension — resolveNodeId() in store.ts will add it.
    */
   qualifiedNameToFilePath(qualifiedName, project, funcName) {
     const withoutProject = qualifiedName.startsWith(project + ".") ? qualifiedName.slice(project.length + 1) : qualifiedName;
@@ -16146,7 +16227,9 @@ var CbmAdapter = class {
     for (const n of cbmNodes) {
       const label = n.label?.toLowerCase() ?? "file";
       const kind = this.mapLabel(label);
-      const filePath = n.file_path ? n.file_path : n.file ? import_path2.default.relative(repoPath, n.file).replace(/\\/g, "/") : n.name;
+      const filePath = this.resolveNodeFilePath(n, repoPath, "", n.name);
+      if (!filePath)
+        continue;
       if (this.matchesExclude(filePath, exclude))
         continue;
       const id = kind === "file" ? filePath : `${filePath}::${n.qualified_name ?? n.name}`;
@@ -16192,10 +16275,14 @@ var CbmAdapter = class {
       });
       if (!result?.callees)
         continue;
+      const fromFile = this.resolveNodeFilePath(fn, repoPath, project, fn.name);
+      if (!fromFile)
+        continue;
       for (const callee of result.callees) {
-        const fromFile = fn.file_path ?? "";
-        const toFile = callee.qualified_name ? this.qualifiedNameToFilePath(callee.qualified_name, project, callee.name) : callee.file_path ?? "";
-        if (!fromFile || !toFile || fromFile === toFile)
+        const toFile = this.resolveNodeFilePath(callee, repoPath, project, callee.name);
+        if (!toFile)
+          continue;
+        if (fromFile === toFile)
           continue;
         const edgeId2 = `${fromFile}::calls::${toFile}`;
         if (seen.has(edgeId2))
@@ -16541,6 +16628,77 @@ var SessionManager = class {
 };
 
 // src/mcp/server.ts
+function _roadmapPath(storeDir) {
+  return path5.join(storeDir, "roadmap.json");
+}
+function loadRoadmapFile(storeDir) {
+  try {
+    const raw = fs4.readFileSync(_roadmapPath(storeDir), "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return { version: 1, updatedAt: Date.now(), features: [] };
+  }
+}
+function saveRoadmapFile(storeDir, roadmap) {
+  roadmap.updatedAt = Date.now();
+  fs4.writeFileSync(_roadmapPath(storeDir), JSON.stringify(roadmap, null, 2), "utf-8");
+}
+function buildRoadmapContext(features) {
+  const byStatus = {
+    complete: features.filter((f) => f.status === "complete"),
+    "in-progress": features.filter((f) => f.status === "in-progress"),
+    planned: features.filter((f) => f.status === "planned"),
+    blocked: features.filter((f) => f.status === "blocked"),
+    backlog: features.filter((f) => f.status === "backlog")
+  };
+  let ctx = "## Mycelium Project Roadmap\n\n";
+  if (byStatus.complete.length) {
+    ctx += "COMPLETE (" + byStatus.complete.length + "):\n";
+    byStatus.complete.forEach((f) => {
+      ctx += "- " + f.name;
+      if (f.files.length) {
+        const shown = f.files.slice(0, 3).join(", ");
+        const extra = f.files.length > 3 ? ", +" + (f.files.length - 3) + " more" : "";
+        ctx += " [" + shown + extra + "]";
+      }
+      ctx += "\n";
+    });
+    ctx += "\n";
+  }
+  if (byStatus["in-progress"].length) {
+    ctx += "IN PROGRESS (" + byStatus["in-progress"].length + "):\n";
+    byStatus["in-progress"].forEach((f) => {
+      ctx += "- " + f.name;
+      if (f.files.length)
+        ctx += " [" + f.files.join(", ") + "]";
+      if (f.notes)
+        ctx += "\n  \u2192 " + f.notes;
+      ctx += "\n";
+    });
+    ctx += "\n";
+  }
+  if (byStatus.planned.length) {
+    ctx += "PLANNED (" + byStatus.planned.length + "):\n";
+    byStatus.planned.forEach((f) => {
+      ctx += "- " + f.name;
+      if (f.dependsOn.length) {
+        const names = f.dependsOn.map((id) => features.find((x) => x.id === id)?.name || id).join(", ");
+        ctx += " (requires: " + names + ")";
+      }
+      ctx += "\n";
+    });
+  }
+  if (byStatus.blocked.length) {
+    ctx += "\nBLOCKED (" + byStatus.blocked.length + "):\n";
+    byStatus.blocked.forEach((f) => {
+      ctx += "- " + f.name;
+      if (f.notes)
+        ctx += " \u2014 " + f.notes;
+      ctx += "\n";
+    });
+  }
+  return ctx;
+}
 var RateLimiter = class {
   constructor() {
     this.counts = /* @__PURE__ */ new Map();
@@ -16573,6 +16731,7 @@ var McpServer = class {
     this.changeLogger = changeLogger;
     this.config = config;
     this.configPath = path5.join(projectRoot, ".mycelium", "config.json");
+    this.storeDir = path5.join(projectRoot, ".mycelium");
     this.defaultIgnore = [...config.parser.exclude];
     this.sessionManager = new SessionManager(
       projectRoot,
@@ -16580,6 +16739,96 @@ var McpServer = class {
     );
     this.loadUserOverrides();
     this.syncEffectiveExclude();
+  }
+  handleRoadmapGet(res) {
+    const roadmap = loadRoadmapFile(this.storeDir);
+    const context = buildRoadmapContext(roadmap.features);
+    const stats = {
+      total: roadmap.features.length,
+      complete: roadmap.features.filter((f) => f.status === "complete").length,
+      inProgress: roadmap.features.filter((f) => f.status === "in-progress").length,
+      planned: roadmap.features.filter((f) => f.status === "planned").length,
+      blocked: roadmap.features.filter((f) => f.status === "blocked").length
+    };
+    res.writeHead(200);
+    res.end(JSON.stringify({ ...roadmap, context, stats }));
+  }
+  async handleRoadmapFeaturePost(req, res) {
+    try {
+      const body = await this.readBody(req);
+      const feature = JSON.parse(body);
+      if (!feature.id || !feature.name) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: '"id" and "name" are required' }));
+        return;
+      }
+      const roadmap = loadRoadmapFile(this.storeDir);
+      const idx = roadmap.features.findIndex((f) => f.id === feature.id);
+      const next = {
+        id: feature.id,
+        name: feature.name,
+        status: feature.status || "planned",
+        description: feature.description || "",
+        files: feature.files || [],
+        dependsOn: feature.dependsOn || [],
+        tags: feature.tags || [],
+        priority: feature.priority,
+        notes: feature.notes,
+        completedAt: feature.completedAt,
+        updatedAt: Date.now()
+      };
+      if (idx >= 0)
+        roadmap.features[idx] = { ...roadmap.features[idx], ...next };
+      else
+        roadmap.features.push(next);
+      saveRoadmapFile(this.storeDir, roadmap);
+      this.broadcastRoadmapUpdate();
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, feature: next }));
+    } catch (e) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: String(e) }));
+    }
+  }
+  async handleRoadmapFeaturePatch(featureId, req, res) {
+    try {
+      const body = await this.readBody(req);
+      const patch = JSON.parse(body);
+      const roadmap = loadRoadmapFile(this.storeDir);
+      const idx = roadmap.features.findIndex((f) => f.id === featureId);
+      if (idx < 0) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: "Feature not found: " + featureId }));
+        return;
+      }
+      roadmap.features[idx] = {
+        ...roadmap.features[idx],
+        ...patch,
+        id: featureId,
+        // id is always immutable
+        updatedAt: Date.now()
+      };
+      if (patch.status === "complete" && !roadmap.features[idx].completedAt) {
+        roadmap.features[idx].completedAt = Date.now();
+      }
+      saveRoadmapFile(this.storeDir, roadmap);
+      this.broadcastRoadmapUpdate();
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true, feature: roadmap.features[idx] }));
+    } catch (e) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: String(e) }));
+    }
+  }
+  /** Push 'roadmap-updated' to all connected SSE clients — triggers tab refresh in UI */
+  broadcastRoadmapUpdate() {
+    for (const client of this.sseClients) {
+      try {
+        client.write("event: roadmap-updated\ndata: {}\n\n");
+      } catch {
+        this.sseClients.delete(client);
+      }
+    }
   }
   // ── Persistence helpers ────────────────────────────────────────────────────
   loadUserOverrides() {
@@ -16670,6 +16919,10 @@ var McpServer = class {
       return this.handleEntryPoints(url, res);
     if (pathname === "/ui" || pathname === "/ui/")
       return this.handleUI(res);
+    if (pathname === "/myc-inject.js")
+      return this.handleStaticAsset("myc-inject.js", res, "application/javascript");
+    if (pathname === "/roadmap-main.js")
+      return this.handleStaticAsset("roadmap-main.js", res, "application/javascript");
     if (pathname === "/teams")
       return this.handleTeams(res);
     if (pathname === "/debug")
@@ -16736,6 +16989,21 @@ var McpServer = class {
       this.handleDescribe(req, res);
       return;
     }
+    if (pathname === "/roadmap" && method === "GET") {
+      this.handleRoadmapGet(res);
+      return;
+    }
+    if (pathname === "/roadmap/feature" && method === "POST") {
+      this.handleRoadmapFeaturePost(req, res);
+      return;
+    }
+    if (pathname.startsWith("/roadmap/feature/") && method === "PATCH") {
+      const featureId = decodeURIComponent(pathname.slice("/roadmap/feature/".length));
+      if (featureId) {
+        this.handleRoadmapFeaturePatch(featureId, req, res);
+        return;
+      }
+    }
     if (pathname === "/events" && method === "GET") {
       this.handleEvents(res);
       return;
@@ -16766,6 +17034,26 @@ var McpServer = class {
     }));
   }
   // ── Existing handlers (unchanged) ─────────────────────────────────────────
+  handleStaticAsset(filename, res, contentType) {
+    const candidates = [
+      path5.join(__dirname, "..", "..", "ui", filename),
+      path5.join(__dirname, "..", "ui", filename),
+      path5.join(process.cwd(), "ui", filename)
+    ];
+    for (const candidate of candidates) {
+      if (fs4.existsSync(candidate)) {
+        try {
+          const content = fs4.readFileSync(candidate);
+          res.writeHead(200, { "Content-Type": contentType });
+          res.end(content);
+          return;
+        } catch {
+        }
+      }
+    }
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: `Static asset not found: ${filename}` }));
+  }
   handleStatus(res) {
     const stats = this.store.getStats();
     res.writeHead(200);
@@ -17372,7 +17660,6 @@ function readPathAliases(workspaceRoot) {
       const raw = fs5.readFileSync(tsconfigPath, "utf8").replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
       const tsconfig = JSON.parse(raw);
       const paths = tsconfig.compilerOptions?.paths ?? {};
-      const baseUrl = tsconfig.compilerOptions?.baseUrl ?? ".";
       for (const [alias, targets] of Object.entries(paths)) {
         if (targets.length > 0) {
           const cleanAlias = alias.replace(/\*$/, "");
@@ -17386,32 +17673,153 @@ function readPathAliases(workspaceRoot) {
   aliasCache.set(workspaceRoot, result);
   return result;
 }
-function extractImports(content, fromFile, workspaceRoot, aliases) {
-  const results = [];
-  const fromDir = path6.dirname(fromFile);
+function extractJsRawPaths(content) {
+  const paths = [];
   const patterns = [
     /import\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g,
     /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
     /export\s+[\s\S]*?\s+from\s+['"]([^'"]+)['"]/g
   ];
-  for (const pattern of patterns) {
-    let match2;
-    while ((match2 = pattern.exec(content)) !== null) {
-      const source = match2[1];
-      if (source.startsWith(".")) {
-        const resolved = resolveRelative(fromDir, source);
-        if (resolved)
-          results.push({ source, resolvedPath: resolved });
-        continue;
-      }
-      const aliasMatch = Object.entries(aliases).find(([prefix]) => source.startsWith(prefix));
-      if (aliasMatch) {
-        const [prefix, target] = aliasMatch;
-        const rest = source.slice(prefix.length);
-        const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, "");
+  for (const p of patterns) {
+    let m;
+    while ((m = p.exec(content)) !== null)
+      paths.push(m[1]);
+  }
+  return paths;
+}
+function extractHtmlRawPaths(content) {
+  const paths = [];
+  for (const m of content.matchAll(/<script[^>]+\bsrc=["']([^"']+)["']/gi)) {
+    const p = m[1].trim();
+    if (!p.startsWith("http") && !p.startsWith("//") && !p.startsWith("#"))
+      paths.push(p.startsWith(".") ? p : "./" + p);
+  }
+  for (const m of content.matchAll(/<link[^>]+\bhref=["']([^"'#?]+)["']/gi)) {
+    const p = m[1].trim();
+    if (!p.startsWith("http") && !p.startsWith("//") && !p.startsWith("data:")) {
+      if (/\.(css|js|mjs)$/.test(p))
+        paths.push(p.startsWith(".") ? p : "./" + p);
+    }
+  }
+  for (const block of content.matchAll(
+    /<script[^>]+type=["']module["'][^>]*>([\s\S]*?)<\/script>/gi
+  )) {
+    paths.push(...extractJsRawPaths(block[1]));
+  }
+  return paths;
+}
+function extractCssRawPaths(content) {
+  const paths = [];
+  for (const m of content.matchAll(
+    /^\s*@(?:import|use|forward)\s+(?:url\()?["']([^"')]+)["']/gm
+  )) {
+    const p = m[1].trim();
+    if (!p.startsWith("http") && !p.startsWith("//"))
+      paths.push(p.startsWith(".") ? p : "./" + p);
+  }
+  return paths;
+}
+function extractPythonRawPaths(content) {
+  const paths = [];
+  for (const m of content.matchAll(/^from\s+(\.+)([\w.]+)\s+import\s+/gm)) {
+    const dots = m[1];
+    const mod = m[2].replace(/\./g, "/");
+    const prefix = dots.length === 1 ? "./" : "../".repeat(dots.length - 1);
+    paths.push(prefix + mod);
+  }
+  for (const m of content.matchAll(/^from\s+(\.+)\s+import\s+([\w,\s]+)/gm)) {
+    const dots = m[1];
+    const names = m[2].split(",").map((n) => n.trim()).filter(Boolean);
+    const prefix = dots.length === 1 ? "./" : "../".repeat(dots.length - 1);
+    for (const name of names)
+      paths.push(prefix + name);
+  }
+  return paths;
+}
+function extractRustRawPaths(content) {
+  const paths = [];
+  for (const m of content.matchAll(/^\s*(?:pub\s+)?mod\s+(\w+)\s*;/gm)) {
+    paths.push("./" + m[1]);
+  }
+  for (const m of content.matchAll(/^\s*use\s+super::([\w:]+)/gm)) {
+    const p = m[1].split("::")[0];
+    paths.push("../" + p);
+  }
+  for (const m of content.matchAll(/^\s*use\s+crate::([\w:]+)/gm)) {
+    const p = m[1].replace(/\{[^}]*\}$/, "").split("::").filter(Boolean).join("/");
+    if (p)
+      paths.push(p);
+  }
+  return paths;
+}
+function extractCppRawPaths(content) {
+  const paths = [];
+  for (const m of content.matchAll(/^\s*#include\s+"([^"]+)"/gm)) {
+    const p = m[1].replace(/^\.\//, "");
+    paths.push("./" + p);
+  }
+  return paths;
+}
+function extractImports(content, fromFile, workspaceRoot, aliases) {
+  const results = [];
+  const fromDir = path6.dirname(fromFile);
+  const ext2 = path6.extname(fromFile).toLowerCase();
+  let rawPaths;
+  switch (ext2) {
+    case ".html":
+    case ".htm":
+    case ".xhtml":
+      rawPaths = extractHtmlRawPaths(content);
+      break;
+    case ".css":
+    case ".scss":
+    case ".sass":
+    case ".less":
+      rawPaths = extractCssRawPaths(content);
+      break;
+    case ".py":
+    case ".pyi":
+      rawPaths = extractPythonRawPaths(content);
+      break;
+    case ".rs":
+      rawPaths = extractRustRawPaths(content);
+      break;
+    case ".c":
+    case ".cpp":
+    case ".cc":
+    case ".cxx":
+    case ".h":
+    case ".hpp":
+    case ".hh":
+    case ".hxx":
+      rawPaths = extractCppRawPaths(content);
+      break;
+    default:
+      rawPaths = extractJsRawPaths(content);
+      break;
+  }
+  for (const source of rawPaths) {
+    if (!source)
+      continue;
+    if (source.startsWith("http") || source.startsWith("//") || source.startsWith("#") || source.startsWith("data:") || source.startsWith("mailto:"))
+      continue;
+    if (source.startsWith(".")) {
+      const resolved = resolveRelative(fromDir, source);
+      if (resolved)
         results.push({ source, resolvedPath: resolved });
-        continue;
-      }
+      continue;
+    }
+    const aliasMatch = Object.entries(aliases).find(([prefix]) => source.startsWith(prefix));
+    if (aliasMatch) {
+      const [prefix, target] = aliasMatch;
+      const rest = source.slice(prefix.length);
+      const resolved = normalizeExt(`${target}${rest}`).replace(/^\.\//, "");
+      results.push({ source, resolvedPath: resolved });
+      continue;
+    }
+    if (ext2 === ".rs" && !source.startsWith(".")) {
+      results.push({ source, resolvedPath: source });
+      continue;
     }
   }
   const seen = /* @__PURE__ */ new Set();
@@ -17513,45 +17921,217 @@ var parser = new CodeParser();
 // src/parser/detect.ts
 var fs6 = __toESM(require("fs"));
 var path7 = __toESM(require("path"));
+var TS_JS = "ts,tsx,js,jsx,mjs,cjs";
+var WEB = "html,htm,css,scss,sass,less";
+var PYTHON = "py,pyi";
+var SYSTEMS = "rs,c,cpp,cc,cxx,h,hpp,hh";
+var GO = "go";
+var JAVA = "java,kt,kts,scala";
+var RUBY = "rb,rake,gemspec";
+var PHP = "php";
+var SWIFT = "swift";
+var CSHARP = "cs";
+var ALL_EXTS = `{${[TS_JS, WEB, PYTHON, SYSTEMS, GO, JAVA, RUBY, PHP, SWIFT, CSHARP].join(",")}}`;
+var SOURCE_CANDIDATES = [
+  // Web / Node
+  "src",
+  "app",
+  "pages",
+  "lib",
+  "libs",
+  "components",
+  "utils",
+  "hooks",
+  "helpers",
+  "server",
+  "client",
+  "api",
+  "routes",
+  "middleware",
+  "services",
+  "controllers",
+  "store",
+  "stores",
+  "state",
+  "models",
+  "schemas",
+  "types",
+  // Web asset dirs (scanned with web-only extensions)
+  "ui",
+  "public",
+  "static",
+  "assets",
+  "web",
+  // Python
+  "scripts",
+  "tests",
+  "test",
+  // Go / Rust / systems
+  "cmd",
+  "pkg",
+  "internal",
+  "core",
+  // Ruby / PHP / misc
+  "bin",
+  "config"
+];
+var ALWAYS_IGNORE = /* @__PURE__ */ new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  "out",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".vite",
+  ".mycelium",
+  "__pycache__",
+  ".pytest_cache",
+  "coverage",
+  ".nyc_output",
+  ".turbo",
+  ".cache",
+  "vendor",
+  "target",
+  // Rust / Go build artifacts
+  ".idea",
+  ".vscode",
+  "migrations"
+  // DB migration folders — usually not useful
+]);
+function detectProjectTypes(root) {
+  const exists = (f) => fs6.existsSync(path7.join(root, f));
+  return {
+    hasTypeScript: exists("tsconfig.json") || exists("tsconfig.base.json"),
+    hasPython: exists("pyproject.toml") || exists("setup.py") || exists("requirements.txt") || exists("Pipfile"),
+    hasRust: exists("Cargo.toml"),
+    hasGo: exists("go.mod"),
+    hasJava: exists("pom.xml") || exists("build.gradle") || exists("build.gradle.kts"),
+    hasRuby: exists("Gemfile"),
+    hasPHP: exists("composer.json"),
+    hasSwift: exists("Package.swift"),
+    hasCSharp: exists("*.csproj") || exists("*.sln")
+  };
+}
+function buildExtGlob(hints) {
+  const sets = [];
+  sets.push(TS_JS, WEB);
+  if (hints.hasPython)
+    sets.push(PYTHON);
+  if (hints.hasRust)
+    sets.push(SYSTEMS);
+  if (hints.hasGo)
+    sets.push(GO);
+  if (hints.hasJava)
+    sets.push(JAVA);
+  if (hints.hasRuby)
+    sets.push(RUBY);
+  if (hints.hasPHP)
+    sets.push(PHP);
+  if (hints.hasSwift)
+    sets.push(SWIFT);
+  if (hints.hasCSharp)
+    sets.push(CSHARP);
+  const anySpecific = hints.hasPython || hints.hasRust || hints.hasGo || hints.hasJava || hints.hasRuby || hints.hasPHP || hints.hasSwift || hints.hasCSharp;
+  if (!anySpecific)
+    sets.push(PYTHON, SYSTEMS, GO);
+  const allExts = [...new Set(sets.join(",").split(","))].join(",");
+  return `{${allExts}}`;
+}
+var ASSET_DIRS = ["ui", "public", "static", "assets", "web", "frontend"];
+var ASSET_EXTS = "{html,htm,css,scss,sass,less}";
+function addAssetDirs(root, globs) {
+  for (const dir of ASSET_DIRS) {
+    const full = path7.join(root, dir);
+    if (fs6.existsSync(full) && fs6.statSync(full).isDirectory()) {
+      const g = `${dir}/**/*.${ASSET_EXTS}`;
+      if (!globs.includes(g))
+        globs.push(g);
+    }
+  }
+  return globs;
+}
 function detectSourceGlobs(workspaceRoot) {
-  const exts = "{ts,tsx,js,jsx}";
+  const hints = detectProjectTypes(workspaceRoot);
+  const exts = buildExtGlob(hints);
   const tsconfigPath = path7.join(workspaceRoot, "tsconfig.json");
   if (fs6.existsSync(tsconfigPath)) {
     try {
       const raw = fs6.readFileSync(tsconfigPath, "utf8").replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
       const tsconfig = JSON.parse(raw);
       if (Array.isArray(tsconfig.include) && tsconfig.include.length > 0) {
-        const globs = tsconfig.include.map((p) => {
-          const base = p.replace(/\/\*\*\/\*(\.\w+)?$/, "").replace(/\/\*(\.\w+)?$/, "").replace(/\.$/, "").replace(/\*$/, "").replace(/\/$/, "");
-          return base;
-        }).filter(
-          (base) => base.length > 0 && !base.includes("*") && // skip glob patterns like **/*.tsx
+        const globs = tsconfig.include.map(
+          (p) => p.replace(/\/\*\*\/\*(\.\w+)?$/, "").replace(/\/\*(\.\w+)?$/, "").replace(/\.$/, "").replace(/\*$/, "").replace(/\/$/, "")
+        ).filter(
+          (base) => base.length > 0 && !base.includes("*") && // skip raw glob patterns
           !path7.extname(base)
-          // skip file entries like nativewind-env.d.ts
+          // skip file entries like env.d.ts
         ).map((base) => `${base}/**/*.${exts}`).filter((v, i, a) => a.indexOf(v) === i);
         if (globs.length > 0) {
-          console.log(`[GraphMem] Detected source globs from tsconfig.include:`, globs);
-          return globs;
+          const final = addAssetDirs(workspaceRoot, globs);
+          console.log(`[GraphMem] Detected source globs from tsconfig.include:`, final);
+          return final;
         }
       }
       const rootDir = tsconfig.compilerOptions?.rootDir;
       if (rootDir && rootDir !== ".") {
-        const glob2 = `${rootDir.replace(/^\.\//, "")}/**/*.${exts}`;
-        console.log(`[GraphMem] Detected source glob from tsconfig.rootDir:`, glob2);
-        return [glob2];
+        const globs = [`${rootDir.replace(/^\.\//, "")}/**/*.${exts}`];
+        const final = addAssetDirs(workspaceRoot, globs);
+        console.log(`[GraphMem] Detected source glob from tsconfig.rootDir:`, final);
+        return final;
       }
-    } catch (e) {
+    } catch {
       console.warn("[GraphMem] Could not parse tsconfig.json, falling back to directory detection");
     }
   }
-  const candidates = ["src", "app", "pages", "lib", "components", "utils", "hooks", "server", "client"];
-  const found = candidates.filter(
-    (dir) => fs6.existsSync(path7.join(workspaceRoot, dir)) && fs6.statSync(path7.join(workspaceRoot, dir)).isDirectory()
-  );
+  if (hints.hasGo) {
+    try {
+      const gomod = fs6.readFileSync(path7.join(workspaceRoot, "go.mod"), "utf8");
+      const moduleLine = gomod.split("\n").find((l) => l.startsWith("module "));
+      if (moduleLine) {
+        const globs = [`**/*.{${GO}}`];
+        console.log(`[GraphMem] Detected Go project, scanning:`, globs);
+        return globs;
+      }
+    } catch {
+    }
+  }
+  if (hints.hasRust && fs6.existsSync(path7.join(workspaceRoot, "src"))) {
+    const globs = [`src/**/*.{${SYSTEMS}}`];
+    console.log(`[GraphMem] Detected Rust project, scanning:`, globs);
+    return globs;
+  }
+  if (hints.hasPython) {
+    const pyDirs = ["src", "app", "lib", workspaceRoot].map((d) => path7.join(workspaceRoot, d)).filter((d) => fs6.existsSync(d) && fs6.statSync(d).isDirectory());
+    const pkgDir = pyDirs.find((d) => {
+      try {
+        return fs6.readdirSync(d).some(
+          (f) => fs6.statSync(path7.join(d, f)).isDirectory() && fs6.existsSync(path7.join(d, f, "__init__.py"))
+        );
+      } catch {
+        return false;
+      }
+    });
+    if (pkgDir) {
+      const rel = path7.relative(workspaceRoot, pkgDir).replace(/\\/g, "/") || ".";
+      const globs2 = [`${rel}/**/*.{${PYTHON}}`];
+      console.log(`[GraphMem] Detected Python project, scanning:`, globs2);
+      return globs2;
+    }
+    const globs = [`**/*.{${PYTHON}}`];
+    console.log(`[GraphMem] Detected Python project (root scan):`, globs);
+    return globs;
+  }
+  const found = SOURCE_CANDIDATES.filter((dir) => {
+    const full = path7.join(workspaceRoot, dir);
+    return fs6.existsSync(full) && fs6.statSync(full).isDirectory() && !ALWAYS_IGNORE.has(dir);
+  });
   if (found.length > 0) {
     const globs = found.map((dir) => `${dir}/**/*.${exts}`);
-    console.log(`[GraphMem] Detected source globs from directories:`, globs);
-    return globs;
+    const unique = [...new Set(globs)];
+    console.log(`[GraphMem] Detected source globs from directories:`, unique);
+    return unique;
   }
   console.log("[GraphMem] No source structure detected, scanning root");
   return [`**/*.${exts}`];
@@ -18012,8 +18592,15 @@ async function startWatcher(root, store, config, onUpdate) {
     const result = parser.parseFile(abs, content, root);
     if (store.getFileHash(rel) === result.fileNode.lastHash)
       return;
+    const existing = store.getNode(rel);
+    const savedDescription = existing?.description ?? "";
+    const savedTags = existing?.tags ?? [];
     store.deleteNodesForFile(rel);
     store.deleteEdgesForFile(rel);
+    if (savedDescription) {
+      result.fileNode.description = savedDescription;
+      result.fileNode.tags = savedTags;
+    }
     store.upsertNode(result.fileNode);
     for (const sym of result.symbolNodes)
       store.upsertNode(sym);
@@ -18021,7 +18608,7 @@ async function startWatcher(root, store, config, onUpdate) {
       store.upsertEdge(edge);
     store.resolveEdges();
     const apiKey = getApiKey();
-    if (apiKey) {
+    if (apiKey && !savedDescription) {
       const summarizer = new Summarizer({ ...config.summarizer, apiKey });
       await summarizer.summarizePending(store, () => content);
     }

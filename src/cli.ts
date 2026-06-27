@@ -167,19 +167,32 @@ async function startWatcher(root: string, store: GraphStore, config: GraphMemCon
     const result  = parser.parseFile(abs, content, root);
     if (store.getFileHash(rel) === result.fileNode.lastHash) return;
 
+    // Preserve existing summary before deleting the node —
+    // otherwise every save looks like an unsummarized file to Claude
+    const existing        = store.getNode(rel);
+    const savedDescription = existing?.description ?? '';
+    const savedTags        = existing?.tags        ?? [];
+
     store.deleteNodesForFile(rel);
     store.deleteEdgesForFile(rel);
+
+    if (savedDescription) {
+      result.fileNode.description = savedDescription;
+      result.fileNode.tags        = savedTags;
+    }
+
     store.upsertNode(result.fileNode);
     for (const sym  of result.symbolNodes) store.upsertNode(sym);
     for (const edge of result.edges)       store.upsertEdge(edge);
     store.resolveEdges();
 
-    // Re-summarize the changed file if we have an API key
+    // Only call Claude for genuinely new/unsummarized files
     const apiKey = getApiKey();
-    if (apiKey) {
+    if (apiKey && !savedDescription) {
       const summarizer = new Summarizer({ ...config.summarizer, apiKey });
       await summarizer.summarizePending(store, () => content);
     }
+
     dim(`Updated: ${rel}`);
     onUpdate?.();
   };

@@ -3,7 +3,7 @@
 # 🍄 Mycelium — Codebase Memory
 
 This project uses **Mycelium** for AI agent memory and task tracking.
-Graph: **15 files** · **59 edges** · AI descriptions on every node.
+Graph: **19 files** · **61 edges** · AI descriptions on every node.
 
 > **You are not the first agent here. Read before you touch anything.**
 
@@ -44,7 +44,7 @@ See every session that ran before you. What files were touched, how many lines c
 ### Step 3 — Check blast radius before modifying any function
 
 ```bash
-curl "http://localhost:47821/xref?file=src/api/orders.ts&fn=createOrder"
+curl "http://localhost:47821/xref?file=src/auth/token.ts&fn=refreshToken"
 ```
 
 Replace the file and function name with whatever you're about to change. This returns every caller and callee. If something imports or calls what you're modifying, read that file too before changing the signature.
@@ -98,6 +98,9 @@ curl "http://localhost:47821/status"
 | 4 | Run `/xref` before modifying any function that has callers |
 | 5 | Read only the files preflight returned — trust the graph |
 | 6 | Run `mycelium task done` when finished |
+
+## Team lenses
+  - `core`
 
 ---
 
