@@ -1,6 +1,6 @@
 {
   "name": "@kopikocappu/mycelium",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "Codebase memory for AI coding agents. Natural language preflight, graph viewer, and agent history in one command.",
   "bin": {
     "mycelium": "dist/cli.js"
