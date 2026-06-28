@@ -3460,5 +3460,138 @@ function _rmapUnhoverV2(edges, nodeGs, gMain) {
 </script>
 <script src="myc-inject.js"></script>
 <script src="roadmap-main.js"></script>
+<!-- ── Sidebar resize — drag handler ───────────────────────────────────────── -->
+<script>
+(function () {
+  const handle     = document.getElementById('sidebar-resize-handle');
+  const sidebar    = document.getElementById('sidebar');
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  if (!handle || !sidebar) return;
+
+  // Apply a width value: updates CSS variable, element styles, and handle position
+  function applySidebarWidth(w) {
+    w = Math.max(200, Math.min(640, w));
+    _sidebarW = w;
+    document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+    // Only force width when not collapsed (collapsed class overrides to 0)
+    if (!sidebarCollapsed) {
+      sidebar.style.width    = w + 'px';
+      sidebar.style.minWidth = w + 'px';
+    }
+    handle.style.left = sidebarCollapsed ? '0px' : w + 'px';
+    // collapse btn: let CSS var drive it (clear any inline left)
+    if (!sidebarCollapsed) collapseBtn.style.left = '';
+    try { localStorage.setItem('mycelium-sidebar-w', w); } catch {}
+  }
+
+  // Apply saved width on startup (CSS default is 340px)
+  if (_sidebarW && _sidebarW !== 340) applySidebarWidth(_sidebarW);
+
+  handle.addEventListener('mousedown', function (e) {
+    if (sidebarCollapsed) return;   // ignore drag when sidebar is hidden
+    e.preventDefault();
+
+    const startX = e.clientX;
+    const startW = sidebar.getBoundingClientRect().width;
+
+    document.body.classList.add('sidebar-resizing');
+    handle.classList.add('rz-dragging');
+
+    function onMove(e) {
+      applySidebarWidth(startW + e.clientX - startX);
+    }
+
+    function onUp() {
+      document.body.classList.remove('sidebar-resizing');
+      handle.classList.remove('rz-dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      // Nudge graph to fill new canvas width
+      if (typeof fitToScreen === 'function') try { fitToScreen(); } catch {}
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  // Keep handle position in sync after collapse/expand animations finish
+  const origCollapse = window.setSidebarCollapsed;
+  window.setSidebarCollapsed = function (collapsed) {
+    origCollapse(collapsed);
+    // After the CSS transition ends (~320ms), snap handle to correct position
+    setTimeout(() => {
+      handle.style.left = collapsed ? '0px' : _sidebarW + 'px';
+      handle.style.display = collapsed ? 'none' : '';
+    }, 340);
+  };
+})();
+</script>
+
+<!-- ── Sidebar resize — drag handler ───────────────────────────────────────── -->
+<script>
+(function () {
+  const handle     = document.getElementById('sidebar-resize-handle');
+  const sidebar    = document.getElementById('sidebar');
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  if (!handle || !sidebar) return;
+
+  // Apply a width value: updates CSS variable, element styles, and handle position
+  function applySidebarWidth(w) {
+    w = Math.max(200, Math.min(640, w));
+    _sidebarW = w;
+    document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+    // Only force width when not collapsed (collapsed class overrides to 0)
+    if (!sidebarCollapsed) {
+      sidebar.style.width    = w + 'px';
+      sidebar.style.minWidth = w + 'px';
+    }
+    handle.style.left = sidebarCollapsed ? '0px' : w + 'px';
+    // collapse btn: let CSS var drive it (clear any inline left)
+    if (!sidebarCollapsed) collapseBtn.style.left = '';
+    try { localStorage.setItem('mycelium-sidebar-w', w); } catch {}
+  }
+
+  // Apply saved width on startup (CSS default is 340px)
+  if (_sidebarW && _sidebarW !== 340) applySidebarWidth(_sidebarW);
+
+  handle.addEventListener('mousedown', function (e) {
+    if (sidebarCollapsed) return;   // ignore drag when sidebar is hidden
+    e.preventDefault();
+
+    const startX = e.clientX;
+    const startW = sidebar.getBoundingClientRect().width;
+
+    document.body.classList.add('sidebar-resizing');
+    handle.classList.add('rz-dragging');
+
+    function onMove(e) {
+      applySidebarWidth(startW + e.clientX - startX);
+    }
+
+    function onUp() {
+      document.body.classList.remove('sidebar-resizing');
+      handle.classList.remove('rz-dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      // Nudge graph to fill new canvas width
+      if (typeof fitToScreen === 'function') try { fitToScreen(); } catch {}
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  // Keep handle position in sync after collapse/expand animations finish
+  const origCollapse = window.setSidebarCollapsed;
+  window.setSidebarCollapsed = function (collapsed) {
+    origCollapse(collapsed);
+    // After the CSS transition ends (~320ms), snap handle to correct position
+    setTimeout(() => {
+      handle.style.left = collapsed ? '0px' : _sidebarW + 'px';
+      handle.style.display = collapsed ? 'none' : '';
+    }, 340);
+  };
+})();
+</script>
 </body>
 </html>

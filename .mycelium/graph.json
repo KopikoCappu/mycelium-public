@@ -945,22 +945,22 @@
     "ui/index.html": {
       "id": "ui/index.html",
       "kind": "file",
-      "lineCount": 3464,
+      "lineCount": 3597,
       "path": "ui/index.html",
       "name": "index.html",
-      "description": "Main HTML entry point for a D3.js-based code dependency graph visualization tool called 'Mycelium Graph'. Renders an interactive SVG canvas with sidebar panels for node inspection, search, history, and dependency analysis, featuring dark theme styling with custom CSS variables.",
+      "description": "Main HTML entry point for a code dependency graph visualization tool called 'Mycelium Graph' that renders an interactive D3-based graph of file/function dependencies with a sidebar for search, history, and node details, plus a canvas with minimap, zoom controls, and context menus.",
       "tags": [
         "ui",
         "visualization",
-        "d3js",
-        "html",
-        "frontend",
+        "d3",
         "graph",
+        "frontend",
+        "dark-theme",
         "interactive"
       ],
       "exported": true,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::API_BASE": {
       "id": "ui/index.html::API_BASE",
@@ -973,8 +973,8 @@
       "exported": false,
       "lineStart": 798,
       "lineEnd": 798,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::DIR_PALETTE": {
       "id": "ui/index.html::DIR_PALETTE",
@@ -987,8 +987,8 @@
       "exported": false,
       "lineStart": 800,
       "lineEnd": 800,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::getDirColor": {
       "id": "ui/index.html::getDirColor",
@@ -1001,8 +1001,8 @@
       "exported": false,
       "lineStart": 808,
       "lineEnd": 808,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::COLORS": {
       "id": "ui/index.html::COLORS",
@@ -1015,8 +1015,8 @@
       "exported": false,
       "lineStart": 818,
       "lineEnd": 818,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::COLOR_PRESETS": {
       "id": "ui/index.html::COLOR_PRESETS",
@@ -1029,8 +1029,8 @@
       "exported": false,
       "lineStart": 829,
       "lineEnd": 829,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::applyFlowColors": {
       "id": "ui/index.html::applyFlowColors",
@@ -1043,8 +1043,8 @@
       "exported": false,
       "lineStart": 877,
       "lineEnd": 877,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::resetColors": {
       "id": "ui/index.html::resetColors",
@@ -1057,8 +1057,8 @@
       "exported": false,
       "lineStart": 908,
       "lineEnd": 908,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::buildColorPresets": {
       "id": "ui/index.html::buildColorPresets",
@@ -1071,8 +1071,8 @@
       "exported": false,
       "lineStart": 910,
       "lineEnd": 910,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::switchModalTab": {
       "id": "ui/index.html::switchModalTab",
@@ -1085,8 +1085,8 @@
       "exported": false,
       "lineStart": 925,
       "lineEnd": 925,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::loadGraph": {
       "id": "ui/index.html::loadGraph",
@@ -1099,8 +1099,8 @@
       "exported": false,
       "lineStart": 943,
       "lineEnd": 943,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::buildVis": {
       "id": "ui/index.html::buildVis",
@@ -1113,8 +1113,8 @@
       "exported": false,
       "lineStart": 959,
       "lineEnd": 959,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::ticked": {
       "id": "ui/index.html::ticked",
@@ -1127,8 +1127,8 @@
       "exported": false,
       "lineStart": 1173,
       "lineEnd": 1173,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::centerOnNode": {
       "id": "ui/index.html::centerOnNode",
@@ -1141,8 +1141,8 @@
       "exported": false,
       "lineStart": 1184,
       "lineEnd": 1184,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::showCtxMenu": {
       "id": "ui/index.html::showCtxMenu",
@@ -1155,8 +1155,8 @@
       "exported": false,
       "lineStart": 1197,
       "lineEnd": 1197,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::hideCtxMenu": {
       "id": "ui/index.html::hideCtxMenu",
@@ -1169,8 +1169,8 @@
       "exported": false,
       "lineStart": 1204,
       "lineEnd": 1204,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::persistHidden": {
       "id": "ui/index.html::persistHidden",
@@ -1183,8 +1183,8 @@
       "exported": false,
       "lineStart": 1262,
       "lineEnd": 1262,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::hideNodeInstant": {
       "id": "ui/index.html::hideNodeInstant",
@@ -1197,8 +1197,8 @@
       "exported": false,
       "lineStart": 1264,
       "lineEnd": 1264,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::unhideNode": {
       "id": "ui/index.html::unhideNode",
@@ -1211,8 +1211,8 @@
       "exported": false,
       "lineStart": 1287,
       "lineEnd": 1287,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::unhideAll": {
       "id": "ui/index.html::unhideAll",
@@ -1225,8 +1225,8 @@
       "exported": false,
       "lineStart": 1288,
       "lineEnd": 1288,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::silentRebuild": {
       "id": "ui/index.html::silentRebuild",
@@ -1239,8 +1239,8 @@
       "exported": false,
       "lineStart": 1289,
       "lineEnd": 1289,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::toggleHiddenList": {
       "id": "ui/index.html::toggleHiddenList",
@@ -1253,8 +1253,8 @@
       "exported": false,
       "lineStart": 1292,
       "lineEnd": 1292,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderHiddenList": {
       "id": "ui/index.html::renderHiddenList",
@@ -1267,8 +1267,8 @@
       "exported": false,
       "lineStart": 1297,
       "lineEnd": 1297,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::updateHiddenRow": {
       "id": "ui/index.html::updateHiddenRow",
@@ -1281,8 +1281,8 @@
       "exported": false,
       "lineStart": 1308,
       "lineEnd": 1308,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::clusterForce": {
       "id": "ui/index.html::clusterForce",
@@ -1295,8 +1295,8 @@
       "exported": false,
       "lineStart": 1316,
       "lineEnd": 1316,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderHulls": {
       "id": "ui/index.html::renderHulls",
@@ -1309,8 +1309,8 @@
       "exported": false,
       "lineStart": 1332,
       "lineEnd": 1332,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::selectNode": {
       "id": "ui/index.html::selectNode",
@@ -1323,8 +1323,8 @@
       "exported": false,
       "lineStart": 1355,
       "lineEnd": 1355,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::startFlowAnimation": {
       "id": "ui/index.html::startFlowAnimation",
@@ -1337,8 +1337,8 @@
       "exported": false,
       "lineStart": 1392,
       "lineEnd": 1392,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::tick": {
       "id": "ui/index.html::tick",
@@ -1351,8 +1351,8 @@
       "exported": false,
       "lineStart": 1410,
       "lineEnd": 1410,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::positionFlowEndpoints": {
       "id": "ui/index.html::positionFlowEndpoints",
@@ -1365,8 +1365,8 @@
       "exported": false,
       "lineStart": 1421,
       "lineEnd": 1421,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::stopFlowAnimation": {
       "id": "ui/index.html::stopFlowAnimation",
@@ -1379,8 +1379,8 @@
       "exported": false,
       "lineStart": 1432,
       "lineEnd": 1432,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::depList": {
       "id": "ui/index.html::depList",
@@ -1393,8 +1393,8 @@
       "exported": false,
       "lineStart": 1441,
       "lineEnd": 1441,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::INITIAL": {
       "id": "ui/index.html::INITIAL",
@@ -1407,8 +1407,8 @@
       "exported": false,
       "lineStart": 1443,
       "lineEnd": 1443,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderItem": {
       "id": "ui/index.html::renderItem",
@@ -1421,8 +1421,8 @@
       "exported": false,
       "lineStart": 1445,
       "lineEnd": 1445,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::toggleDepSection": {
       "id": "ui/index.html::toggleDepSection",
@@ -1435,8 +1435,8 @@
       "exported": false,
       "lineStart": 1458,
       "lineEnd": 1458,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderNodeInfo": {
       "id": "ui/index.html::renderNodeInfo",
@@ -1449,8 +1449,8 @@
       "exported": false,
       "lineStart": 1468,
       "lineEnd": 1468,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::hideNodeFromPanel": {
       "id": "ui/index.html::hideNodeFromPanel",
@@ -1463,8 +1463,8 @@
       "exported": false,
       "lineStart": 1516,
       "lineEnd": 1516,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::copyNodePath": {
       "id": "ui/index.html::copyNodePath",
@@ -1477,8 +1477,8 @@
       "exported": false,
       "lineStart": 1518,
       "lineEnd": 1518,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::filterByTag": {
       "id": "ui/index.html::filterByTag",
@@ -1491,8 +1491,8 @@
       "exported": false,
       "lineStart": 1528,
       "lineEnd": 1528,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::focusNode": {
       "id": "ui/index.html::focusNode",
@@ -1505,8 +1505,8 @@
       "exported": false,
       "lineStart": 1539,
       "lineEnd": 1539,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_rebuildKeepPositions": {
       "id": "ui/index.html::_rebuildKeepPositions",
@@ -1519,8 +1519,8 @@
       "exported": false,
       "lineStart": 1642,
       "lineEnd": 1642,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::rebuildVis": {
       "id": "ui/index.html::rebuildVis",
@@ -1533,8 +1533,8 @@
       "exported": false,
       "lineStart": 1669,
       "lineEnd": 1669,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::pinNode": {
       "id": "ui/index.html::pinNode",
@@ -1547,8 +1547,8 @@
       "exported": false,
       "lineStart": 1683,
       "lineEnd": 1683,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::unpinNode": {
       "id": "ui/index.html::unpinNode",
@@ -1561,8 +1561,8 @@
       "exported": false,
       "lineStart": 1697,
       "lineEnd": 1697,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_persistPins": {
       "id": "ui/index.html::_persistPins",
@@ -1575,8 +1575,8 @@
       "exported": false,
       "lineStart": 1709,
       "lineEnd": 1709,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::applyMultiSelect": {
       "id": "ui/index.html::applyMultiSelect",
@@ -1589,8 +1589,8 @@
       "exported": false,
       "lineStart": 1719,
       "lineEnd": 1719,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::clearMultiSelect": {
       "id": "ui/index.html::clearMultiSelect",
@@ -1603,8 +1603,8 @@
       "exported": false,
       "lineStart": 1744,
       "lineEnd": 1744,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderMultiSelectInfo": {
       "id": "ui/index.html::renderMultiSelectInfo",
@@ -1617,8 +1617,8 @@
       "exported": false,
       "lineStart": 1749,
       "lineEnd": 1749,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderSmallList": {
       "id": "ui/index.html::renderSmallList",
@@ -1631,8 +1631,8 @@
       "exported": false,
       "lineStart": 1772,
       "lineEnd": 1772,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::expandNeighbors": {
       "id": "ui/index.html::expandNeighbors",
@@ -1645,8 +1645,8 @@
       "exported": false,
       "lineStart": 1795,
       "lineEnd": 1795,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::isolateSubtree": {
       "id": "ui/index.html::isolateSubtree",
@@ -1659,8 +1659,8 @@
       "exported": false,
       "lineStart": 1846,
       "lineEnd": 1846,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::clearSubtreeIsolation": {
       "id": "ui/index.html::clearSubtreeIsolation",
@@ -1673,8 +1673,8 @@
       "exported": false,
       "lineStart": 1869,
       "lineEnd": 1869,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::copyAsMarkdown": {
       "id": "ui/index.html::copyAsMarkdown",
@@ -1687,8 +1687,8 @@
       "exported": false,
       "lineStart": 1878,
       "lineEnd": 1878,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::startDescriptionEdit": {
       "id": "ui/index.html::startDescriptionEdit",
@@ -1701,8 +1701,8 @@
       "exported": false,
       "lineStart": 1903,
       "lineEnd": 1903,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::save": {
       "id": "ui/index.html::save",
@@ -1715,8 +1715,8 @@
       "exported": false,
       "lineStart": 1929,
       "lineEnd": 1929,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::setSidebarCollapsed": {
       "id": "ui/index.html::setSidebarCollapsed",
@@ -1729,8 +1729,8 @@
       "exported": false,
       "lineStart": 1968,
       "lineEnd": 1968,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::fitToScreen": {
       "id": "ui/index.html::fitToScreen",
@@ -1743,8 +1743,8 @@
       "exported": false,
       "lineStart": 1989,
       "lineEnd": 1989,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::initMinimap": {
       "id": "ui/index.html::initMinimap",
@@ -1757,8 +1757,8 @@
       "exported": false,
       "lineStart": 2009,
       "lineEnd": 2009,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::updateMinimapNodes": {
       "id": "ui/index.html::updateMinimapNodes",
@@ -1771,8 +1771,8 @@
       "exported": false,
       "lineStart": 2011,
       "lineEnd": 2011,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::updateMinimap": {
       "id": "ui/index.html::updateMinimap",
@@ -1785,8 +1785,8 @@
       "exported": false,
       "lineStart": 2034,
       "lineEnd": 2034,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::showTooltip": {
       "id": "ui/index.html::showTooltip",
@@ -1799,8 +1799,8 @@
       "exported": false,
       "lineStart": 2050,
       "lineEnd": 2050,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::moveTooltip": {
       "id": "ui/index.html::moveTooltip",
@@ -1813,8 +1813,8 @@
       "exported": false,
       "lineStart": 2062,
       "lineEnd": 2062,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::hideTooltip": {
       "id": "ui/index.html::hideTooltip",
@@ -1827,8 +1827,8 @@
       "exported": false,
       "lineStart": 2070,
       "lineEnd": 2070,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::nodeRadius": {
       "id": "ui/index.html::nodeRadius",
@@ -1841,8 +1841,8 @@
       "exported": false,
       "lineStart": 2073,
       "lineEnd": 2073,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::shortName": {
       "id": "ui/index.html::shortName",
@@ -1855,8 +1855,8 @@
       "exported": false,
       "lineStart": 2083,
       "lineEnd": 2083,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::groupByDirectory": {
       "id": "ui/index.html::groupByDirectory",
@@ -1869,8 +1869,8 @@
       "exported": false,
       "lineStart": 2088,
       "lineEnd": 2088,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::computeConnectionCounts": {
       "id": "ui/index.html::computeConnectionCounts",
@@ -1883,8 +1883,8 @@
       "exported": false,
       "lineStart": 2100,
       "lineEnd": 2100,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::detectImportCycles": {
       "id": "ui/index.html::detectImportCycles",
@@ -1897,8 +1897,8 @@
       "exported": false,
       "lineStart": 2113,
       "lineEnd": 2113,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::WHITE": {
       "id": "ui/index.html::WHITE",
@@ -1911,8 +1911,8 @@
       "exported": false,
       "lineStart": 2120,
       "lineEnd": 2120,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::dfs": {
       "id": "ui/index.html::dfs",
@@ -1925,8 +1925,8 @@
       "exported": false,
       "lineStart": 2122,
       "lineEnd": 2122,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderCyclesPanel": {
       "id": "ui/index.html::renderCyclesPanel",
@@ -1939,8 +1939,8 @@
       "exported": false,
       "lineStart": 2150,
       "lineEnd": 2150,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::focusCycle": {
       "id": "ui/index.html::focusCycle",
@@ -1953,8 +1953,8 @@
       "exported": false,
       "lineStart": 2164,
       "lineEnd": 2164,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::setLoading": {
       "id": "ui/index.html::setLoading",
@@ -1967,8 +1967,8 @@
       "exported": false,
       "lineStart": 2170,
       "lineEnd": 2170,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::hideLoading": {
       "id": "ui/index.html::hideLoading",
@@ -1981,8 +1981,8 @@
       "exported": false,
       "lineStart": 2174,
       "lineEnd": 2174,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::updateDirLegend": {
       "id": "ui/index.html::updateDirLegend",
@@ -1995,8 +1995,8 @@
       "exported": false,
       "lineStart": 2179,
       "lineEnd": 2179,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::toggleIsolateDir": {
       "id": "ui/index.html::toggleIsolateDir",
@@ -2009,8 +2009,8 @@
       "exported": false,
       "lineStart": 2191,
       "lineEnd": 2191,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::applyDirIsolation": {
       "id": "ui/index.html::applyDirIsolation",
@@ -2023,8 +2023,8 @@
       "exported": false,
       "lineStart": 2197,
       "lineEnd": 2197,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::switchTab": {
       "id": "ui/index.html::switchTab",
@@ -2037,8 +2037,8 @@
       "exported": false,
       "lineStart": 2214,
       "lineEnd": 2214,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::summarizeSession": {
       "id": "ui/index.html::summarizeSession",
@@ -2051,8 +2051,8 @@
       "exported": false,
       "lineStart": 2227,
       "lineEnd": 2227,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::toggleTaskEdit": {
       "id": "ui/index.html::toggleTaskEdit",
@@ -2065,8 +2065,8 @@
       "exported": false,
       "lineStart": 2333,
       "lineEnd": 2333,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::setActiveTask": {
       "id": "ui/index.html::setActiveTask",
@@ -2079,8 +2079,8 @@
       "exported": false,
       "lineStart": 2348,
       "lineEnd": 2348,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::loadHistory": {
       "id": "ui/index.html::loadHistory",
@@ -2093,8 +2093,8 @@
       "exported": false,
       "lineStart": 2383,
       "lineEnd": 2383,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_renderSession": {
       "id": "ui/index.html::_renderSession",
@@ -2107,8 +2107,8 @@
       "exported": false,
       "lineStart": 2480,
       "lineEnd": 2480,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::SHOW": {
       "id": "ui/index.html::SHOW",
@@ -2121,8 +2121,8 @@
       "exported": false,
       "lineStart": 2496,
       "lineEnd": 2496,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_toggleSession": {
       "id": "ui/index.html::_toggleSession",
@@ -2135,8 +2135,8 @@
       "exported": false,
       "lineStart": 2565,
       "lineEnd": 2565,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_relativeElapsed": {
       "id": "ui/index.html::_relativeElapsed",
@@ -2149,8 +2149,8 @@
       "exported": false,
       "lineStart": 2574,
       "lineEnd": 2574,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_getFilePath": {
       "id": "ui/index.html::_getFilePath",
@@ -2163,8 +2163,8 @@
       "exported": false,
       "lineStart": 2586,
       "lineEnd": 2586,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_relativeTime": {
       "id": "ui/index.html::_relativeTime",
@@ -2177,8 +2177,8 @@
       "exported": false,
       "lineStart": 2592,
       "lineEnd": 2592,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_taskDuration": {
       "id": "ui/index.html::_taskDuration",
@@ -2191,8 +2191,8 @@
       "exported": false,
       "lineStart": 2608,
       "lineEnd": 2608,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_renderHistoryItem": {
       "id": "ui/index.html::_renderHistoryItem",
@@ -2205,8 +2205,8 @@
       "exported": false,
       "lineStart": 2618,
       "lineEnd": 2618,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::loadIgnoreConfig": {
       "id": "ui/index.html::loadIgnoreConfig",
@@ -2219,8 +2219,8 @@
       "exported": false,
       "lineStart": 2681,
       "lineEnd": 2681,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderIgnoreList": {
       "id": "ui/index.html::renderIgnoreList",
@@ -2233,8 +2233,8 @@
       "exported": false,
       "lineStart": 2692,
       "lineEnd": 2692,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::postIgnoreAction": {
       "id": "ui/index.html::postIgnoreAction",
@@ -2247,8 +2247,8 @@
       "exported": false,
       "lineStart": 2724,
       "lineEnd": 2724,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::initSSE": {
       "id": "ui/index.html::initSSE",
@@ -2261,8 +2261,8 @@
       "exported": false,
       "lineStart": 2793,
       "lineEnd": 2793,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "src/parser/treeSitter.ts": {
       "id": "src/parser/treeSitter.ts",
@@ -2824,8 +2824,15 @@
       "lineCount": 997,
       "path": "src/mcp/server.ts",
       "name": "server.ts",
-      "description": "",
-      "tags": [],
+      "description": "File appears to be incorrectly duplicated HTML/CSS content instead of TypeScript server code; should define MCP (Model Context Protocol) server implementation for managing code analysis and graph data endpoints.",
+      "tags": [
+        "api",
+        "server",
+        "mcp",
+        "backend",
+        "typescript",
+        "middleware"
+      ],
       "exported": true,
       "lastHash": "a682d60d77532cd3",
       "lastUpdated": 1782529828516
@@ -3606,8 +3613,8 @@
       "exported": false,
       "lineStart": 2821,
       "lineEnd": 2821,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_renderRoadmapList": {
       "id": "ui/index.html::_renderRoadmapList",
@@ -3620,8 +3627,8 @@
       "exported": false,
       "lineStart": 2848,
       "lineEnd": 2848,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_renderFeatureCard": {
       "id": "ui/index.html::_renderFeatureCard",
@@ -3634,8 +3641,8 @@
       "exported": false,
       "lineStart": 2870,
       "lineEnd": 2870,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::highlightFeatureFiles": {
       "id": "ui/index.html::highlightFeatureFiles",
@@ -3648,8 +3655,8 @@
       "exported": false,
       "lineStart": 2920,
       "lineEnd": 2920,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::setRoadmapFilter": {
       "id": "ui/index.html::setRoadmapFilter",
@@ -3662,8 +3669,8 @@
       "exported": false,
       "lineStart": 3044,
       "lineEnd": 3044,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::setRoadmapView": {
       "id": "ui/index.html::setRoadmapView",
@@ -3676,8 +3683,8 @@
       "exported": false,
       "lineStart": 3020,
       "lineEnd": 3020,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::stopRoadmapTree": {
       "id": "ui/index.html::stopRoadmapTree",
@@ -3690,8 +3697,8 @@
       "exported": false,
       "lineStart": 3055,
       "lineEnd": 3055,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_calcFeatureDepths": {
       "id": "ui/index.html::_calcFeatureDepths",
@@ -3704,8 +3711,8 @@
       "exported": false,
       "lineStart": 3088,
       "lineEnd": 3088,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::renderRoadmapTree": {
       "id": "ui/index.html::renderRoadmapTree",
@@ -3718,8 +3725,8 @@
       "exported": false,
       "lineStart": 3127,
       "lineEnd": 3127,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::STATUS_COLOR": {
       "id": "ui/index.html::STATUS_COLOR",
@@ -3732,8 +3739,8 @@
       "exported": false,
       "lineStart": 3175,
       "lineEnd": 3175,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::STATUS_GLOW": {
       "id": "ui/index.html::STATUS_GLOW",
@@ -3746,8 +3753,8 @@
       "exported": false,
       "lineStart": 3182,
       "lineEnd": 3182,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::STATUS_ICON": {
       "id": "ui/index.html::STATUS_ICON",
@@ -3760,8 +3767,8 @@
       "exported": false,
       "lineStart": 3189,
       "lineEnd": 3189,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::bezierD": {
       "id": "ui/index.html::bezierD",
@@ -3774,8 +3781,8 @@
       "exported": false,
       "lineStart": 3252,
       "lineEnd": 3252,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_rmapHover": {
       "id": "ui/index.html::_rmapHover",
@@ -3914,8 +3921,8 @@
       "exported": false,
       "lineStart": 3061,
       "lineEnd": 3061,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_startTreeResizeObs": {
       "id": "ui/index.html::_startTreeResizeObs",
@@ -3928,8 +3935,8 @@
       "exported": false,
       "lineStart": 3065,
       "lineEnd": 3065,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_fitRoadmapTree": {
       "id": "ui/index.html::_fitRoadmapTree",
@@ -3942,8 +3949,8 @@
       "exported": false,
       "lineStart": 3107,
       "lineEnd": 3107,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::mkBtn": {
       "id": "ui/index.html::mkBtn",
@@ -3956,8 +3963,8 @@
       "exported": false,
       "lineStart": 3340,
       "lineEnd": 3340,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_startTreeParticles": {
       "id": "ui/index.html::_startTreeParticles",
@@ -3970,8 +3977,8 @@
       "exported": false,
       "lineStart": 3366,
       "lineEnd": 3366,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_rmapHoverV2": {
       "id": "ui/index.html::_rmapHoverV2",
@@ -3984,8 +3991,8 @@
       "exported": false,
       "lineStart": 3411,
       "lineEnd": 3411,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     },
     "ui/index.html::_rmapUnhoverV2": {
       "id": "ui/index.html::_rmapUnhoverV2",
@@ -3998,8 +4005,50 @@
       "exported": false,
       "lineStart": 3454,
       "lineEnd": 3454,
-      "lastHash": "3fc9978b65264d11",
-      "lastUpdated": 1782529825201
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
+    },
+    "ui/index.html::applySidebarWidth": {
+      "id": "ui/index.html::applySidebarWidth",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "applySidebarWidth",
+      "description": "",
+      "signature": "function applySidebarWidth(w): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3472,
+      "lineEnd": 3472,
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
+    },
+    "ui/index.html::onMove": {
+      "id": "ui/index.html::onMove",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onMove",
+      "description": "",
+      "signature": "function onMove(e): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3500,
+      "lineEnd": 3500,
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
+    },
+    "ui/index.html::onUp": {
+      "id": "ui/index.html::onUp",
+      "kind": "function",
+      "path": "ui/index.html",
+      "name": "onUp",
+      "description": "",
+      "signature": "function onUp(): void",
+      "tags": [],
+      "exported": false,
+      "lineStart": 3504,
+      "lineEnd": 3504,
+      "lastHash": "3a28e42fbc763066",
+      "lastUpdated": 1782631028196
     }
   },
   "edges": {
@@ -4155,7 +4204,7 @@
       "from": "ui/index.html",
       "to": "ui/myc-inject.js",
       "kind": "imports",
-      "weight": 18
+      "weight": 20
     },
     "src/parser/treeSitter.ts::imports::src/graph/schema.ts": {
       "id": "src/parser/treeSitter.ts::imports::src/graph/schema.ts",
@@ -4431,5 +4480,5 @@
       "weight": 1
     }
   },
-  "lastUpdated": 1782538700833
+  "lastUpdated": 1782632717625
 }

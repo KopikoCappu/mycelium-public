@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": 1782535223543,
+  "updatedAt": 1782632606088,
   "features": [
     {
       "id": "core-graph",
@@ -19,7 +19,7 @@
       ],
       "priority": "p0",
       "completedAt": 1749000000000,
-      "updatedAt": 1782531592003
+      "updatedAt": 1782626317570
     },
     {
       "id": "ts-parser",
@@ -36,7 +36,8 @@
         "core"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317580
     },
     {
       "id": "haiku-summarization",
@@ -53,7 +54,8 @@
         "core"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317585
     },
     {
       "id": "openai-embeddings",
@@ -70,7 +72,8 @@
         "search"
       ],
       "priority": "p1",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317590
     },
     {
       "id": "mcp-server",
@@ -89,7 +92,8 @@
         "core"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317597
     },
     {
       "id": "preflight",
@@ -109,7 +113,8 @@
         "core"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317602
     },
     {
       "id": "file-watcher",
@@ -129,7 +134,8 @@
         "realtime"
       ],
       "priority": "p1",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317604
     },
     {
       "id": "bootstrap",
@@ -148,7 +154,8 @@
         "core"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317607
     },
     {
       "id": "graph-ui",
@@ -167,7 +174,8 @@
         "d3"
       ],
       "priority": "p0",
-      "completedAt": 1749000000000
+      "completedAt": 1749000000000,
+      "updatedAt": 1782626317608
     },
     {
       "id": "flow-animation",
@@ -186,7 +194,8 @@
         "accessibility"
       ],
       "priority": "p1",
-      "completedAt": 1749500000000
+      "completedAt": 1749500000000,
+      "updatedAt": 1782632606088
     },
     {
       "id": "graph-interactions",
@@ -204,7 +213,8 @@
         "ux"
       ],
       "priority": "p1",
-      "completedAt": 1749500000000
+      "completedAt": 1749500000000,
+      "updatedAt": 1782626317614
     },
     {
       "id": "cycle-detection",
@@ -222,7 +232,8 @@
         "dx"
       ],
       "priority": "p1",
-      "completedAt": 1749500000000
+      "completedAt": 1749500000000,
+      "updatedAt": 1782626317616
     },
     {
       "id": "settings-modal",
@@ -241,7 +252,8 @@
         "settings"
       ],
       "priority": "p2",
-      "completedAt": 1749500000000
+      "completedAt": 1749500000000,
+      "updatedAt": 1782626317622
     },
     {
       "id": "session-architecture",
@@ -261,7 +273,8 @@
       ],
       "priority": "p0",
       "completedAt": 1750500000000,
-      "notes": "sessions.ts is written. Server routes + cli 'mycelium task' command are written but not yet built and installed."
+      "notes": "sessions.ts is written. Server routes + cli 'mycelium task' command are written but not yet built and installed.",
+      "updatedAt": 1782626317625
     },
     {
       "id": "history-ui",
@@ -281,7 +294,8 @@
         "sessions"
       ],
       "priority": "p1",
-      "completedAt": 1750500000000
+      "completedAt": 1750500000000,
+      "updatedAt": 1782626317627
     },
     {
       "id": "myc-mascot",
@@ -291,16 +305,15 @@
       "files": [
         "ui/myc-inject.js"
       ],
-      "dependsOn": [
-        "graph-ui"
-      ],
+      "dependsOn": [],
       "tags": [
         "ui",
         "animation",
         "mascot"
       ],
       "priority": "p2",
-      "completedAt": 1750800000000
+      "completedAt": 1750800000000,
+      "updatedAt": 1782628805536
     },
     {
       "id": "session-integration",
@@ -320,7 +333,8 @@
         "cli"
       ],
       "priority": "p0",
-      "notes": "Files are all written. Just needs: copy sessions.ts → src/, merge server additions, merge cli additions, build + install, then test 'mycelium task X' in compound-hub."
+      "notes": "Files are all written. Just needs: copy sessions.ts → src/, merge server additions, merge cli additions, build + install, then test 'mycelium task X' in compound-hub.",
+      "updatedAt": 1782626317632
     },
     {
       "id": "call-edge-verification",
@@ -339,7 +353,8 @@
         "parsing"
       ],
       "priority": "p1",
-      "notes": "Run: cd compound-hub && mycelium debug — check that import edges are present post-fix."
+      "notes": "Run: cd compound-hub && mycelium debug — check that import edges are present post-fix.",
+      "updatedAt": 1782626317634
     },
     {
       "id": "landing-page-myc",
@@ -358,7 +373,8 @@
         "mascot"
       ],
       "priority": "p1",
-      "notes": "Behaviors designed. Pending: hook into landing page scroll events + Vercel deploy."
+      "notes": "Behaviors designed. Pending: hook into landing page scroll events + Vercel deploy.",
+      "updatedAt": 1782626317636
     },
     {
       "id": "roadmap-feature",
@@ -380,7 +396,8 @@
         "ui"
       ],
       "priority": "p0",
-      "notes": "You are here. roadmap.json ✓ — server endpoints and UI tab pending."
+      "notes": "You are here. roadmap.json ✓ — server endpoints and UI tab pending.",
+      "updatedAt": 1782626317642
     },
     {
       "id": "describe-endpoint",
@@ -397,7 +414,8 @@
         "api",
         "dx"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317644
     },
     {
       "id": "npm-publish",
@@ -415,7 +433,8 @@
         "release",
         "npm"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317646
     },
     {
       "id": "landing-page-deploy",
@@ -430,7 +449,8 @@
         "marketing",
         "deployment"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317640
     },
     {
       "id": "tree-sitter",
@@ -448,7 +468,8 @@
         "core",
         "multi-language"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317647
     },
     {
       "id": "git-integration",
@@ -467,7 +488,8 @@
         "dx",
         "sessions"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317649
     },
     {
       "id": "benchmarks",
@@ -483,7 +505,8 @@
         "research",
         "marketing"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317651
     },
     {
       "id": "blog-post",
@@ -498,7 +521,8 @@
         "marketing",
         "research"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317654
     },
     {
       "id": "anthropic-outreach",
@@ -514,7 +538,8 @@
         "career",
         "marketing"
       ],
-      "priority": "p0"
+      "priority": "p0",
+      "updatedAt": 1782626317656
     },
     {
       "id": "arxiv-submission",
@@ -530,7 +555,8 @@
         "research",
         "career"
       ],
-      "priority": "p1"
+      "priority": "p1",
+      "updatedAt": 1782626317658
     },
     {
       "id": "session-replay",
@@ -550,7 +576,8 @@
         "sessions",
         "visualization"
       ],
-      "priority": "p2"
+      "priority": "p2",
+      "updatedAt": 1782626317660
     },
     {
       "id": "preflight-accuracy",
@@ -569,7 +596,8 @@
         "sessions",
         "ai"
       ],
-      "priority": "p2"
+      "priority": "p2",
+      "updatedAt": 1782626317662
     },
     {
       "id": "cloud-backend",
@@ -588,7 +616,7 @@
       ],
       "priority": "p2",
       "notes": "$12/mo Pro, $49/mo Team tiers. Self-hosted graph + cloud session history.",
-      "updatedAt": 1782535223543
+      "updatedAt": 1782626317663
     },
     {
       "id": "stripe-billing",
@@ -604,7 +632,26 @@
         "billing",
         "saas"
       ],
-      "priority": "p2"
+      "priority": "p2",
+      "updatedAt": 1782626317665
+    },
+    {
+      "id": "testing-testing-3771",
+      "name": "Testing TESTING",
+      "status": "planned",
+      "description": "Testing",
+      "files": [],
+      "dependsOn": [
+        "call-edge-verification",
+        "tree-sitter",
+        "myc-mascot"
+      ],
+      "tags": [
+        "auth",
+        "billing",
+        "ui"
+      ],
+      "updatedAt": 1782626317667
     }
   ]
 }
