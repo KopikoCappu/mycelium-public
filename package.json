@@ -23,7 +23,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KopikoCappu/Mycelium.git"
+    "url": "git+https://github.com/KopikoCappu/Mycelium-public.git"
   },
   "files": [
     "dist/",
